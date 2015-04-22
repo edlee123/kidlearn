@@ -1,0 +1,305 @@
+#-*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:        simulation
+# Purpose:
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     CreativeCommon
+#-------------------------------------------------------------------------------
+
+from seq_manager import * #Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
+from exercise import Exercise
+from student import *
+from knowledge import *
+import numpy as np
+import copy as copy
+import json
+import config
+#reload(stud)
+import os
+
+#########################################################
+#########################################################
+## class Session_state
+
+class Session_state(object):
+    def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
+        self._student = student_state
+        self._seq_manager = seq_manager_state
+        self._exercise = exercise
+
+        for key, val in kwargs.iteritems():
+            object.__setattr__(self, key, val)
+
+    def __repr__(self):
+        return  self._exercise.__str__() + self._student["knowledges"].__str__()
+    
+    def __str__(self):
+        return self.__repr__()
+
+
+## class Session_state
+#########################################################
+
+#########################################################
+#########################################################
+## class Working_session
+
+class Working_session(object):
+    def __init__(self,student,seq_manager):
+        self._student = student
+        self._seq_manager = seq_manager
+        self._KC = self._seq_manager.get_KC()
+        self._states = []
+        self._current_ex = None
+
+    def get_working_session_logs(self):
+        session_logs = {}
+        session_logs["stude_ID"] = self._student._id
+        session_logs["RT"] = self._seq_manager.getRTnames()
+        session_logs["KC"] = self._KC
+        session_logs["nbValueParam"] = self._seq_manager.getNbValueParam()
+        session_logs["states"] = self._states
+        return session_logs
+
+    def multi_step_forward(self,nb_step):
+        for i in range(nb_step):
+            self.step_forward()
+
+    def step_forward(self):
+        act = self._seq_manager.sample()
+        ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
+        self._current_ex = self._student.answer(Exercise(act,ex_skill_lvl,self._KC))
+        self.save_actual_state()
+        self._seq_manager.update(act,self._current_ex._answer)
+
+    def actual_state(self):
+        return Session_state(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(self._current_ex))
+        
+    def save_actual_state(self):
+        self._states.append(self.actual_state())
+
+## class Working_session
+#########################################################
+
+#########################################################
+#########################################################
+## class Simulation
+
+class Simulation(object):
+    def __init__(self, seq_manager_list_name = ["RiARiT"], nb_students = 100, nb_ex = 100, model_student = 3, q_population_params = [0,0], *args, **kwargs):
+        self.config = self.load_config()
+        
+        self._seq_manager_list_name = seq_manager_list_name
+        self._working_sessions = {key: [] for key in self._seq_manager_list_name}
+        self._nb_students = nb_students
+        self._nb_ex = nb_ex
+        self._model_student = model_student
+        for key, val in kwargs.iteritems():
+            object.__setattr__(self, key, val)
+        
+        self._population = self.define_population()
+        #self.population_simulation()
+        #self.population = []
+        #self.define_seq_manager()
+
+    def load_config(self):
+        return config.Config()
+
+    def student_simulation(self, student, seq_manager_name):
+        working_session = Working_session(student,self.define_seq_manager(seq_manager_name))
+        working_session.multi_step_forward(self._nb_ex)
+        #print working_session.get_working_session_logs()
+        self._working_sessions[seq_manager_name].append(working_session)
+
+    def population_simulation(self):
+        for seq_manager_name in self._seq_manager_list_name:
+            print seq_manager_name
+            population = copy.deepcopy(self._population)
+            for student in population:
+                self.student_simulation(student,seq_manager_name)
+
+    # Define sequence manager
+    ##############################################################
+
+    def define_seq_manager(self,seq_manager_name):
+        with open('data.json', 'rb') as fp:
+            ssb_data = json.load(fp)
+
+        seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
+        if seq_manager_name == "RiARiT":
+            seq_manager = RIARIT_hssbg(*seq_manager_params_creation)
+        elif seq_manager_name == "ZPDES":
+            seq_manager = ZPDES_hssbg(*seq_manager_params_creation)
+        elif seq_manager_name == "Sequence":
+            seq_manager = Sequence(*seq_manager_params_creation)
+        else :
+            seq_manager = Random_sequence(*seq_manager_params_creation)
+        
+        return seq_manager
+
+    ##############################################################
+    ## Population generation functions
+    ##############################################################
+
+    # Generate population
+    ##############################################################
+
+    def define_population(self):
+        self.population_generation_parameters()
+        if self._model_student == 0:
+            population = self.generate_qstudent_population()
+
+        elif self._model_student == 1:
+            population = self.generate_pstudent_population()
+
+        elif self._model_student == 2:
+            population = self.generate_ktstudent_population()
+
+        elif self._model_student == 3:
+            population = self.generate_ktfeatures_population()
+
+        else:
+            print "NOT GOOD STUD MODEL TYPE"
+
+        return population
+
+    def generate_qstudent_population(self):
+        population_q_profiles = self.generate_q_profiles()
+        population = []
+        for stud_skills in population_q_profiles:
+            population.append(Qstudent(knowledge_levels = stud_skills, knowledge_names = self._knowledge_names))
+        return population
+
+    def generate_pstudent_population(self):
+        population_p_profiles = self.generate_p_profiles()
+        population_q_profiles = self.generate_q_profiles()
+        population = []
+        for i in range(self._nb_students):
+            population.append(Pstudent(params = population_p_profiles[i],knowledge_levels = population_q_profiles[i], knowledge_names = self._knowledge_names))
+        return population
+
+    def generate_ktstudent_population(self,kt_profil = 0):
+        population = []
+        for i in range(self._nb_students):
+            population.append(KT_student(knowledge_names = self._knowledge_names, knowledge_params = self._kt_student_profils[kt_profil]))
+        return population
+
+    def generate_ktfeatures_population(self,kt_profil = 0):
+        population = []
+        for i in range(self._nb_students):
+            population.append(KT_student(self.config._knowledges_conf))
+        return population
+
+        return population
+
+    # Generate population parameters
+    ##############################################################
+    def generate_kt_parametrisation(self):
+
+        return
+
+    def generate_normal_population(self,size_population = 100, mean = [0.7,0.8,0.5,0.1,0.1,0.1,0.1],var = [0.03,0.01,0.001,0.01,0.01,0.01,0.01]):
+        cov = np.diag(var)
+        population_normal = np.random.multivariate_normal(mean,cov,(size_population))
+        #for i in range(0,len(lvl)) :
+        #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
+        return population_normal
+
+    def generate_q_profiles(self):
+        population_q_profiles = self.generate_normal_population(self._nb_students,self.population_skill_lvl_mean,self.population_skill_lvl_var)
+        for stud in population_q_profiles:
+            stud = self.correct_skill_vector(stud)
+        return population_q_profiles
+
+    def generate_p_profiles(self):
+        self._nb_class = len(self._p_student_profiles)
+        nbStudClass = self._nb_students/self._nb_class
+        population_p_profiles = []
+        for p in self._p_student_profiles:
+            for i in range(0,nbStudClass):
+                population_p_profiles.append(p)
+        
+        return population_p_profiles
+
+    def correct_skill_vector(self,skill_vector):
+        for i in [2,5]:
+            if skill_vector[i] > skill_vector[i-1]:
+                skill_vector[i] = skill_vector[i-1]
+        for i in range(len(skill_vector)):
+            if skill_vector[i] < 1 or skill_vector[i] > 1:
+                skill_vector[i] = min(max(skill_vector[i],0),1)
+            if i > 3: 
+                if skill_vector[i] > skill_vector[i-3]:
+                    skill_vector[i] = skill_vector[i-1]
+            skill_vector[i] = round(skill_vector[i],2)
+        return skill_vector
+
+    def population_generation_parameters(self,skill_lvl_mean = 0, skill_lvl_var = 0):
+        #self._knowledge_names = ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"]
+        #self.RT_main = "MAIN"
+        self._knowledge_names = ["S1","S2","S3"]
+        self.RT_main = "KTTEST"
+
+
+        #####################################################################################
+        ##Definition of population parameters, first the skill level average
+        #####################################################################################
+
+        population_skill_lvl_mean_tab = []
+        population_skill_lvl_mean_tab.append([0.2,0.2,0.1,0.1,0.1,0.1,0.1])
+        #population_skill_lvl_mean_tab.append([1,1,1,1,1,1,1])
+        #population_skill_lvl_mean_tab.append([0.2,0.2,0.2,0.2,0,0,0])
+        #population_skill_lvl_mean_tab.append([0.5,0.5,0.5,0.5,0.5,0.5,0.5])
+        #population_skill_lvl_mean_tab.append([0.3,0.3,0.3,0.3,0.3,0.3,0.3])
+        #population_skill_lvl_mean_tab.append([0.5,0.5,0.5,0.5,0.5,0.5,0.5])
+        #population_skill_lvl_mean_tab.append([0.7,0.7,0.7,0.7,0.5,0.5,0.5])
+        #population_skill_lvl_mean_tab.append([0.05,0.01,0.001,0.001,0.001,0.01,0.01])
+        #population_skill_lvl_mean_tab.append([0.4,0.3,0.2,0.1,0.1,0.3,0.3])
+        #population_skill_lvl_mean_tab.append([0.6,0.5,0.1,0.1,0.1,0.5,0.3])
+        #population_skill_lvl_mean_tab.append([0.8,0.7,0.1,0.1,0.1,0.6])
+        population_skill_lvl_mean_tab.append([1,1,0,0,0,0,0])
+        
+        self.population_skill_lvl_mean = population_skill_lvl_mean_tab[skill_lvl_mean]
+        
+        ##Second, the skill level variance
+        
+        population_skill_lvl_var_tab = []
+        population_skill_lvl_var_tab.append([0,0,0,0,0,0,0])
+        #population_skill_lvl_var_tab.append([0.03,0.03,0.03,0.03,0.03,0.03,0.03])
+        #population_skill_lvl_var_tab.append([0.3,0.3,0.3,0.3,0.3,0.3,0.3])
+        population_skill_lvl_var_tab.append([0.005,0.005,0.01,0.01,0.01,0.005,0.01])
+
+        self.population_skill_lvl_var = population_skill_lvl_var_tab[skill_lvl_var]
+        
+        ################################################################################
+        ## Here, we define p_student understanding profiles
+        ################################################################################
+        
+        self._p_student_profiles = []
+        self._p_student_profiles.append({"MAIN": [1],"M": [1], "R": [1],"MM": [1], "RM": [1],"mod": [1],"Car": [0],"M4": [1], "UR": [1], "DR": [1]})
+        self._p_student_profiles.append({"MAIN": [2],"M": [2], "R": [2],"MM": [2], "RM": [2],"mod": [2],"Car": [1],"M4": [2], "UR": [2], "DR": [2]})
+        self._p_student_profiles.append({"MAIN": [3],"M": [3], "R": [3],"MM": [3], "RM": [3],"mod": [3],"Car": [1],"M4": [3], "UR": [3], "DR": [3]})
+        self._p_student_profiles.append({"MAIN": [4],"M": [4], "R": [4],"MM": [4], "RM": [4],"mod": [4],"Car": [1],"M4": [4], "UR": [4], "DR": [4]})
+        #self._p_student_profiles.append({"MAIN": [0],"M": [0], "R": [0],"MM": [0], "RM": [0],"mod": [0],"Mmod": [0],"M4mod": [0]})
+        #self._p_student_profiles.append({"MAIN": [3],"M": [3], "R": [3],"MM": [3], "RM": [3],"mod": [3],"Mmod": [3],"M4mod": [3]})
+        #self._p_student_profiles.append({"M":[12],"mod":[2,2,0], "R": [6]}) # comprend l'écrit (e+o)
+
+        ################################################################################
+        ## Definition of KT student profils
+        ################################################################################
+        
+        self._kt_student_profils = []
+        self._kt_student_profils.append([{"L0" : 0.01,"T": 0.02, "G" : 0.1, "S" : 0.1}])
+        #self._kt_student_profils.append({"KnowMoney":0,"IntSum":0, "IntSub":0, "IntDec":0, "DecSum":0, "DecSub":0, "DecDec":0})
+
+        ################################################################################
+        ## Definition of KT student profils
+        ################################################################################
+        
+        self._kt_student_profils = []
+        self._kt_student_profils.append([{"beta_0": 0.1,"beta":[0,0,0]}])
+

@@ -1,0 +1,56 @@
+#-*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:        exercise
+# Purpose:
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     CreativeCommon
+#-------------------------------------------------------------------------------
+
+import numpy as np
+import copy
+import re
+from simulation.knowledge import *
+
+class Exercise(object):
+
+    def __init__(self,params,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [], *args,**kwargs):
+        self._gamma = np.array(gamma)
+        self._params = params
+        self._answer = answer
+        #self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
+        self.add_attr(args,kwargs)
+
+    def __repr__(self):
+        #print "act : %s" % self._params
+        #print "ans : %s" % self._answer
+        act = {} #self._params
+        act["CS"] = self._answer
+        return act.__str__()
+    
+    def __str__(self):
+        return self.__repr__()
+
+    def get_knowledges_worked(self, by_names = 0, by_gamma = 1):
+        if by_gamma:
+            return [int(gamma > 0) for gamma in self._gamma]
+        elif by_names:
+            return [kc._name for kc in self._knowledges if kc._level != 0]
+        else:
+            return [self._knowledges.index(kc) for kc in self._knowledges if kc._level != 0]
+
+    def get_knowledges_level(self):
+        levels = []
+        for kc in self._knowledges:
+            levels.append(kc._level)
+        return levels
+
+    def get_attr(self):
+        return {"params": self._params, "knowledge" : self._knowledges, "answer" : self._answer}
+
+    def add_attr(self,*args,**kwargs):
+        for key, val in kwargs.iteritems():
+            object.__setattr__(self, key, val)
