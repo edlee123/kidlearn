@@ -10,10 +10,6 @@
 # Licence:     CreativeCommon
 #-------------------------------------------------------------------------------
 
-from numpy import *
-import copy
-import re
-import json
 from student import *
 
 class Qstudent(Student):
@@ -62,7 +58,7 @@ class Qstudent(Student):
     def learn(self,lvls_ex,prob = 1):
         prob_learn_tab = self.calcul_prob_learn(lvls_ex,prob)
         for i in range(0,len(lvls_ex)):
-            s = random.multinomial(1,[1-prob_learn_tab[i],prob_learn_tab[i]]) 
+            s = np.random.multinomial(1,[1-prob_learn_tab[i],prob_learn_tab[i]]) 
             lvl_up = nonzero(s==1)[0][0]
             if lvl_up and self._knowledges[i]._level < lvls_ex[i]:
                 coef_up = max(0.00,self.learning_progress[i] * (lvls_ex[i]-self._knowledges[i]._level))
@@ -104,12 +100,12 @@ class Qstudent(Student):
         self.learn(exercise.get_knowledges_level())
         prob_correct = self.compute_prob_correct_answer(exercise.get_knowledges_level())
         #print prob_correct
-        #s = random.multinomial(1,[1-prob_correct,prob_correct]) 
+        #s = np.random.multinomial(1,[1-prob_correct,prob_correct]) 
         #cor = nonzero(s==1)[0][0]
         nb_try = 0
         ans = 0
         while ans == 0 and nb_try < self.nbTry:
-            s = random.multinomial(1,[1-prob_correct,prob_correct])
+            s = np.random.multinomial(1,[1-prob_correct,prob_correct])
             ans = nonzero(s==1)[0][0]
             if ans == 0:
                 nb_try += 1

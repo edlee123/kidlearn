@@ -18,7 +18,6 @@ import numpy as np
 import copy as copy
 import json
 import config
-#reload(stud)
 import os
 
 #########################################################

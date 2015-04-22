@@ -10,10 +10,6 @@
 # Licence:     CreativeCommon
 #-------------------------------------------------------------------------------
 
-import numpy as np
-import copy
-import re
-import json
 from operator import mul
 from student import *
 

@@ -13,7 +13,7 @@
 import numpy as np
 import copy
 import re
-from simulation.knowledge import *
+from knowledge import *
 
 class Exercise(object):
 

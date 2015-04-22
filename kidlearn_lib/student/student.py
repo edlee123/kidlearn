@@ -10,13 +10,15 @@
 # Licence:     CreativeCommon
 #-------------------------------------------------------------------------------
 
+from knowledge import *
+from functions import *
+import numpy as np
+
 import os
-from numpy import *
 import re
 import pickle
 import json
-from simulation.knowledge import *
-from functions import *
+import copy
 
 class Student(object):
 

@@ -10,9 +10,6 @@
 # Licence:     CreativeCommon
 #-------------------------------------------------------------------------------
 
-from numpy import *
-import copy
-import re
 from q_student import *
 
 class Pstudent(Qstudent):
@@ -53,7 +50,7 @@ class Pstudent(Qstudent):
 
         for key,actspe in act.items():
             for i in range(len(actspe)):
-                s = random.multinomial(1,[1-prob,prob]) 
+                s = np.random.multinomial(1,[1-prob,prob]) 
                 do_lvl_up = nonzero(s==1)[0][0]
                 if do_lvl_up :
                     lvl_up = self.p_learning[i] * (1-self.p_lvl[key][i][actspe[i]])  
@@ -89,7 +86,7 @@ class Pstudent(Qstudent):
         nb_try = 0
         ans = 0
         while ans == 0 and nb_try < self.nbTry:
-            s = random.multinomial(1,[1-prob,prob])
+            s = np.random.multinomial(1,[1-prob,prob])
             ans = nonzero(s==1)[0][0]
             if ans == 0:
                 nb_try += 1
