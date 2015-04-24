@@ -2,29 +2,18 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 # Name:        custom_graph
-# Purpose:
+# Purpose: 
 #
-# Author:      Bclement
+# Authors:      Bclement, WSchueller
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
 # Licence:     CreativeCommon
 #-------------------------------------------------------------------------------
 
-import matplotlib.pyplot as plt
-import time
-import numpy as np
-import pickle
-import copy
+from custom_graph import *
 
-def load_graph(filename):
-    with open(filename, 'rb') as fichier:
-        mon_depickler=pickle.Unpickler(fichier)
-        tempgr=mon_depickler.load()
-    return tempgr
-
-
-class CustomGraph(object):
+class Curve(CustomGraph):
     def __init__(self,y,*arg,**kwargs):
         self.keepwinopen=0
         self.sort=1

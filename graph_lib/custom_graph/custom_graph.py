@@ -4,7 +4,7 @@
 # Name:        custom_graph
 # Purpose:
 #
-# Author:      Bclement
+# Authors:      Bclement, WSchueller
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
@@ -24,14 +24,14 @@ def load_graph(filename):
     return tempgr
 
 
-class Curve(object):
+class CustomGraph(object):
     def __init__(self,y,*arg,**kwargs):
         self.keepwinopen=0
         self.sort=1
         self.filename="graph"+time.strftime("%Y%m%d%H%M%S", time.localtime())
         if "filename" in kwargs.keys():
             self.filename=kwargs["filename"]
-        self.title=self.filename
+        self.title="title"
         self.xlabel="X"
         self.ylabel="Y"
         self.alpha=0.3
