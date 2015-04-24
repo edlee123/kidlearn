@@ -1,6 +1,14 @@
 #-*- coding: utf-8 -*-
-# 
-# 2015 BCLEMENT
+#-------------------------------------------------------------------------------
+# Name:        circospy
+# Purpose:
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     CreativeCommon
+#-------------------------------------------------------------------------------
 
 import sys as sys
 import numpy as np
