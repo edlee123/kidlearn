@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        circospy
+# Name:        sim_launcher
 # Purpose:
 #
 # Author:      Bclement
@@ -11,15 +11,11 @@
 
 #-------------------------------------------------------------------------------
 
-import sys as sys
 import numpy as np
-import scipy as scipy
-import scipy.stats as sstats
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from matplotlib.patches import Rectangle
-import pylab as pylab
-from my_functions import *
+import copy as copy
+import json
+import config
+import os
 
-from scipy.cluster.vq import vq, kmeans, whiten, kmeans2
-import copy
+from simulation import *
+

@@ -8,7 +8,8 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
+
 #-------------------------------------------------------------------------------
 
 import matplotlib.pyplot as plt
@@ -25,7 +26,15 @@ def load_graph(filename):
 
 
 class CustomGraph(object):
-    def __init__(self,y,*arg,**kwargs):
+    def __init__(self,*arg,**kwargs):
+        """ TODO : 
+            arguments pincipaux : 
+            filename
+            title
+            xmin-max
+            ymin-max
+            
+        """
         self.keepwinopen=0
         self.sort=1
         self.filename="graph"+time.strftime("%Y%m%d%H%M%S", time.localtime())

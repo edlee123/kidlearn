@@ -7,7 +7,8 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
+
 #-------------------------------------------------------------------------------
 
 from operator import mul
@@ -33,6 +34,11 @@ class KT_student(Student):
     def __str__(self):
         return self.__repr__()
 
+    def get_knowledge(self,id_dic = {"_id" : 0}, *arg, **kwargs):
+        for knowledge in self._knowledges:
+            if knowledge.__getattribute__(id_dic.keys()[0]) == id_dic.values()[0]:
+                return knowledge
+
     def get_state(self, seq_values = None):
         student_state = Student.get_state(self)
         student_state["knowledges"] = self._knowledges
@@ -56,8 +62,8 @@ class KT_student(Student):
         p_correct = self.emission_prob(exercise)
         print "p_correct : %s " % p_correct
         # Answer / Observation
-        s = random.multinomial(1,[1-p_correct,p_correct])
-        ans = nonzero(s==1)[0][0]
+        s = np.random.multinomial(1,[1-p_correct,p_correct])
+        ans = np.nonzero(s==1)[0][0]
                 
         # Transition computation
         self.update_mastery(exercise)

@@ -7,7 +7,8 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
+
 #-------------------------------------------------------------------------------
 
 from student import *
@@ -29,6 +30,11 @@ class Qstudent(Student):
         #self.lvl_up_prob = 0.8 #0.6
         #student_state["skills"] = self._skills
 
+    @property
+    def knowledges(self):
+        return self._knowledges
+    
+
     def get_state(self, seq_values = None):
         student_state = Student.get_state(self)
         student_state["knowledges"] = self._knowledges
@@ -47,7 +53,7 @@ class Qstudent(Student):
             if lvls_ex[i] - self._knowledges[i]._level  > 0.4:
                 p = 0
             else:
-                p = (1.0/(1+1*exp(-20*(self._knowledges[i]._level - lvls_ex[i]+0.07))))
+                p = (1.0/(1+1*np.exp(-20*(self._knowledges[i]._level - lvls_ex[i]+0.07))))
             
             p  = p * prob
             p = min(1,max(self.min_prob,p))
@@ -59,7 +65,7 @@ class Qstudent(Student):
         prob_learn_tab = self.calcul_prob_learn(lvls_ex,prob)
         for i in range(0,len(lvls_ex)):
             s = np.random.multinomial(1,[1-prob_learn_tab[i],prob_learn_tab[i]]) 
-            lvl_up = nonzero(s==1)[0][0]
+            lvl_up = np.nonzero(s==1)[0][0]
             if lvl_up and self._knowledges[i]._level < lvls_ex[i]:
                 coef_up = max(0.00,self.learning_progress[i] * (lvls_ex[i]-self._knowledges[i]._level))
                 newlvl = min(self._knowledges[i]._level + coef_up,lvls_ex[i])
@@ -77,7 +83,7 @@ class Qstudent(Student):
                 p = 0
             else:
             #p = self.guess_prob*((1.0/pi)*arctan((self._knowledges[i]._level - lvls_ex[i] + 0.1)*30) + 0.5)
-                p = self.guess_prob*(1.0/(1+1*exp(-20*(self._knowledges[i]._level - lvls_ex[i]+0.10))))
+                p = self.guess_prob*(1.0/(1+1*np.exp(-20*(self._knowledges[i]._level - lvls_ex[i]+0.10))))
             probas.append(p)
 
         return probas
@@ -101,18 +107,7 @@ class Qstudent(Student):
         prob_correct = self.compute_prob_correct_answer(exercise.get_knowledges_level())
         #print prob_correct
         #s = np.random.multinomial(1,[1-prob_correct,prob_correct]) 
-        #cor = nonzero(s==1)[0][0]
-        nb_try = 0
-        ans = 0
-        while ans == 0 and nb_try < self.nbTry:
-            s = np.random.multinomial(1,[1-prob_correct,prob_correct])
-            ans = nonzero(s==1)[0][0]
-            if ans == 0:
-                nb_try += 1
-
-        #self.motivation = min(max(self.motivation + (ans-0.5)/50,0.5),2)
-        exercise._answer = ans
-        exercise.add_attr(_nb_try = nb_try)
-        return exercise
+        #cor = np.nonzero(s==1)[0][0]
+        return self.try_and_answer(prob_correct,exercise)
 
 

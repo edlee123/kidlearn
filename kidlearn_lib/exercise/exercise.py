@@ -7,7 +7,8 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
+
 #-------------------------------------------------------------------------------
 
 import numpy as np
@@ -21,13 +22,29 @@ class Exercise(object):
         self._gamma = np.array(gamma)
         self._params = params
         self._answer = answer
-        #self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
+        self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
         self.add_attr(args,kwargs)
+
+    @property
+    def params(self):
+        return self._params
+
+    @property
+    def gamma(self):
+        return self._gamma
+    
+    @property
+    def answer(self):
+        return self._answer
+
+    @property
+    def knowledges(self):
+        return self._knowledges
 
     def __repr__(self):
         #print "act : %s" % self._params
         #print "ans : %s" % self._answer
-        act = {} #self._params
+        act = copy.deepcopy(self._params)
         act["CS"] = self._answer
         return act.__str__()
     

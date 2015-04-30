@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
 #-------------------------------------------------------------------------------
 
 from q_student import *
@@ -51,7 +51,7 @@ class Pstudent(Qstudent):
         for key,actspe in act.items():
             for i in range(len(actspe)):
                 s = np.random.multinomial(1,[1-prob,prob]) 
-                do_lvl_up = nonzero(s==1)[0][0]
+                do_lvl_up = np.nonzero(s==1)[0][0]
                 if do_lvl_up :
                     lvl_up = self.p_learning[i] * (1-self.p_lvl[key][i][actspe[i]])  
                     self.p_lvl[key][i][actspe[i]] = min(self.p_lvl[key][i][actspe[i]] + lvl_up,1)
@@ -81,19 +81,10 @@ class Pstudent(Qstudent):
 
         self.learn(exercise._params,exercise._skills)
         Qstudent.learn(self,exercise._skills,prob)
-        prob = self.compute_prob_correct_answer(act)*Qstudent.compute_prob_correct_answer(self,exercise._skills)
-        prob = pow(prob,1)
-        nb_try = 0
-        ans = 0
-        while ans == 0 and nb_try < self.nbTry:
-            s = np.random.multinomial(1,[1-prob,prob])
-            ans = nonzero(s==1)[0][0]
-            if ans == 0:
-                nb_try += 1
-
-        exercise._answer = ans
-        exercise.add_attr(_nb_try = nb_try)
-        return exercise
+        prob_correct = self.compute_prob_correct_answer(act)*Qstudent.compute_prob_correct_answer(self,exercise._skills)
+        prob_correct = pow(prob_correct,1)
+        
+        return self.try_and_answer(prob_correct,exercise)
 
     def choose_tab(self,_tab,_type):
         if _type < len(_tab) :

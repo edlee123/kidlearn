@@ -18,13 +18,13 @@ def dissample(p):
 #########################################################
 ## class HierachySSBG
 class HierarchySSBG(object):
-    def __init__(self,RT = "MAIN", filter1=None,filter2=None,uniformval=None, algo = "", path = "assets/algorithm/hierarchyRT/RT_"):
+    def __init__(self,RT = "MAIN", filter1=None,filter2=None,uniformval=None, path = ""):
         self.filter1 = filter1
         self.filter2 = filter2
         self.uniformval = uniformval
         self.ssbg_used = []
         #self.current_lvl_ex = {}
-        self.algo = algo
+        self.algo = "HierarchySSBG"
         self.path = path
         self.main_act = RT
         RT = self.path + RT+".txt"

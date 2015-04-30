@@ -9,11 +9,12 @@ from hssbg import *
 ## class RIARIT_hssb
 
 class RIARIT_hssbg(HierarchySSBG):
-    def __init__(self,RT = "MAIN", levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, algo = "", path = "assets/algorithm/hierarchyRT/RT_"):
+    def __init__(self,RT = "MAIN", levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = "hierarchyRT/RT_"):
 
         self.levelupdate = levelupdate
         self.current_lvl_ex = {}
-        HierarchySSBG.__init__(self, RT, filter1,filter2,uniformval,algo, path)
+        HierarchySSBG.__init__(self, RT, filter1,filter2,uniformval, path)
+        self.algo = "RIARIT_hssbg"
         self.load_Error()
         #self.CreateHSSBG(RT)
 
@@ -59,6 +60,8 @@ class RIARIT_hssbg(HierarchySSBG):
     def addSsbgToCompute(self,pre_ssbg,act,lvl = None,**kwargs):
         #if lvl == None:
         #    lvl = [1]*self.ncompetences
+        #print pre_ssbg.ID
+        #print act
         for actRT in range(len(pre_ssbg.using_RT)):
             nameRT = pre_ssbg.using_RT[actRT][act[pre_ssbg.ID][actRT]]
             if nameRT[0:2] != 'NO':
@@ -100,11 +103,11 @@ class RIARIT_hssbg(HierarchySSBG):
 
     def return_answer_impact(self,corsol,error_ID = None):
         if corsol == 1:
-            return [1]*max(1,len(self.error_tab[0]))
+            return [1]*max(1,self.ncompetences)
         elif error_ID != None:
             error_num = self.error_ID_tab.index(error_ID)
         else:
-            return [0]*max(1,len(self.error_tab[0]))
+            return [0]*max(1,self.ncompetences)
 
         return self.error_tab[error_num]
 

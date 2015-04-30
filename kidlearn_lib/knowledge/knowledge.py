@@ -7,7 +7,8 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
+
 #-------------------------------------------------------------------------------
 
 import os
@@ -25,6 +26,17 @@ class Knowledge(object):
 
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def level(self):
+        return self._level
 
     def __repr__(self):
         return "%s : %s" % (self._name,self._level)

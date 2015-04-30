@@ -7,18 +7,19 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     CreativeCommon
+# Licence:     GNU GENERAL PUBLIC LICENSE
 #-------------------------------------------------------------------------------
 
 from seq_manager import * #Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
 from exercise import Exercise
 from student import *
-from knowledge import *
+from functions import *
 import numpy as np
 import copy as copy
 import json
 import config
 import os
+import graph_lib as graph
 
 #########################################################
 #########################################################
@@ -33,14 +34,61 @@ class Session_state(object):
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
 
+    @property
+    def exercise(self):
+        return self._exercise
+    
+    @property
+    def ex_params(self):
+        return self._exercise.params
+
+    @property
+    def ex_answer(self):
+        return self._exercise.answer
+
+    @property
+    def student(self):
+        return self._student
+    
+    @property
+    def seq_manager(self):
+        return self._seq_manager
+    
     def __repr__(self):
         return  self._exercise.__str__() + self._student["knowledges"].__str__()
     
     def __str__(self):
         return self.__repr__()
 
+    ###########################################################################
+    ##### Data Analysis tools 
+    def get_attr(self,attr,*arg,**kwargs):
+        data = getattr(self,attr)
+        if len(arg)>0:
+            data = getattr(data,arg[0])
+
+        return data
+
+    def base(self):
+        return
+
+
+    ##### Data Analysis tools 
+    ###########################################################################
+
+
 
 ## class Session_state
+#########################################################
+
+#########################################################
+#########################################################
+## class States_matrix
+
+#class States_matrix(object):
+
+
+## class States_matrix
 #########################################################
 
 #########################################################
@@ -55,17 +103,30 @@ class Working_session(object):
         self._states = []
         self._current_ex = None
 
+    @property
+    def student(self):
+        return self._student
+    
+    @property
+    def states(self):
+        return self._states
+
+    @property
+    def nb_states(self):
+        return len(self._states)
+    
+
     def get_working_session_logs(self):
         session_logs = {}
-        session_logs["stude_ID"] = self._student._id
+        session_logs["stude_ID"] = self._student.id
         session_logs["RT"] = self._seq_manager.getRTnames()
         session_logs["KC"] = self._KC
         session_logs["nbValueParam"] = self._seq_manager.getNbValueParam()
         session_logs["states"] = self._states
         return session_logs
 
-    def multi_step_forward(self,nb_step):
-        for i in range(nb_step):
+    def run(self,nb_ex):
+        for i in range(nb_ex):
             self.step_forward()
 
     def step_forward(self):
@@ -81,7 +142,84 @@ class Working_session(object):
     def save_actual_state(self):
         self._states.append(self.actual_state())
 
+    ###########################################################################
+    ##### Data Analysis tools 
+    
+    def base(self):
+        return
+
+
+    ##### Data Analysis tools 
+    ###########################################################################
+
 ## class Working_session
+#########################################################
+
+
+
+#########################################################
+#########################################################
+## class Working_group
+class Working_group(object):
+    def __init__(self,students,seq_manager):
+        self._working_sessions = []
+        for s in students:
+            self.add_student(s,copy.deepcopy(seq_manager))
+
+    @property
+    def working_sessions(self):
+        return self._working_sessions
+
+    def get_working_session(self,num_stud = 0, id_stud = None):
+        if id_stud:
+            for ws in self._working_sessions:
+                if ws.student.id == id_stud:
+                    return ws
+
+        return self._working_sessions[num_stud]
+
+    def run(self,nb_ex):
+        for ws in self._working_sessions:
+            ws.run(nb_ex)
+    
+    def add_student(self,student,seq_manager):
+        self._working_sessions.append(Working_session(student,seq_manager))
+
+    ###########################################################################
+    ##### Data Analysis tools 
+    
+    def get_data_time(self,time = 0, attr = None,*arg, **kwargs):
+        data = []
+        for ws in self._working_sessions:
+            if attr:
+                data.append(ws.states[time].get_attr(attr,*arg))
+            else: 
+                data.append(ws.states[time])
+        return data
+
+    def get_ex_repartition_time(self,nb_ex = 100):
+        type_ex = ["M","R","MM","RM"]
+        nb_ex_type = [6,4,4,4]
+        def repart_base(j):
+            return [0 for i in range(nb_ex_type[j])]
+        
+        repart = [[],[],[],[]]
+        for i in range(nb_ex):
+            exs = self.get_data_time(i,"_exercise","_params")
+            for nbType in range(len(type_ex)):
+                repart[nbType].append(repart_base(nbType))
+            for j in range(len(exs)):
+                repart[exs[j]["MAIN"][0]][i][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
+
+        graph.kGraph.plot_cluster_lvl_sub([repart],100,100, title = "%s \nStudent distribution per erxercices type over time" % ("test"),path = "graphics/", ref = "clust_xseq_global_%s" % ("test"),legend = ["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"],dataToUse = range(len([repart])))
+
+        return repart
+
+    ##### Data Analysis tools 
+    ###########################################################################
+
+
+## class Working_group
 #########################################################
 
 #########################################################
@@ -89,11 +227,11 @@ class Working_session(object):
 ## class Simulation
 
 class Simulation(object):
-    def __init__(self, seq_manager_list_name = ["RiARiT"], nb_students = 100, nb_ex = 100, model_student = 3, q_population_params = [0,0], *args, **kwargs):
-        self.config = self.load_config()
+    def __init__(self, seq_manager_list_name = ["Sequence","ZPDES","RiARiT"], nb_students = 100, nb_ex = 100, model_student = 0, *args, **kwargs):
+        #self.config = self.load_config()
         
         self._seq_manager_list_name = seq_manager_list_name
-        self._working_sessions = {key: [] for key in self._seq_manager_list_name}
+        self._groups = {key: [] for key in self._seq_manager_list_name}
         self._nb_students = nb_students
         self._nb_ex = nb_ex
         self._model_student = model_student
@@ -101,25 +239,43 @@ class Simulation(object):
             object.__setattr__(self, key, val)
         
         self._population = self.define_population()
+        for seq_manager_name in self._seq_manager_list_name:
+            self.add_working_group(copy.deepcopy(self._population),seq_manager_name)
         #self.population_simulation()
         #self.population = []
         #self.define_seq_manager()
 
+    @property
+    def groups(self):
+        return self._groups
+
     def load_config(self):
         return config.Config()
 
-    def student_simulation(self, student, seq_manager_name):
-        working_session = Working_session(student,self.define_seq_manager(seq_manager_name))
-        working_session.multi_step_forward(self._nb_ex)
-        #print working_session.get_working_session_logs()
-        self._working_sessions[seq_manager_name].append(working_session)
+    def add_working_group(self,population,seq_manager_name):
+        self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
 
-    def population_simulation(self):
-        for seq_manager_name in self._seq_manager_list_name:
-            print seq_manager_name
-            population = copy.deepcopy(self._population)
-            for student in population:
-                self.student_simulation(student,seq_manager_name)
+    #def student_simulation(self, student, seq_manager_name):
+    #    working_session = Working_session(student,self.define_seq_manager(seq_manager_name))
+    #    working_session.run(self._nb_ex)
+    #    #print working_session.get_working_session_logs()
+    #    self._groups[seq_manager_name].append(working_session)
+
+    #def population_simulation(self):
+    #    for seq_manager_name in self._seq_manager_list_name:
+    #        print seq_manager_name
+    #        population = copy.deepcopy(self._population)
+    #        for student in population:
+    #            self.student_simulation(student,seq_manager_name)
+
+    def run(self):
+        for name,group in self._groups.items():
+            print name
+            self.lauch_group_simulation(group)
+
+    def lauch_group_simulation(self,group):
+        for sub_group in group:
+            sub_group.run(self._nb_ex)
 
     # Define sequence manager
     ##############################################################
@@ -201,18 +357,18 @@ class Simulation(object):
 
         return
 
-    def generate_normal_population(self,size_population = 100, mean = [0.7,0.8,0.5,0.1,0.1,0.1,0.1],var = [0.03,0.01,0.001,0.01,0.01,0.01,0.01]):
-        cov = np.diag(var)
-        population_normal = np.random.multivariate_normal(mean,cov,(size_population))
-        #for i in range(0,len(lvl)) :
-        #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
-        return population_normal
-
     def generate_q_profiles(self):
         population_q_profiles = self.generate_normal_population(self._nb_students,self.population_skill_lvl_mean,self.population_skill_lvl_var)
         for stud in population_q_profiles:
             stud = self.correct_skill_vector(stud)
         return population_q_profiles
+
+    def generate_normal_population(self,size_population, mean,var):
+        cov = np.diag(var)
+        population_normal = np.random.multivariate_normal(mean,cov,(size_population))
+        #for i in range(0,len(lvl)) :
+        #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
+        return population_normal
 
     def generate_p_profiles(self):
         self._nb_class = len(self._p_student_profiles)
@@ -238,17 +394,17 @@ class Simulation(object):
         return skill_vector
 
     def population_generation_parameters(self,skill_lvl_mean = 0, skill_lvl_var = 0):
-        #self._knowledge_names = ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"]
+        self._knowledge_names = ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"]
         #self.RT_main = "MAIN"
-        self._knowledge_names = ["S1","S2","S3"]
-        self.RT_main = "KTTEST"
+        #self._knowledge_names = ["S1","S2","S3"]
+        self.RT_main = "MAIN" #"KTTEST"
 
 
         #####################################################################################
         ##Definition of population parameters, first the skill level average
         #####################################################################################
 
-        population_skill_lvl_mean_tab = []
+        population_skill_lvl_mean_tab = [] #[0.7,0.8,0.5,0.1,0.1,0.1,0.1]
         population_skill_lvl_mean_tab.append([0.2,0.2,0.1,0.1,0.1,0.1,0.1])
         #population_skill_lvl_mean_tab.append([1,1,1,1,1,1,1])
         #population_skill_lvl_mean_tab.append([0.2,0.2,0.2,0.2,0,0,0])
@@ -266,7 +422,7 @@ class Simulation(object):
         
         ##Second, the skill level variance
         
-        population_skill_lvl_var_tab = []
+        population_skill_lvl_var_tab = []#[0.03,0.01,0.001,0.01,0.01,0.01,0.01]
         population_skill_lvl_var_tab.append([0,0,0,0,0,0,0])
         #population_skill_lvl_var_tab.append([0.03,0.03,0.03,0.03,0.03,0.03,0.03])
         #population_skill_lvl_var_tab.append([0.3,0.3,0.3,0.3,0.3,0.3,0.3])

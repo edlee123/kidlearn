@@ -1,0 +1,6 @@
+Competences	KnowMoney	IntSum	IntSub	IntDec	DecSum	DecSub	DecDec
+Actions	Token
+UsingTable	RT_MM
+Nb_stay	1
+1	Mmod	0.9	1	1	1	1	1	0.8	0	0	0	0	0	0	0	0	0	0	0	0	1	0.9
+1	Mmod	1	1	1	1	1	1	1	0	0	0	0	0	0	0	1	1	1	1	1	1	1
