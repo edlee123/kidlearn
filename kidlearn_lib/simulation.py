@@ -20,6 +20,8 @@ import json
 import config
 import os
 import graph_lib as graph
+import datafile
+import time
 
 #########################################################
 #########################################################
@@ -211,8 +213,6 @@ class Working_group(object):
             for j in range(len(exs)):
                 repart[exs[j]["MAIN"][0]][i][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
 
-        graph.kGraph.plot_cluster_lvl_sub([repart],100,100, title = "%s \nStudent distribution per erxercices type over time" % ("test"),path = "graphics/", ref = "clust_xseq_global_%s" % ("test"),legend = ["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"],dataToUse = range(len([repart])))
-
         return repart
 
     ##### Data Analysis tools 
@@ -227,7 +227,7 @@ class Working_group(object):
 ## class Simulation
 
 class Simulation(object):
-    def __init__(self, seq_manager_list_name = ["Sequence","ZPDES","RiARiT"], nb_students = 100, nb_ex = 100, model_student = 0, *args, **kwargs):
+    def __init__(self, seq_manager_list_name = ["Sequence","ZPDES","RiARiT"], nb_students = 100, nb_ex = 100, model_student = 0, ref = "0", *args, **kwargs):
         #self.config = self.load_config()
         
         self._seq_manager_list_name = seq_manager_list_name
@@ -235,12 +235,15 @@ class Simulation(object):
         self._nb_students = nb_students
         self._nb_ex = nb_ex
         self._model_student = model_student
+        self.do_simu_path(ref)
+
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
         
         self._population = self.define_population()
         for seq_manager_name in self._seq_manager_list_name:
             self.add_working_group(copy.deepcopy(self._population),seq_manager_name)
+
         #self.population_simulation()
         #self.population = []
         #self.define_seq_manager()
@@ -255,6 +258,14 @@ class Simulation(object):
     def add_working_group(self,population,seq_manager_name):
         self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
 
+    def do_simu_path(self,ref):
+        directory = ""
+        for seqName in self._seq_manager_list_name:
+            directory += "%s_" % seqName[0:min(len(seqName),3)]
+        directory = "%sms%s" % (directory,self._model_student)
+        self._directory = directory 
+        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_ex,ref)
+
     #def student_simulation(self, student, seq_manager_name):
     #    working_session = Working_session(student,self.define_seq_manager(seq_manager_name))
     #    working_session.run(self._nb_ex)
@@ -267,6 +278,15 @@ class Simulation(object):
     #        population = copy.deepcopy(self._population)
     #        for student in population:
     #            self.student_simulation(student,seq_manager_name)
+    def save(self):
+        datafile.create_directories([self._directory])
+        final_dir = "%s/%s/" % (self._directory,self._ref_simu)
+        datafile.create_directories([final_dir])
+        datafile.save_file(self,self._ref_simu,final_dir)
+
+    def load(self,filename = "sim"):
+        #TODO
+        return
 
     def run(self):
         for name,group in self._groups.items():

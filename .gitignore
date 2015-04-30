@@ -18,7 +18,6 @@ lib64/
 parts/
 sdist/
 var/
-kidlearn_soft/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -54,6 +53,9 @@ coverage.xml
 docs/_build/
 
 # Project spe
+kidlearn_soft/
+*data/
+
 .project
 .pydevproject
 *.settings/
