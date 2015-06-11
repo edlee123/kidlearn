@@ -10,6 +10,8 @@
 # Licence:     GNU GENERAL PUBLIC LICENSE
 #-------------------------------------------------------------------------------
 
+import os
+import sys
 from seq_manager import * #Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
 from exercise import Exercise
 from student import *
@@ -18,7 +20,6 @@ import numpy as np
 import copy as copy
 import json
 import config
-import os
 import graph_lib as graph
 import datafile
 import time
@@ -116,7 +117,6 @@ class Working_session(object):
     @property
     def nb_states(self):
         return len(self._states)
-    
 
     def get_working_session_logs(self):
         session_logs = {}
@@ -252,13 +252,14 @@ class Simulation(object):
     def groups(self):
         return self._groups
 
-    def load_config(self):
-        return config.Config()
+    def load_config(self, config = None):
+        
+        return config
 
     def add_working_group(self,population,seq_manager_name):
         self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
 
-    def do_simu_path(self,ref):
+    def do_simu_path(self,ref = ""):
         directory = ""
         for seqName in self._seq_manager_list_name:
             directory += "%s_" % seqName[0:min(len(seqName),3)]
@@ -278,6 +279,7 @@ class Simulation(object):
     #        population = copy.deepcopy(self._population)
     #        for student in population:
     #            self.student_simulation(student,seq_manager_name)
+    
     def save(self):
         datafile.create_directories([self._directory])
         final_dir = "%s/%s/" % (self._directory,self._ref_simu)
@@ -300,19 +302,22 @@ class Simulation(object):
     # Define sequence manager
     ##############################################################
 
-    def define_seq_manager(self,seq_manager_name):
-        with open('data.json', 'rb') as fp:
+    def define_seq_manager(self,seq_manager_name, data_file_name = 'data.json'):
+        dirf = os.path.dirname(os.path.realpath(__file__)) + "/"
+        data_file = dirf + data_file_name
+        with open(data_file, 'rb') as fp:
             ssb_data = json.load(fp)
+        ssb_data["path"] = dirf
 
         seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
         if seq_manager_name == "RiARiT":
-            seq_manager = RIARIT_hssbg(*seq_manager_params_creation)
+            seq_manager = RIARIT_hssbg(*seq_manager_params_creation, params = ssb_data)
         elif seq_manager_name == "ZPDES":
-            seq_manager = ZPDES_hssbg(*seq_manager_params_creation)
+            seq_manager = ZPDES_hssbg(*seq_manager_params_creation, params = ssb_data)
         elif seq_manager_name == "Sequence":
-            seq_manager = Sequence(*seq_manager_params_creation)
+            seq_manager = Sequence(*seq_manager_params_creation, params = ssb_data)
         else :
-            seq_manager = Random_sequence(*seq_manager_params_creation)
+            seq_manager = Random_sequence(*seq_manager_params_creation, params = ssb_data)
         
         return seq_manager
 
@@ -323,7 +328,7 @@ class Simulation(object):
     # Generate population
     ##############################################################
 
-    def define_population(self):
+    def define_population(self, config = None):
         self.population_generation_parameters()
         if self._model_student == 0:
             population = self.generate_qstudent_population()

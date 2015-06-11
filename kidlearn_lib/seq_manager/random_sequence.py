@@ -6,10 +6,9 @@ import copy
 
 class Random_sequence(RIARIT_hssbg):
 
-    def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = None):
+    def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = None, params = {}):
 
-        RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval)
-        self.algo = "Random" 
+        RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval, params = params)
         #self.all_ex,self.all_lvl = 
         self.all_ExPossible()
         self.calcul_all_Ex_lvl()

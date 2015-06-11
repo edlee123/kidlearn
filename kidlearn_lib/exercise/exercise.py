@@ -18,16 +18,18 @@ from knowledge import *
 
 class Exercise(object):
 
-    def __init__(self,params,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [], *args,**kwargs):
+    def __init__(self,ex_params,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [], params = {}, *args,**kwargs):
+        # ex_params : 
+
         self._gamma = np.array(gamma)
-        self._params = params
+        self._ex_params = ex_params
         self._answer = answer
         self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
         self.add_attr(args,kwargs)
 
     @property
-    def params(self):
-        return self._params
+    def ex_params(self):
+        return self._ex_params
 
     @property
     def gamma(self):
@@ -42,9 +44,9 @@ class Exercise(object):
         return self._knowledges
 
     def __repr__(self):
-        #print "act : %s" % self._params
+        #print "act : %s" % self._ex_params
         #print "ans : %s" % self._answer
-        act = copy.deepcopy(self._params)
+        act = copy.deepcopy(self._ex_params)
         act["CS"] = self._answer
         return act.__str__()
     
@@ -66,7 +68,7 @@ class Exercise(object):
         return levels
 
     def get_attr(self):
-        return {"params": self._params, "knowledge" : self._knowledges, "answer" : self._answer}
+        return {"ex_params": self._ex_params, "knowledge" : self._knowledges, "answer" : self._answer}
 
     def add_attr(self,*args,**kwargs):
         for key, val in kwargs.iteritems():

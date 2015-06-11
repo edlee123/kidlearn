@@ -37,7 +37,6 @@ class Qstudent(Student):
 
     def get_state(self, seq_values = None):
         student_state = Student.get_state(self)
-        student_state["knowledges"] = self._knowledges
 
         return student_state
 

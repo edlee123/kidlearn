@@ -9,9 +9,9 @@
 # Copyright:   (c) BClement 2015
 # Licence:     GNU GENERAL PUBLIC LICENSE
 #-------------------------------------------------------------------------------
-
-from knowledge import *
+#from ..functions, knowledge 
 from functions import *
+from knowledge import *
 import numpy as np
 import os
 import re
@@ -35,6 +35,7 @@ class Student(object):
     def get_state(self, seq_values = None):
         student_state = {}
         student_state["id"] = self._id
+        student_state["knowledges"] = self._knowledges
 
         return student_state
 

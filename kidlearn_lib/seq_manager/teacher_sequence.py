@@ -1,4 +1,6 @@
 #-*- coding: utf-8 -*-
+import os
+import sys
 from numpy import *
 import copy
 import re
@@ -7,13 +9,10 @@ import copy
 
 class Sequence(RIARIT_hssbg):
      
-    def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05,sizeSerie = 6, path = "hierarchyRT/RT_"):
-        
-        with open('data.json', 'rb') as fp:
-            ssb_data = json.load(fp)
+    def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05,sizeSerie = 6, path = "hierarchyRT/RT_", params = {}):
 
-        sizeSerie = ssb_data['sizeSerie']
-        RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval, path)
+        sizeSerie = params['sizeSerie']
+        RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval, path, params = params)
         #self.fault = [0]*sizeSerie utsing ?
         self.generate_acts()
         self.answers = [0]*sizeSerie
@@ -21,8 +20,8 @@ class Sequence(RIARIT_hssbg):
         self.currentGroup = 0
         self.num_question = 0
         self.nbPoint = 0
-        self.toLvlYp = ssb_data['toLvlYp']
-        self.minAns = ssb_data['minAns'] 
+        self.toLvlYp = params['toLvlYp']
+        self.minAns = params['minAns'] 
         #self.ssbh = ZPDES_hssbg(RT, levelupdate, filter1, filter2, uniformval, algo = "RiARiT")
         return
 

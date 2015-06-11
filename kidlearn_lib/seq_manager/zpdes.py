@@ -11,7 +11,7 @@ from riarit import *
 class ZPDES_hssbg(RIARIT_hssbg):
 
     def instantiate_ssbg(self,RT):
-        return ZPDES_ssbg(RT,self.levelupdate,self.filter1,self.filter2,self.uniformval,algo = "ZPDES")
+        return ZPDES_ssbg(RT,self.levelupdate,self.filter1,self.filter2,self.uniformval, params = self.params)
 
     def update(self, act, corsol = True, error_ID = None, *args):
         #if act is None:
@@ -37,7 +37,7 @@ class ZPDES_hssbg(RIARIT_hssbg):
 class ZPDES_ssbg(RIARIT_ssbg):
 
     def instanciate_ssb(self,ii,is_hierarchical,stepUpdate = 8):
-        return ZPDES_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii],self.filter1,self.filter2,self.uniformval, algo = self.algo,is_hierarchical = is_hierarchical, using_RT = self.using_RT[ii],step_Update = stepUpdate)
+        return ZPDES_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii],self.filter1,self.filter2,self.uniformval, is_hierarchical = is_hierarchical, using_RT = self.using_RT[ii],step_Update = stepUpdate, params = self.params)
 
     def calcul_reward(self,act,answer_impact):
         coeff_ans = mean(answer_impact)
@@ -70,12 +70,13 @@ class ZPDES_ssbg(RIARIT_ssbg):
 
 class ZPDES_ssb(RIARIT_ssb):
 
-    def __init__(self,id, nval, ntask, requer, stop, filter1,filter2,uniformval, algo = "ZPDES",is_hierarchical = 0, using_RT = [],step_Update = 8):
+    def __init__(self,id, nval, ntask, requer, stop, filter1,filter2,uniformval,is_hierarchical = 0, using_RT = [],step_Update = 8, params = {}):
 
-        with open('data.json', 'rb') as fp:
+
+        with open(params["path"] + 'data.json', 'rb') as fp:
             ssb_data = json.load(fp)
 
-        SSbandit.__init__(self,id, nval, ntask, filter1,filter2,uniformval, algo,is_hierarchical,using_RT)
+        SSbandit.__init__(self,id, nval, ntask, filter1,filter2,uniformval,is_hierarchical,using_RT, params = params)
         self.stepUpdate = ssb_data['stepUpdate']
         self.size_window = min(len(self.bandval),ssb_data['size_window'])
         self.promote(True)

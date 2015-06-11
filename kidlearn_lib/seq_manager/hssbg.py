@@ -18,13 +18,18 @@ def dissample(p):
 #########################################################
 ## class HierachySSBG
 class HierarchySSBG(object):
-    def __init__(self,RT = "MAIN", filter1=None,filter2=None,uniformval=None, path = ""):
+    def __init__(self,RT = "MAIN", filter1=None,filter2=None,uniformval=None, path = "", params = {}):
+        # params : RT, path
+
+        main_dir = params["path"]
+        self.params = params
+        path = main_dir+path
+
         self.filter1 = filter1
         self.filter2 = filter2
         self.uniformval = uniformval
         self.ssbg_used = []
         #self.current_lvl_ex = {}
-        self.algo = "HierarchySSBG"
         self.path = path
         self.main_act = RT
         RT = self.path + RT+".txt"
@@ -83,7 +88,7 @@ class HierarchySSBG(object):
         return
 
     def instantiate_ssbg(self,RT):
-        return SSBanditGroup(RT,self.filter1,self.filter2,self.uniformval,algo = self.algo)
+        return SSBanditGroup(RT,self.filter1,self.filter2,self.uniformval,params = self.params)
 
     def CreateHSSBG(self,RT = 'assets/algorithm/hierarchyRT/RT_MAIN.txt'):
         mainSSBG = self.instantiate_ssbg(RT)
@@ -132,11 +137,12 @@ class HierarchySSBG(object):
 #########################################################
 ## class SSBanditGroup
 class SSBanditGroup(object):
-    def __init__(self, RT, filter1,filter2,uniformval,algo):
+    def __init__(self, RT, filter1,filter2,uniformval, params = {}):
+        #params : RT
+        self.params = params
         self.filter1 = filter1
         self.filter2 = filter2
         self.uniformval = uniformval
-        self.algo = algo
         #self.sonSSBG = {}
         self.loadRT(RT)
 
@@ -185,7 +191,7 @@ class SSBanditGroup(object):
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
-        return SSbandit(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii],self.filter1,self.filter2,self.uniformval, self.algo,is_hierarchical, using_RT = self.using_RT[ii])
+        return SSbandit(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii],self.filter1,self.filter2,self.uniformval,is_hierarchical, using_RT = self.using_RT[ii], params = self.params)
 
     def CreateSSBs(self):
         self.SSB = [[] for i in range(self.nactions)]
@@ -218,15 +224,15 @@ class SSBanditGroup(object):
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, ntask, filter1,filter2,uniformval, algo,is_hierarchical = 0, using_RT = []):
-
+    def __init__(self,id, nval, ntask, filter1,filter2,uniformval,is_hierarchical = 0, using_RT = [], params = {}):
+        # params : filter1, filter2, uniformval,
+        self.params = params
         self.id = id
         self.nval = nval
         self.bandval = [0]*nval
         self.filter1 = filter1
         self.filter2 = filter2
         self.uniformval = uniformval
-        self.algo = algo
         self.success = [[] for x in xrange(nval)]
         self.is_hierarchical = is_hierarchical
         self.using_RT = using_RT
