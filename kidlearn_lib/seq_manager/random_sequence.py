@@ -3,13 +3,13 @@ from teacher_sequence import *
 #import random
 import operator
 import copy
+import numpy as np
 
 class Random_sequence(RIARIT_hssbg):
 
     def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = None, params = {}):
 
         RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval, params = params)
-        #self.all_ex,self.all_lvl = 
         self.all_ExPossible()
         self.calcul_all_Ex_lvl()
 
@@ -55,20 +55,14 @@ class Random_sequence(RIARIT_hssbg):
         newDic = copy.deepcopy(self.all_lvl)
         
         while len(newDic) > 3:
-            #print "NewTurn"
-            #print newDic
-            #print r
             newDic = dicht(newDic,r)
-            #print newDic
-            #raw_input()
 
         dist = []
         for vals in newDic:
             dist.append(calDist(vals[1],r))
-        #print dist
+
         exToChoose = newDic[dist.index(min(dist))]
-        #print exToChoose
-        #raw_input()
+
         return self.all_ex[int(exToChoose[0])]
 
     def calcul_all_Ex_lvl(self):

@@ -1,0 +1,60 @@
+{
+    "reward_train": {
+        "name": "reward_built"
+    },
+
+    "reward_test": {
+        "name": "reward_built"
+    },
+
+    "domain_train": {
+        "name": "box"
+    },
+
+    "domain_test": {
+        "name": "box"
+    },
+
+    "interactions": {
+        "nb": 101
+    },
+
+    "dynamics": {
+        "nb_episodes": 300,
+        "type": "epsilon_greedy",
+        "epsilon": 0.5,
+        "known_dynamic": false
+    },
+
+    "teacher": {
+        "corrections" : true,
+        "reset": false
+    },
+
+    "evaluation": {
+        "period" : 5,
+        "nb_episodes": 100,
+        "decay_factor": 0.9,
+        "tol": 0.001,
+        "nb_actions": -1
+    },
+
+    "algorithm": {
+        "name": "BPLI",
+        "output": "policy",
+        "nb_trees": 10,
+        "criterion" : "custom",
+        "use_good" : true,
+        "use_bad" : true,
+        "create_exemples_good" : "balance",
+        "create_exemples_bad" : "blance",
+        "compute_likelihood_good" : true,
+        "compute_likelihood_bad" : false,
+        "decay_factor" : 0.9,
+        "beta" : 1.0,
+        "maxdepth" : 8,
+        "relearn_countdown" : 5,
+        "allow_duplicate_good" : false,
+        "allow_duplicate_bad" : false
+    }
+}

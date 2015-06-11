@@ -11,14 +11,11 @@ from hssbg import *
 class RIARIT_hssbg(HierarchySSBG):
     def __init__(self,RT = "MAIN", levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = "hierarchyRT/RT_", params = {}):
         # params : RT, path
-
-        #main_dir = params["path"]
-        #path = main_dir+path
-
+        
         self.levelupdate = levelupdate
         self.current_lvl_ex = {}
+        
         HierarchySSBG.__init__(self, RT, filter1,filter2,uniformval, path, params = params)
-        #self.algo = "RIARIT_hssbg"
         self.load_Error()
         #self.CreateHSSBG(RT)
 
@@ -125,6 +122,7 @@ class RIARIT_ssbg(SSBanditGroup):
     def __init__(self,RT, levelupdate, filter1,filter2,uniformval, params = {}):
         SSBanditGroup.__init__(self,RT, filter1,filter2,uniformval, params = params)
         self.levelupdate = levelupdate
+        
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
