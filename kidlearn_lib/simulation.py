@@ -15,7 +15,7 @@ import sys
 from seq_manager import * #Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
 from exercise import Exercise
 from student import *
-from functions import *
+import functions as func
 import numpy as np
 import copy as copy
 import json
@@ -26,9 +26,9 @@ import time
 
 #########################################################
 #########################################################
-## class Session_state
+## class Session_step
 
-class Session_state(object):
+class Session_step(object):
     def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
         self._student = student_state
         self._seq_manager = seq_manager_state
@@ -43,7 +43,7 @@ class Session_state(object):
     
     @property
     def ex_params(self):
-        return self._exercise.params
+        return self._exercise.ex_params
 
     @property
     def ex_answer(self):
@@ -81,7 +81,7 @@ class Session_state(object):
 
 
 
-## class Session_state
+## class Session_step
 #########################################################
 
 #########################################################
@@ -99,11 +99,16 @@ class Session_state(object):
 ## class Working_session
 
 class Working_session(object):
-    def __init__(self,student,seq_manager):
-        self._student = student
-        self._seq_manager = seq_manager
+    def __init__(self, params = None, params_file = "worksess_test_1", directory = "params_files", *args, **kwargs):
+
+        params = params or func.load_json(params_file,directory)
+        self.params = params
+
+        self._student = config.student(self.params["student"])
+        self._seq_manager = config.seq_manager(self.params["seq_manager"])
+
         self._KC = self._seq_manager.get_KC()
-        self._states = []
+        self._step = []
         self._current_ex = None
 
     @property
@@ -111,12 +116,12 @@ class Working_session(object):
         return self._student
     
     @property
-    def states(self):
-        return self._states
+    def step(self):
+        return self._step
 
     @property
-    def nb_states(self):
-        return len(self._states)
+    def nb_step(self):
+        return len(self._step)
 
     def get_working_session_logs(self):
         session_logs = {}
@@ -124,7 +129,7 @@ class Working_session(object):
         session_logs["RT"] = self._seq_manager.getRTnames()
         session_logs["KC"] = self._KC
         session_logs["nbValueParam"] = self._seq_manager.getNbValueParam()
-        session_logs["states"] = self._states
+        session_logs["step"] = self._step
         return session_logs
 
     def run(self,nb_ex):
@@ -135,14 +140,14 @@ class Working_session(object):
         act = self._seq_manager.sample()
         ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
         self._current_ex = self._student.answer(Exercise(act,ex_skill_lvl,self._KC))
-        self.save_actual_state()
+        self.save_actual_step()
         self._seq_manager.update(act,self._current_ex._answer)
 
-    def actual_state(self):
-        return Session_state(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(self._current_ex))
+    def actual_step(self):
+        return Session_step(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(self._current_ex))
         
-    def save_actual_state(self):
-        self._states.append(self.actual_state())
+    def save_actual_step(self):
+        self._step.append(self.actual_step())
 
     ###########################################################################
     ##### Data Analysis tools 
@@ -158,19 +163,32 @@ class Working_session(object):
 #########################################################
 
 
-
 #########################################################
 #########################################################
 ## class Working_group
 class Working_group(object):
-    def __init__(self,students,seq_manager):
+    def __init__(self, params = None, params_file = "workgroup_test_1", directory = "params_files", *args, **kwargs):
+        #params : 
+
+        params = params or func.load_json(params_file,directory)
+        self.params = params
+
         self._working_sessions = []
-        for s in students:
-            self.add_student(s,copy.deepcopy(seq_manager))
+
+        for student_params in self.params["population"]:
+            params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
+            self._working_sessions.append(Working_session(params = params))
+
 
     @property
     def working_sessions(self):
         return self._working_sessions
+
+    @property
+    def students(self):
+        students = [ws.student for ws in self._working_sessions]
+        return students
+    
 
     def get_working_session(self,num_stud = 0, id_stud = None):
         if id_stud:
@@ -194,9 +212,9 @@ class Working_group(object):
         data = []
         for ws in self._working_sessions:
             if attr:
-                data.append(ws.states[time].get_attr(attr,*arg))
+                data.append(ws.step[time].get_attr(attr,*arg))
             else: 
-                data.append(ws.states[time])
+                data.append(ws.step[time])
         return data
 
     def get_ex_repartition_time(self,nb_ex = 100):
@@ -207,7 +225,7 @@ class Working_group(object):
         
         repart = [[],[],[],[]]
         for i in range(nb_ex):
-            exs = self.get_data_time(i,"_exercise","_params")
+            exs = self.get_data_time(i,"_exercise","_ex_params")
             for nbType in range(len(type_ex)):
                 repart[nbType].append(repart_base(nbType))
             for j in range(len(exs)):
@@ -227,22 +245,30 @@ class Working_group(object):
 ## class Simulation
 
 class Simulation(object):
-    def __init__(self, seq_manager_list_name = ["Sequence","ZPDES","RiARiT"], nb_students = 100, nb_ex = 100, model_student = 0, ref = "0", *args, **kwargs):
-        #self.config = self.load_config()
-        
-        self._seq_manager_list_name = seq_manager_list_name
-        self._groups = {key: [] for key in self._seq_manager_list_name}
-        self._nb_students = nb_students
-        self._nb_ex = nb_ex
-        self._model_student = model_student
-        self.do_simu_path(ref)
+    def __init__(self,params = None, params_file = "simu_test_1", directory = "params_files", *args, **kwargs):
+        # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
+        #self.config = self.load_config()
+        params = params or func.load_json(params_file,directory)
+        self.params = params
+
+        self._seq_manager_list_name = self.params["seq_manager_list"]
+        self._nb_students = self.params["nb_students"]
+        self._nb_step = self.params["nb_step"]
+        self._model_student = self.params["model_student"]
+        self.do_simu_path(self.params["ref_simu"])
+        
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
         
+        self._groups = {key: [] for key in self._seq_manager_list_name}
+        
         self._population = self.define_population()
         for seq_manager_name in self._seq_manager_list_name:
-            self.add_working_group(copy.deepcopy(self._population),seq_manager_name)
+            params = self.params["working_group"]
+            params["seq_manager"] = self.params["seq_managers"][seq_manager_name]
+            params["population"] = self._population
+            self.add_working_group(params)
 
         #self.population_simulation()
         #self.population = []
@@ -252,24 +278,30 @@ class Simulation(object):
     def groups(self):
         return self._groups
 
-    def load_config(self, config = None):
-        
-        return config
+    @property
+    def students(self):
+        return {sname : groups.students for sname,groups in self._groups.items()}
 
-    def add_working_group(self,population,seq_manager_name):
-        self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
+
+    def load_config(self, params_file = None):
+        
+        return 
+
+    def add_working_group(self,params):
+        self._groups[params["seq_manager"]["name"]].append(Working_group(params))
+        #self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
 
     def do_simu_path(self,ref = ""):
         directory = ""
         for seqName in self._seq_manager_list_name:
-            directory += "%s_" % seqName[0:min(len(seqName),3)]
+            directory += "%s_" % seqName[0:min(len(seqName),2)]
         directory = "%sms%s" % (directory,self._model_student)
         self._directory = directory 
-        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_ex,ref)
+        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_step,ref)
 
     #def student_simulation(self, student, seq_manager_name):
     #    working_session = Working_session(student,self.define_seq_manager(seq_manager_name))
-    #    working_session.run(self._nb_ex)
+    #    working_session.run(self._nb_step)
     #    #print working_session.get_working_session_logs()
     #    self._groups[seq_manager_name].append(working_session)
 
@@ -297,29 +329,36 @@ class Simulation(object):
 
     def lauch_group_simulation(self,group):
         for sub_group in group:
-            sub_group.run(self._nb_ex)
+            sub_group.run(self._nb_step)
 
     # Define sequence manager
     ##############################################################
 
-    def define_seq_manager(self,seq_manager_name, data_file_name = 'data.json'):
-        dirf = os.path.dirname(os.path.realpath(__file__)) + "/"
-        data_file = dirf + data_file_name
-        with open(data_file, 'rb') as fp:
-            ssb_data = json.load(fp)
-        ssb_data["path"] = dirf
-
-        seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
-        if seq_manager_name == "RiARiT":
-            seq_manager = RIARIT_hssbg(*seq_manager_params_creation, params = ssb_data)
-        elif seq_manager_name == "ZPDES":
-            seq_manager = ZPDES_hssbg(*seq_manager_params_creation, params = ssb_data)
-        elif seq_manager_name == "Sequence":
-            seq_manager = Sequence(*seq_manager_params_creation, params = ssb_data)
-        else :
-            seq_manager = Random_sequence(*seq_manager_params_creation, params = ssb_data)
+    # def define_seq_manager(self,seq_manager_name, data_file_name = 'data.json'):
+    #     dirf = os.path.dirname(os.path.realpath(__file__)) + "/"
+    #     data_file = dirf + data_file_name
         
-        return seq_manager
+    #     with open(data_file, 'rb') as fp:
+    #         ssb_data = json.load(fp)
+        
+    #     ssb_data["path"] = dirf
+
+    #     #seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
+        
+    #     if seq_manager_name == "RiARiT":
+    #         #seq_manager = RIARIT_hssbg(self.RT_main, params = ssb_data)
+    #         seq_manager = RIARIT_hssbg(params = ssb_data[seq_manager_name])
+    #     elif seq_manager_name == "ZPDES":
+    #         #seq_manager = ZPDES_hssbg(self.RT_main, params = ssb_data[seq_manager_name])
+    #         seq_manager = ZPDES_hssbg(params = ssb_data[seq_manager_name])
+    #     elif seq_manager_name == "Sequence":
+    #         #seq_manager = Sequence(self.RT_main, params = ssb_data[seq_manager_name])
+    #         seq_manager = Sequence(params = ssb_data[seq_manager_name])
+    #     else :
+    #         #seq_manager = Random_sequence(self.RT_main, params = ssb_data[seq_manager_name])
+    #         seq_manager = Random_sequence(params = ssb_data["Random"])
+        
+    #     return seq_manager
 
     ##############################################################
     ## Population generation functions
@@ -350,8 +389,10 @@ class Simulation(object):
     def generate_qstudent_population(self):
         population_q_profiles = self.generate_q_profiles()
         population = []
+
         for stud_skills in population_q_profiles:
-            population.append(Qstudent(knowledge_levels = stud_skills, knowledge_names = self._knowledge_names))
+            population.append({"model": 0, "knowledge_levels" : stud_skills, "knowledge_names" : self._knowledge_names})
+
         return population
 
     def generate_pstudent_population(self):

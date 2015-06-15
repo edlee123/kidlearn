@@ -78,5 +78,11 @@ def write_in_file(path,stringToWrite, optionWrite = "w"):
     with open(path,optionWrite) as fp:
         fp.write(stringToWrite)
 
-    return
+def load_json(file_name, dir_path = ""):
+    file_name = file_name.split(".")[0] + ".json"
+    path = "%s/%s" % (dir_path,file_name)
+    with open(path, 'rb') as fp:
+        json_data = json.load(fp)
+
+    return json_data
 

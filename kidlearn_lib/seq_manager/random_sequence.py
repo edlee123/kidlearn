@@ -7,9 +7,9 @@ import numpy as np
 
 class Random_sequence(RIARIT_hssbg):
 
-    def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = None, params = {}):
+    def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
 
-        RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval, params = params)
+        RIARIT_hssbg.__init__(self, params = params)
         self.all_ExPossible()
         self.calcul_all_Ex_lvl()
 
@@ -68,7 +68,7 @@ class Random_sequence(RIARIT_hssbg):
     def calcul_all_Ex_lvl(self):
         all_lvl = {}
         for i in range(len(self.all_ex)):
-            all_lvl[str(i)] = mean(self.computelvl(self.all_ex[i],"MAIN"))
+            all_lvl[str(i)] = mean(self.compute_act_lvl(self.all_ex[i],"MAIN"))
         self.all_lvl = sorted(all_lvl.items(), key=operator.itemgetter(1))
         #print sorted_lvl
         return 

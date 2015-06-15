@@ -1,0 +1,9 @@
+{
+    "student": {
+        "id" : "x",
+        "knowledge_levels" : [0.3,0.3,0.2,0.1,0.1,0.1,0.1], 
+        "knowledge_names" : ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"], 
+        "threshold_prob" : 0, 
+        "nb_try" : 1
+    }
+}

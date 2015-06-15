@@ -4,18 +4,24 @@
 
 from hssbg import *
 
+# class RIARIT_ssbg(object): pass
+# class RIARIT_ssb(object): pass
+
 #########################################################
 #########################################################
 ## class RIARIT_hssb
 
 class RIARIT_hssbg(HierarchySSBG):
-    def __init__(self,RT = "MAIN", levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05, path = "hierarchyRT/RT_", params = {}):
+
+    # ssbgClasse = RIARIT_ssbg
+
+    def __init__(self, params = None, params_file = "seq_test_1", directory = "params_files"):
         # params : RT, path
-        
-        self.levelupdate = levelupdate
+
+        params = params or func.load_json(params_file,directory)
         self.current_lvl_ex = {}
         
-        HierarchySSBG.__init__(self, RT, filter1,filter2,uniformval, path, params = params)
+        HierarchySSBG.__init__(self, params = params)
         self.load_Error()
         #self.CreateHSSBG(RT)
 
@@ -42,7 +48,9 @@ class RIARIT_hssbg(HierarchySSBG):
         return
 
     def instantiate_ssbg(self,RT):
-        return RIARIT_ssbg(RT,self.levelupdate,self.filter1,self.filter2,self.uniformval,params = self.params)
+        params = self.params["RIARIT_ssbg"]
+        params["RT"] = RT
+        return RIARIT_ssbg(params = params)
 
     def compute_act_lvl(self, act, RT = None, **kwargs):
         lvl = {}
@@ -119,14 +127,17 @@ class RIARIT_hssbg(HierarchySSBG):
 #########################################################
 ## class RIARIT_ssbg
 class RIARIT_ssbg(SSBanditGroup):
-    def __init__(self,RT, levelupdate, filter1,filter2,uniformval, params = {}):
-        SSBanditGroup.__init__(self,RT, filter1,filter2,uniformval, params = params)
-        self.levelupdate = levelupdate
+
+    def __init__(self,params = None, params_file = "Rssb_test_1", directory = "params_files"):
+        SSBanditGroup.__init__(self,params = params)
+        self.levelupdate = params["levelupdate"]
         
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
-        return RIARIT_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii],self.filter1,self.filter2,self.uniformval, is_hierarchical = is_hierarchical, using_RT = self.using_RT[ii], params = self.params)
+        params = self.params["RIARIT_ssb"]
+
+        return RIARIT_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, using_RT = self.using_RT[ii], params = params)
 
     def get_estim_level(self,**kwargs):
         if "dict_form" in kwargs.keys():
@@ -143,9 +154,10 @@ class RIARIT_ssbg(SSBanditGroup):
             lvlDiff.append(lvl[i]-self.estim_level[i])
         return lvlDiff
         
-    def loadRT(self,RT = 'assets/algorithm/hierarchyRT/RT_MAIN.txt'):
+    def loadRT(self,RT):
         reader = open(RT, 'rb')
-        self.ID = ((RT.split("/")[-1]).split(".")[0]).split("_")[1]
+        self.ID = ((RT.split("/")[-1]).split(".")[0])
+        #self.ID = ((RT.split("/")[-1]).split(".")[0]).split("_")[1]
         #print "SSB CREATE: %s" % self.ID
         lines = reader.readlines()
         tmp = spe_split('\W',lines[0])
@@ -227,6 +239,8 @@ class RIARIT_ssbg(SSBanditGroup):
             self.SSB[ii].update(act[ii], r_KC)
             self.SSB[ii].promote(self.estim_level)
 
+RIARIT_hssbg.ssbgClasse = RIARIT_ssbg
+
 ## class RIARIT_ssbg
 #########################################################
 
@@ -236,9 +250,10 @@ class RIARIT_ssbg(SSBanditGroup):
 
 class RIARIT_ssb(SSbandit):
 
-    def __init__(self,id, nval, ntask, requer, stop, filter1,filter2,uniformval, is_hierarchical = 0, using_RT = [], params = {}):
+    def __init__(self,id, nval, ntask, requer, stop, is_hierarchical = 0, using_RT = [], params = {}):
+        # params : 
 
-        SSbandit.__init__(self,id, nval, ntask, filter1,filter2,uniformval,is_hierarchical,using_RT, params = params)
+        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,using_RT, params = params)
 
         self.requer = requer
         self.stop = stop

@@ -15,15 +15,18 @@ from student import *
 
 class Qstudent(Student):
 
-    def __init__(self,id = "x",knowledge_levels = [0.3,0.3,0.2,0.1,0.1,0.1,0.1], knowledge_names = ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"], threshold_prob = 0, nb_try = 1):
-        Student.__init__(self)
+    def __init__(self, params = None, params_file = "qstud_test_1", directory = "params_files", *args, **kwargs):
+        params = params or func.load_json(params_file,directory)
 
-        self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
+        Student.__init__(self, params = params)
+
+        self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(self.params["knowledge_names"],self.params["knowledge_levels"])]
+        
         self.guess_prob = 1 #0.7  #0.7
         self.min_prob = 0
-        self.threshold_prob = threshold_prob
+        self.threshold_prob = 0
         self.learning_progress = [1,1,1,1,1,1,1] # [0.5,0.5,0.5,0.5,0.5,0.5] # [0.2,0.2,0.2,0.2,0.2,0.2] 
-        self.nbTry = nb_try # ssb_data["nb_try"]
+        #self.nbTry = nb_try # ssb_data["nb_try"]
 
         #Not use now
         #self.motivation = 1

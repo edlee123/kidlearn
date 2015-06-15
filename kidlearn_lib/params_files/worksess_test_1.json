@@ -1,0 +1,11 @@
+{
+    "student":{
+        "model": 0,
+        "knowledge_names":["S0","S1"]
+
+    },
+
+    "seq_amanger": {
+
+    }
+}

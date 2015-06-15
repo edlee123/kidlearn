@@ -21,9 +21,11 @@ import copy
 
 class Student(object):
 
-    def __init__(self,id = "x"):
-        self._id = id
+    def __init__(self,id = "x", params = None):
+        self.params = params
+        self._id = id or params["id"]
         self._knowledges = []
+        self.nbTry = 1
         #self._skills = skills
         return
 

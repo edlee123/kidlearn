@@ -9,10 +9,10 @@ import copy
 
 class Sequence(RIARIT_hssbg):
      
-    def __init__(self,RT = None, levelupdate=0.6, filter1=0.1,filter2=0.9,uniformval=0.05,sizeSerie = 6, path = "hierarchyRT/RT_", params = {}):
+    def __init__(self,params = None,  params_file = "seq_test_1", directory = "params_files"):
 
         sizeSerie = params['sizeSerie']
-        RIARIT_hssbg.__init__(self, RT, levelupdate, filter1,filter2,uniformval, path, params = params)
+        RIARIT_hssbg.__init__(self, params = params)
         #self.fault = [0]*sizeSerie utsing ?
         self.generate_acts()
         self.answers = [0]*sizeSerie

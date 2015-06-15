@@ -3,6 +3,8 @@
 ## 2014 BCLEMENT
 
 from numpy import *
+import os
+import sys
 import re
 import pickle
 import json
@@ -12,27 +14,31 @@ def dissample(p):
     s = random.multinomial(1,p)
     return nonzero(s==1)[0][0]
 
+# class SSBanditGroup(object): pass
+# class SSBandit(object): pass
 
 #########################################################
 #########################################################
 #########################################################
-## class HierachySSBG
+## class HierarchySSBG
+
 class HierarchySSBG(object):
-    def __init__(self,RT = "MAIN", filter1=None,filter2=None,uniformval=None, path = "", params = {}):
+
+    #ssbgClasse = SSBanditGroup
+
+    def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
         # params : RT, path
 
-        main_dir = params["path"]
         self.params = params
-        path = main_dir+path
 
-        self.filter1 = filter1
-        self.filter2 = filter2
-        self.uniformval = uniformval
-        self.ssbg_used = []
-        #self.current_lvl_ex = {}
+        #main_dir = self.params["path"]
+        #path = main_dir+self.params["path_RT"]
+        path = self.params["path_RT"]
+
         self.path = path
-        self.main_act = RT
-        RT = self.path + RT+".txt"
+        self.ssbg_used = []
+        self.main_act = params["main_RT"]
+        RT = "%s/%s.txt" % (self.path, self.main_act)
         self.CreateHSSBG(RT)
 
         return
@@ -89,8 +95,9 @@ class HierarchySSBG(object):
 
     def instantiate_ssbg(self,RT):
         return SSBanditGroup(RT,self.filter1,self.filter2,self.uniformval,params = self.params)
+        #return self.ssbgClasse(RT, params = self.params)
 
-    def CreateHSSBG(self,RT = 'assets/algorithm/hierarchyRT/RT_MAIN.txt'):
+    def CreateHSSBG(self,RT):
         mainSSBG = self.instantiate_ssbg(RT)
         self.ncompetences = mainSSBG.ncompetences
         self.SSBGs = {}
@@ -103,7 +110,7 @@ class HierarchySSBG(object):
         for actRT,i in zip(ssbg_father.using_RT,range(len(ssbg_father.using_RT))):
             for nameRT in actRT :
                 if nameRT[0:2] != 'NO' and nameRT not in self.SSBGs.keys():
-                    RT = self.path + nameRT+".txt"
+                    RT = "%s/%s.txt" % (self.path, nameRT)
                     nssbg = self.instantiate_ssbg(RT)
                     self.SSBGs[nameRT] = nssbg
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
@@ -111,9 +118,7 @@ class HierarchySSBG(object):
         return
 
     def update(self, act = None, corsol = True, error_ID = None, *args, **kwargs):
-
         return 0
-
 
     def sample(self):
         act = {}
@@ -129,22 +134,21 @@ class HierarchySSBG(object):
                 self.speSample(self.SSBGs[nameRT],act)
         return act
 
-## class HierachySSBG
+## class HierarchySSBG
 #########################################################
 
 #########################################################
 #########################################################
 #########################################################
 ## class SSBanditGroup
+
 class SSBanditGroup(object):
-    def __init__(self, RT, filter1,filter2,uniformval, params = {}):
+
+    def __init__(self, params = None,  params_file = "ssb_test_1", directory = "params_files"):
         #params : RT
         self.params = params
-        self.filter1 = filter1
-        self.filter2 = filter2
-        self.uniformval = uniformval
         #self.sonSSBG = {}
-        self.loadRT(RT)
+        self.loadRT(self.params["RT"])
 
         return
 
@@ -191,7 +195,7 @@ class SSBanditGroup(object):
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
-        return SSbandit(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii],self.filter1,self.filter2,self.uniformval,is_hierarchical, using_RT = self.using_RT[ii], params = self.params)
+        return SSbandit(ii,len(self.RT[ii]),self.ncompetences,is_hierarchical, using_RT = self.using_RT[ii], params = self.params)
 
     def CreateSSBs(self):
         self.SSB = [[] for i in range(self.nactions)]
@@ -213,6 +217,7 @@ class SSBanditGroup(object):
                 self.nbturn[i] = 0
         return self.act
 
+#HierarchySSBG.ssbgClasse = SSBanditGroup
 
 ## class SSBanditGroup
 #########################################################
@@ -221,18 +226,22 @@ class SSBanditGroup(object):
 #########################################################
 #########################################################
 ## class SSbandit
+
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, ntask, filter1,filter2,uniformval,is_hierarchical = 0, using_RT = [], params = {}):
+    def __init__(self,id, nval, ntask, is_hierarchical = 0, using_RT = [], params = {}):
         # params : filter1, filter2, uniformval,
+
         self.params = params
         self.id = id
         self.nval = nval
         self.bandval = [0]*nval
-        self.filter1 = filter1
-        self.filter2 = filter2
-        self.uniformval = uniformval
+        
+        self.filter1 = params["filter1"]
+        self.filter2 = params["filter2"]
+        self.uniformval = params["uniformval"]
+
         self.success = [[] for x in xrange(nval)]
         self.is_hierarchical = is_hierarchical
         self.using_RT = using_RT
@@ -297,7 +306,6 @@ class SSbandit(object):
             print "band : %s " % str(nn)
         """    
         return dissample(nn)
-
 
 
 ## class SSbandit
