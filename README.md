@@ -10,3 +10,7 @@ http://arxiv.org/abs/1310.3174
 
 How to start:
 Check notebook/KidlearnStarter.ipynb
+
+People involved:
+Benjamin Clement, Didier Roy, Pierre-Yves Oudeyer, Manuel Lopes
+https://flowers.inria.fr/research/kidlearn/
