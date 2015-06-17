@@ -3,15 +3,14 @@
     "nb_students" : 100,
     "nb_step" : 100,
     "ref_simu": "test1",
-
+    
     "student":{
-            "model" : "Qstudent",
+            "model_student" : 0,
             "logistic_vales" : {
                 "learn" : [-20,0.07],
                 "ans" : [-20,0.1]
             }
         },
-
 
     "working_group": {
 
@@ -21,10 +20,8 @@
 
         "RIARIT_hssbg":{
             "name" : "RIARIT_hssbg",
-            "RT": { 
-                "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
-            },
+            "main_RT": "MAIN",
+            "path_RT" : "hierarchyRT",
 
             "RIARIT_ssbg": {
                 "name" : "RIARIT_ssbg",
@@ -40,10 +37,8 @@
 
         "ZPDES_hssbg":{
             "name" : "ZPDES_hssbg",
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
-            },
+            "main_RT": "MAIN",
+            "path_RT" : "hierarchyRT",
 
             "ZPDES_ssbg": {
                 "name" : "ZPDES_ssbg",
@@ -61,10 +56,8 @@
 
         "Sequence":{
             "name" : "Sequence",
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
-            },
+            "main_RT": "MAIN",
+            "path_RT" : "hierarchyRT",
 
             "toLvlYp": 12,
             "sizeSerie": 4,
@@ -83,11 +76,8 @@
 
         "Random_sequence":{
             "name" : "Random_sequence",
-
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
-            },
+            "main_RT": "MAIN",
+            "path_RT" : "hierarchyRT",
 
             "RIARIT_ssbg": {
                 "levelupdate": 0.6,

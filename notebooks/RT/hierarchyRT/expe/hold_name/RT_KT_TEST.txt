@@ -1,0 +1,8 @@
+Competences	S1	S2	S3
+Actions	ExType_H
+UsingTable	NO_RT
+Nb_stay	4
+1	NO1	1	0	0	0	0	0	1	1	1
+1	NO2	0	0	1	0	0	0	1	1	1
+1	NO3	1	0	1	0	0	0	1	1	1
+1	NO4	1	1	1	0	0	0	1	1	1

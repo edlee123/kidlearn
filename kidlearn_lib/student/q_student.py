@@ -12,6 +12,7 @@
 #-------------------------------------------------------------------------------
 
 from student import *
+import functions as func
 
 class Qstudent(Student):
 
@@ -22,6 +23,11 @@ class Qstudent(Student):
 
         self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(self.params["knowledge_names"],self.params["knowledge_levels"])]
         
+        if "logistic_values" in self.params.keys():
+            self.log_vals = self.params["logistic_values"]
+        else:
+            self.log_vals = {"learn" : [-20,0.07], "ans" : [-20,0.1]}
+
         self.guess_prob = 1 #0.7  #0.7
         self.min_prob = 0
         self.threshold_prob = 0
@@ -55,7 +61,7 @@ class Qstudent(Student):
             if lvls_ex[i] - self._knowledges[i]._level  > 0.4:
                 p = 0
             else:
-                p = (1.0/(1+1*np.exp(-20*(self._knowledges[i]._level - lvls_ex[i]+0.07))))
+                p = (1.0/(1+1*np.exp(self.log_vals["learn"][0]*(self._knowledges[i]._level - lvls_ex[i]+self.log_vals["learn"][1]))))
             
             p  = p * prob
             p = min(1,max(self.min_prob,p))
@@ -85,7 +91,7 @@ class Qstudent(Student):
                 p = 0
             else:
             #p = self.guess_prob*((1.0/pi)*arctan((self._knowledges[i]._level - lvls_ex[i] + 0.1)*30) + 0.5)
-                p = self.guess_prob*(1.0/(1+1*np.exp(-20*(self._knowledges[i]._level - lvls_ex[i]+0.10))))
+                p = self.guess_prob*(1.0/(1+1*np.exp(self.log_vals["ans"][0]*(self._knowledges[i]._level - lvls_ex[i]+self.log_vals["learn"][1]))))
             probas.append(p)
 
         return probas

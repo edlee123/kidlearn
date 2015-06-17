@@ -33,13 +33,13 @@ class HierarchySSBG(object):
 
         #main_dir = self.params["path"]
         #path = main_dir+self.params["path_RT"]
-        path = self.params["path_RT"]
-
-        self.path = path
+        self.path = self.params["RT"]["path"]
+        self.main_act = self.params["RT"]["name"]
+        
         self.ssbg_used = []
-        self.main_act = params["main_RT"]
-        RT = "%s/%s.txt" % (self.path, self.main_act)
-        self.CreateHSSBG(RT)
+        #RT = {"name": self.main_act, "path": self.path}
+        #RT = "%s/%s.txt" % (self.path, self.main_act)
+        self.CreateHSSBG(self.params["RT"])
 
         return
 
@@ -110,7 +110,8 @@ class HierarchySSBG(object):
         for actRT,i in zip(ssbg_father.using_RT,range(len(ssbg_father.using_RT))):
             for nameRT in actRT :
                 if nameRT[0:2] != 'NO' and nameRT not in self.SSBGs.keys():
-                    RT = "%s/%s.txt" % (self.path, nameRT)
+                    RT = {"name": nameRT, "path": self.path}
+                    #RT = "%s/%s.txt" % (self.path, nameRT)
                     nssbg = self.instantiate_ssbg(RT)
                     self.SSBGs[nameRT] = nssbg
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
@@ -211,6 +212,7 @@ class SSBanditGroup(object):
         return 0
 
     def sample(self):
+
         for i in range(self.nactions):
             if self.nbturn[i] % self.nb_stay[i] == 0:
                 self.act[i] = int(self.SSB[i].sample())

@@ -47,7 +47,7 @@ class Exercise(object):
         #print "act : %s" % self._ex_params
         #print "ans : %s" % self._answer
         act = copy.deepcopy(self._ex_params)
-        act["CS"] = self._answer
+        act["ans"] = self._answer
         return act.__str__()
     
     def __str__(self):

@@ -1,0 +1,11 @@
+Competences	S0	S1	S2
+Actions	Act1	Act2	Act3
+UsingTable	NO_RT
+Nb_stay	1	1	1
+1   NO1   0.2 0.1 0   0   0   0   0   0   0
+1   NO2   0.5 0.3 0.2 0   0.3 0   0   0   0
+1   NO3   0.7 0.7 0.5 0   0.5 0   0   0   0
+2   NO1   1   1   1   0   0   0   0   0   0
+2   NO2   0.8 1   1   0   0   0   0   0   0
+3   NO1   0.3 0.3 0.7   0   0   0   0   0   0
+3   NO2   0.6   0.6   0.3 0   0   0   0   0   0

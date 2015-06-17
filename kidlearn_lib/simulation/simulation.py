@@ -21,7 +21,7 @@ import copy as copy
 import json
 import config
 import graph_lib as graph
-import datafile
+import config.datafile as datafile
 import time
 
 #########################################################
@@ -58,7 +58,7 @@ class Session_step(object):
         return self._seq_manager
     
     def __repr__(self):
-        return  self._exercise.__str__() + self._student["knowledges"].__str__()
+        return  "act : %s, student skill: %s" % (self._exercise.__str__(), self._student["knowledges"].__str__())
     
     def __str__(self):
         return self.__repr__()
@@ -99,13 +99,14 @@ class Session_step(object):
 ## class Working_session
 
 class Working_session(object):
-    def __init__(self, params = None, params_file = "worksess_test_1", directory = "params_files", *args, **kwargs):
+    def __init__(self, params = None, params_file = "worksess_test_1", directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
 
         params = params or func.load_json(params_file,directory)
         self.params = params
-
-        self._student = config.student(self.params["student"])
-        self._seq_manager = config.seq_manager(self.params["seq_manager"])
+        self.logs = {}
+        
+        self._student = student or config.student(self.params["student"])
+        self._seq_manager = seq_manager or config.seq_manager(self.params["seq_manager"])
 
         self._KC = self._seq_manager.get_KC()
         self._step = []
@@ -139,7 +140,8 @@ class Working_session(object):
     def step_forward(self):
         act = self._seq_manager.sample()
         ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
-        self._current_ex = self._student.answer(Exercise(act,ex_skill_lvl,self._KC))
+        self._current_ex = Exercise(act,ex_skill_lvl,self._KC)
+        self._student.answer(self._current_ex)
         self.save_actual_step()
         self._seq_manager.update(act,self._current_ex._answer)
 
@@ -172,6 +174,7 @@ class Working_group(object):
 
         params = params or func.load_json(params_file,directory)
         self.params = params
+        self.logs = {}
 
         self._working_sessions = []
 
@@ -251,12 +254,15 @@ class Simulation(object):
         #self.config = self.load_config()
         params = params or func.load_json(params_file,directory)
         self.params = params
+        self.logs = {}
 
         self._seq_manager_list_name = self.params["seq_manager_list"]
         self._nb_students = self.params["nb_students"]
         self._nb_step = self.params["nb_step"]
-        self._model_student = self.params["model_student"]
+        self._model_student = self.params["student"]["model"]
+        
         self.do_simu_path(self.params["ref_simu"])
+
         
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
@@ -391,7 +397,11 @@ class Simulation(object):
         population = []
 
         for stud_skills in population_q_profiles:
-            population.append({"model": 0, "knowledge_levels" : stud_skills, "knowledge_names" : self._knowledge_names})
+            params = self.params["student"]
+            params["knowledge_levels"] = stud_skills
+            params["knowledge_names"] = self._knowledge_names
+
+            population.append(params)
 
         return population
 
@@ -463,7 +473,7 @@ class Simulation(object):
         self._knowledge_names = ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"]
         #self.RT_main = "MAIN"
         #self._knowledge_names = ["S1","S2","S3"]
-        self.RT_main = "MAIN" #"KTTEST"
+        #self.RT_main = "MAIN" #"KTTEST"
 
 
         #####################################################################################

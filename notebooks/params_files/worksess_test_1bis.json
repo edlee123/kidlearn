@@ -1,6 +1,6 @@
 {
     "student":{
-        "model": "Qstudent",
+        "model": 0,
         "knowledge_names":["S0","S1","S2"],
         "knowledge_levels" : [0.05,0.1,0],
         "logistic_values" : {
@@ -12,10 +12,8 @@
     "seq_manager": {
 
         "name" : "RIARIT_hssbg",
-        "RT": { 
-            "name":"test1",
-            "path" : "RT/test1"
-            },
+        "main_RT": "test1",
+        "path_RT" : "RT/test1",
 
         "RIARIT_ssbg": {
             "name" : "RIARIT_ssbg",

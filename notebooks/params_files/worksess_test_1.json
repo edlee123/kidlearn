@@ -13,8 +13,8 @@
 
         "name" : "RIARIT_hssbg",
         "RT": { 
-            "name":"test1",
-            "path" : "RT/test1"
+            "name":"RT",
+            "path" : "RT/notebook1"
             },
 
         "RIARIT_ssbg": {

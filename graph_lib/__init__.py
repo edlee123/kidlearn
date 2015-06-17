@@ -1,2 +1,2 @@
-import graph_lib 
+from graph_lib import *
 import kidlearnGraph as kGraph

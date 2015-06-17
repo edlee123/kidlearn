@@ -10,12 +10,12 @@
 # Licence:     GNU GENERAL PUBLIC LICENSE
 #-------------------------------------------------------------------------------
 
-from seq_manager import * #Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
+from seq_manager import * 
 from exercise import *
 from student import *
 from knowledge import *
 from simulation import *
-
+import functions as func
 import numpy as np
 import copy as copy
 import json
@@ -24,48 +24,32 @@ import os
 # Define sequence manager
 ##############################################################
 
-def seq_manager(seq_params):
-    seq_manager_type = seq_params["type"]
+def seq_manager(seq_params = None, params_file = None, directory = None):
+    seq_params = seq_params or func.load_json(params_file,directory)
+    seq_manager_dict = {}
+    seq_manager_dict["RIARIT_hssbg"] = RIARIT_hssbg
+    seq_manager_dict["RIARIT_ssbg"] = RIARIT_ssbg
+    seq_manager_dict["ZPDES_hssbg"] = ZPDES_hssbg
+    seq_manager_dict["ZPDES_ssbg"] = ZPDES_ssbg
+    seq_manager_dict["Sequence"] = Sequence
+    seq_manager_dict["Random_sequence"] = Random_sequence
+
     seq_manager_name = seq_params["name"]
 
-    if seq_params["type"] == "hssbg":
-        if seq_manager_name == "RiARiT":
-            seq_manager = RIARIT_hssbg(seq_params)
-        elif seq_manager_name == "ZPDES":
-            seq_manager = ZPDES_hssbg(seq_params)
-        elif seq_manager_name == "Sequence":
-            seq_manager = Sequence(seq_params)
-        else :
-            seq_manager = Random_sequence(seq_params)
-
-    if seq_params["type"] == "ssbg":
-        if seq_manager_name == "RiARiT":
-            seq_manager = RIARIT_ssbg(seq_params)
-        elif seq_manager_name == "ZPDES":
-            seq_manager = ZPDES_ssbg(seq_params)
-
-    
-    return seq_manager
+    return seq_manager_dict[seq_manager_name](seq_params)
 
 # Define Student
 ##############################################################
-def student(stud_params):
+def student(stud_params = None, params_file = None, directory = None):
+    stud_params = stud_params or func.load_json(params_file,directory)
+    student_dict = {}
+    student_dict["Qstudent"] = Qstudent
+    student_dict["Pstudent"] = Pstudent
+    student_dict["KT_student"] = KT_student
+
     model_student = stud_params["model"]
 
-    if model_student == 0:
-        return Qstudent(params = stud_params)
-
-    elif model_student == 1:
-        return Pstudent(params = stud_params)
-
-    elif model_student == 2:
-        return KT_student(params = stud_params)
-
-    #elif model_student == 3:
-    #    return ktfeatures(stud_params)
-
-    else:
-        print "NOT GOOD STUD MODEL TYPE"
+    return student_dict[model_student](stud_params)
 
 
 ##############################################################

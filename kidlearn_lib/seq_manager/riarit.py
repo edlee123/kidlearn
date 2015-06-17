@@ -155,14 +155,15 @@ class RIARIT_ssbg(SSBanditGroup):
         return lvlDiff
         
     def loadRT(self,RT):
-        reader = open(RT, 'rb')
-        self.ID = ((RT.split("/")[-1]).split(".")[0])
-        #self.ID = ((RT.split("/")[-1]).split(".")[0]).split("_")[1]
+        path_RT = "%s/%s.txt" % (RT["path"], RT["name"])
+        reader = open(path_RT, 'rb')
+        self.ID = ((path_RT.split("/")[-1]).split(".")[0])
+        #self.ID = ((path_RT.split("/")[-1]).split(".")[0]).split("_")[1]
         #print "SSB CREATE: %s" % self.ID
         lines = reader.readlines()
         tmp = spe_split('\W',lines[0])
         self.competences = tmp[1:len(tmp)]
-        self.ncompetences = len(self.competences)
+        self.ncompetences = len(self.competences)   
         self.estim_level = [0]*self.ncompetences
 
         tmp = spe_split('\W',lines[1])
@@ -172,7 +173,7 @@ class RIARIT_ssbg(SSBanditGroup):
         self.nbturn = [0]*self.nactions
 
         tmp = spe_split('\W',lines[3])
-        self.nb_stay = [int(x) for x in tmp[1:len(tmp)]]
+        self.nb_stay = [int(x) for x in tmp[1:len(tmp)]] + [int(x)]*(self.nactions-(len(tmp)-1))
 
         self.RT = [[] for i in range(self.nactions)]
         self.requer = [[] for i in range(self.nactions)]

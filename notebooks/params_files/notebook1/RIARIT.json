@@ -1,0 +1,18 @@
+{
+    "name" : "RIARIT_hssbg",
+    "RT": { 
+        "name":"RT",
+        "path" : "RT/notebook1"
+        },
+
+    "RIARIT_ssbg": {
+        "name" : "RIARIT_ssbg",
+        "levelupdate": 0.6,
+
+        "RIARIT_ssb": {
+            "filter1": 0.2, 
+            "filter2": 0.8, 
+            "uniformval": 0.05
+        }
+    }
+}
