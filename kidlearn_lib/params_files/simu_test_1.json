@@ -4,7 +4,7 @@
     "nb_step" : 100,
     "ref_simu": "test1",
 
-    "student":{
+    "population":{
             "model" : "Qstudent",
             "logistic_vales" : {
                 "learn" : [-20,0.07],

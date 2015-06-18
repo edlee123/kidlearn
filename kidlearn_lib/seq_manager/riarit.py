@@ -1,6 +1,14 @@
 #-*- coding: utf-8 -*-
-## Right Activity at the Right Time
-## 2014 BCLEMENT
+#-------------------------------------------------------------------------------
+# Name:        riarit
+# Purpose:     Right Activity at the Right Time
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     GNU Affero General Public License v3.0
+#-------------------------------------------------------------------------------
 
 from hssbg import *
 

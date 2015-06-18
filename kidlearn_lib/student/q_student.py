@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ class Qstudent(Student):
         
         return prob
 
-    def answer(self,exercise):#act,lvls):
+    def answer(self,exercise, answer = None, nb_try = 0):#act,lvls):
         self.learn(exercise.get_knowledges_level())
         prob_correct = self.compute_prob_correct_answer(exercise.get_knowledges_level())
         #print prob_correct

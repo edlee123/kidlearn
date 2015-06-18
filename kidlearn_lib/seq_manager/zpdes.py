@@ -1,6 +1,14 @@
 #-*- coding: utf-8 -*-
-## Zone of Proximal Development and Empirical Success
-## 2014 BCLEMENT
+#-------------------------------------------------------------------------------
+# Name:        ZPDES
+# Purpose:     Zone of Proximal Development and Empirical Success
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     GNU Affero General Public License v3.0
+#-------------------------------------------------------------------------------
 
 from riarit import *
 from hssbg import *

@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 #from ..functions, knowledge 
 from functions import *
@@ -23,9 +23,12 @@ class Student(object):
 
     def __init__(self,id = "x", params = None):
         self.params = params
-        self._id = id or params["id"]
+        if "id" in params.keys():
+            self._id = params["id"]
+        else:
+            self._id = id
         self._knowledges = []
-        self.nbTry = 1
+        self.logs = {}
         #self._skills = skills
         return
 
@@ -41,10 +44,15 @@ class Student(object):
 
         return student_state
 
+    def answer(self,exercise = None, ans = None, nb_try = 0):
+        exercise._answer = ans
+        exercise.add_attr(_nb_try = nb_try)
+        return exercise
+
     def try_and_answer(self,prob_correct = 0, exercise = None):
         nb_try = 0
         ans = 0
-        while ans == 0 and nb_try < self.nbTry:
+        while ans == 0 and nb_try < exercise.nbMax_try:
             s = np.random.multinomial(1,[1-prob_correct,prob_correct])
             ans = np.nonzero(s==1)[0][0]
             if ans == 0:

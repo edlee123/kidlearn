@@ -7,14 +7,14 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
 from seq_manager import * 
 from exercise import *
 from student import *
 from knowledge import *
-from simulation import *
+from experimentation import *
 import functions as func
 import numpy as np
 import copy as copy

@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
 from q_student import *
@@ -77,7 +77,7 @@ class Pstudent(Qstudent):
         return prob
 
 
-    def answer(self,exercise):#act,lvls):
+    def answer(self,exercise, answer = None, nb_try = 0):#act,lvls):
 
         self.learn(exercise._params,exercise._skills)
         Qstudent.learn(self,exercise._skills,prob)

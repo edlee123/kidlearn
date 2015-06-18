@@ -1,13 +1,13 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        simulation
+# Name:        experimentation
 # Purpose:
 #
 # Author:      Bclement
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
 import os
@@ -124,6 +124,11 @@ class Working_session(object):
     def nb_step(self):
         return len(self._step)
 
+    @property
+    def seq_manager(self):
+        return self._seq_manager
+    
+
     def get_working_session_logs(self):
         session_logs = {}
         session_logs["stude_ID"] = self._student.id
@@ -137,13 +142,22 @@ class Working_session(object):
         for i in range(nb_ex):
             self.step_forward()
 
-    def step_forward(self):
+    def new_exercise(self):
         act = self._seq_manager.sample()
         ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
         self._current_ex = Exercise(act,ex_skill_lvl,self._KC)
-        self._student.answer(self._current_ex)
+
+    def student_answer(self,answer = None, nb_try = 0):
+        self._student.answer(self._current_ex,answer, nb_try = nb_try)
         self.save_actual_step()
-        self._seq_manager.update(act,self._current_ex._answer)
+    
+    def update_manager(self):
+        self._seq_manager.update(self._current_ex.act,self._current_ex._answer)
+
+    def step_forward(self):
+        self.new_exercise()
+        self.student_answer()
+        self.update_manager()
 
     def actual_step(self):
         return Session_step(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(self._current_ex))
@@ -169,18 +183,21 @@ class Working_session(object):
 #########################################################
 ## class Working_group
 class Working_group(object):
-    def __init__(self, params = None, params_file = "workgroup_test_1", directory = "params_files", *args, **kwargs):
+    def __init__(self, params = None, params_file = "workgroup_test_1", directory = "params_files",population = None, working_sessions = None, *args, **kwargs):
         #params : 
 
         params = params or func.load_json(params_file,directory)
         self.params = params
+        self.population = population or config.population(params = params["population"])
         self.logs = {}
 
-        self._working_sessions = []
-
-        for student_params in self.params["population"]:
-            params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
-            self._working_sessions.append(Working_session(params = params))
+        if working_sessions:
+            self._working_sessions = working_sessions
+        else:
+            self._working_sessions = []
+            for student_params in self.population:
+                params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
+                self._working_sessions.append(Working_session(params = params))
 
 
     @property
@@ -245,10 +262,10 @@ class Working_group(object):
 
 #########################################################
 #########################################################
-## class Simulation
+## class Experimentation
 
-class Simulation(object):
-    def __init__(self,params = None, params_file = "simu_test_1", directory = "params_files", *args, **kwargs):
+class Experimentation(object):
+    def __init__(self,params = None, params_file = "simu_test_1", directory = "params_files", working_groups = None, *args, **kwargs):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()
@@ -261,20 +278,24 @@ class Simulation(object):
         self._nb_step = self.params["nb_step"]
         self._model_student = self.params["student"]["model"]
         
-        self.do_simu_path(self.params["ref_simu"])
+        self.do_simu_path(self.params["ref_expe"])
 
         
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
         
-        self._groups = {key: [] for key in self._seq_manager_list_name}
-        
-        self._population = self.define_population()
-        for seq_manager_name in self._seq_manager_list_name:
-            params = self.params["working_group"]
-            params["seq_manager"] = self.params["seq_managers"][seq_manager_name]
-            params["population"] = self._population
-            self.add_working_group(params)
+        if working_groups:
+            self._groups = working_groups
+
+        else:
+            self._groups = {key: [] for key in self._seq_manager_list_name}
+            
+            self._population = self.define_population()
+            for seq_manager_name in self._seq_manager_list_name:
+                params = self.params["working_group"]
+                params["seq_manager"] = self.params["seq_managers"][seq_manager_name]
+                params["population"] = self._population
+                self.add_working_group(params)
 
         #self.population_simulation()
         #self.population = []
@@ -294,7 +315,7 @@ class Simulation(object):
         return 
 
     def add_working_group(self,params):
-        self._groups[params["seq_manager"]["name"]].append(Working_group(params))
+        self._groups[params["seq_manager"]["name"]].append(Working_group(params = params, population = self._population))
         #self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
 
     def do_simu_path(self,ref = ""):

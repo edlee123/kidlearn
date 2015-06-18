@@ -1,4 +1,15 @@
 #-*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:        random_sequence
+# Purpose:
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     GNU Affero General Public License v3.0
+
+#-------------------------------------------------------------------------------
 from teacher_sequence import *
 #import random
 import operator

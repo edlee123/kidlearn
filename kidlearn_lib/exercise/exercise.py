@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 
@@ -18,18 +18,24 @@ from knowledge import *
 
 class Exercise(object):
 
-    def __init__(self,ex_params,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [], params = {}, *args,**kwargs):
-        # ex_params : 
+    def __init__(self,act,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [],  nbMax_try = 1, params = None, *args,**kwargs):
+        # act : 
 
         self._gamma = np.array(gamma)
-        self._ex_params = ex_params
+        self._act = act
         self._answer = answer
         self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
         self.add_attr(args,kwargs)
+        self._nbMax_try = nbMax_try
 
     @property
-    def ex_params(self):
-        return self._ex_params
+    def nbMax_try(self):
+        return self._nbMax_try
+    
+
+    @property
+    def act(self):
+        return self._act
 
     @property
     def gamma(self):
@@ -44,9 +50,9 @@ class Exercise(object):
         return self._knowledges
 
     def __repr__(self):
-        #print "act : %s" % self._ex_params
+        #print "act : %s" % self._act
         #print "ans : %s" % self._answer
-        act = copy.deepcopy(self._ex_params)
+        act = copy.deepcopy(self._act)
         act["ans"] = self._answer
         return act.__str__()
     
@@ -68,7 +74,7 @@ class Exercise(object):
         return levels
 
     def get_attr(self):
-        return {"ex_params": self._ex_params, "knowledge" : self._knowledges, "answer" : self._answer}
+        return {"act": self._act, "knowledge" : self._knowledges, "answer" : self._answer}
 
     def add_attr(self,*args,**kwargs):
         for key, val in kwargs.iteritems():

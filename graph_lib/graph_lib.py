@@ -1,13 +1,13 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        graph_gen
+# Name:        graph_lib
 # Purpose:
 #
 # Author:      Bclement
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 from custom_graph import *

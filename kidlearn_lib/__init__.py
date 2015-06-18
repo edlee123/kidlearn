@@ -3,5 +3,5 @@ import knowledge
 import student
 import seq_manager
 import exercise
-import simulation
+import experimentation
 import setup

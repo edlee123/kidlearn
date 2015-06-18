@@ -1,13 +1,13 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        sim_launcher
+# Name:        setup
 # Purpose:
 #
 # Author:      Bclement
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 
@@ -21,19 +21,17 @@ import kidlearn_lib as k_lib
 import graph_lib as graph
 
 
-
-
 # example of working_session : one student and one seqequance manager
 
 def do_work_session():
-    working_session = k_lib.simulation.Working_session(params_file = "worksess_test_1")
+    working_session = k_lib.experimentation.Working_session(params_file = "worksess_test_1")
     
 
     return
 
 # example of complete simulation
 def do_simu():
-    simu = k_lib.simulation.Simulation(params_file = "simu_test_1")
+    simu = k_lib.experimentation.Experimentation(params_file = "simu_test_1")
     simu.run()
 
     for seq_name,group in simu._groups.items():
