@@ -14,3 +14,5 @@ Check notebook/KidlearnStarter.ipynb
 People involved:
 Benjamin Clement, Didier Roy, Pierre-Yves Oudeyer, Manuel Lopes
 https://flowers.inria.fr/research/kidlearn/
+
+The Kidlearn software released under a dual-license model: GNU Affero GPL License v3 (AGPL3) and Commercial.
