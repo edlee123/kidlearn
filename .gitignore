@@ -56,7 +56,7 @@ docs/_build/
 kidlearn_soft/
 pomdp/
 *data/
-
+.ipynb_checkpoints/
 .project
 .pydevproject
 *.settings/

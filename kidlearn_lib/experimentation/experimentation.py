@@ -42,8 +42,8 @@ class Session_step(object):
         return self._exercise
     
     @property
-    def ex_params(self):
-        return self._exercise.ex_params
+    def act(self):
+        return self._exercise.act
 
     @property
     def ex_answer(self):
@@ -99,9 +99,11 @@ class Session_step(object):
 ## class Working_session
 
 class Working_session(object):
-    def __init__(self, params = None, params_file = "worksess_test_1", directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
+    def __init__(self, params = None, params_file = None, directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
 
-        params = params or func.load_json(params_file,directory)
+        if params != None or params_file != None:
+            params = params or func.load_json(params_file,directory)
+        
         self.params = params
         self.logs = {}
         
@@ -127,6 +129,11 @@ class Working_session(object):
     @property
     def seq_manager(self):
         return self._seq_manager
+
+    @property
+    def KC(self):
+        return self._KC
+    
     
 
     def get_working_session_logs(self):
@@ -183,7 +190,7 @@ class Working_session(object):
 #########################################################
 ## class Working_group
 class Working_group(object):
-    def __init__(self, params = None, params_file = "workgroup_test_1", directory = "params_files",population = None, working_sessions = None, *args, **kwargs):
+    def __init__(self, params = None, params_file = None, directory = "params_files",population = None, working_sessions = None, *args, **kwargs):
         #params : 
 
         params = params or func.load_json(params_file,directory)
@@ -245,7 +252,7 @@ class Working_group(object):
         
         repart = [[],[],[],[]]
         for i in range(nb_ex):
-            exs = self.get_data_time(i,"_exercise","_ex_params")
+            exs = self.get_data_time(i,"_exercise","_act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append(repart_base(nbType))
             for j in range(len(exs)):
@@ -262,10 +269,10 @@ class Working_group(object):
 
 #########################################################
 #########################################################
-## class Experimentation
+## class Experiment
 
-class Experimentation(object):
-    def __init__(self,params = None, params_file = "simu_test_1", directory = "params_files", working_groups = None, *args, **kwargs):
+class Experiment(object):
+    def __init__(self,params = None, params_file = None, directory = "params_files", working_groups = None, *args, **kwargs):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()

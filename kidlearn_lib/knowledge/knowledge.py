@@ -16,7 +16,7 @@ from numpy import *
 import re
 import pickle
 import json
-from functions import *
+import functions as func
 
 class Knowledge(object):
     def __init__(self,name, level = 0, num_id = 0, *args, **kwargs):

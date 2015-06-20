@@ -26,30 +26,17 @@ import os
 
 def seq_manager(seq_params = None, params_file = None, directory = None):
     seq_params = seq_params or func.load_json(params_file,directory)
-    seq_manager_dict = {}
-    seq_manager_dict["RIARIT_hssbg"] = RIARIT_hssbg
-    seq_manager_dict["RIARIT_ssbg"] = RIARIT_ssbg
-    seq_manager_dict["ZPDES_hssbg"] = ZPDES_hssbg
-    seq_manager_dict["ZPDES_ssbg"] = ZPDES_ssbg
-    seq_manager_dict["Sequence"] = Sequence
-    seq_manager_dict["Random_sequence"] = Random_sequence
-
     seq_manager_name = seq_params["name"]
 
-    return seq_manager_dict[seq_manager_name](seq_params)
+    return seq_dict_gen[seq_manager_name](seq_params)
 
 # Define Student
 ##############################################################
 def student(stud_params = None, params_file = None, directory = None):
     stud_params = stud_params or func.load_json(params_file,directory)
-    student_dict = {}
-    student_dict["Qstudent"] = Qstudent
-    student_dict["Pstudent"] = Pstudent
-    student_dict["KT_student"] = KT_student
-
     model_student = stud_params["model"]
 
-    return student_dict[model_student](stud_params)
+    return stud_dict_gen[model_student](stud_params)
 
 
 ##############################################################

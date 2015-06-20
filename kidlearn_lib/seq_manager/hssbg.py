@@ -292,7 +292,7 @@ class SSbandit(object):
                 nb_0 += 1
         
         if nb_0 == len(nn):
-            print self.algo
+            print self.params["name"]
             print "Prob : %s : %s " % (str(self.using_RT),str(nn))
             print self.bandval
             print self.success
