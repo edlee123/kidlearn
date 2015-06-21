@@ -68,3 +68,17 @@ workSession.run(100) # do 100 times step_forward()
 
 workSession.step[0:10] # show the first 10 step
 
+##### Use of  and 3 sequences managers (RiARiT, ZPDES, Random)
+
+wsRiarit = k_lib.experimentation.Working_session(params_file="ws_expe_RiARiT")
+wsZpdes = k_lib.experimentation.Working_session(params_file="ws_expe_ZPDES")
+wsRandom = k_lib.experimentation.Working_session(params_file="ws_expe_Random")
+
+wsRiarit.run(100)
+wsZpdes.run(100)
+wsRandom.run(100)
+
+print "Skill level after 100 steps :"
+print "Riarit %s " % [wsRiarit.step[-1].student["knowledges"][i].level for i in range(len(wsRiarit.KC))]
+print "ZPDES : %s" % [wsZpdes.step[-1].student["knowledges"][i].level for i in range(len(wsZpdes.KC))]
+print "Random : %s"  % [wsRandom.step[-1].student["knowledges"][i].level for i in range(len(wsRandom.KC))]
