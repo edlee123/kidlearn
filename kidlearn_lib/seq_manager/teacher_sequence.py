@@ -17,6 +17,7 @@ import copy
 import re
 from zpdes import *
 import copy
+import functions as func
 
 class Sequence(RIARIT_hssbg):
      
@@ -103,56 +104,10 @@ class Sequence(RIARIT_hssbg):
         act = copy.deepcopy(self.acts[self.currentGroup][self.seqLevels[self.currentGroup]])
         return act
 
-    def generate_acts(self,nGroup = 5):
-        self.acts = [[] for x in range(nGroup)]
-        """
-        self.acts.append([0,2,1,0]);
-        self.acts.append([1,2,1,0]);
-        self.acts.append([1,0,1,0]);
-        self.acts.append([2,2,1,0]);
-        self.acts.append([2,0,1,0]);
-        self.acts.append([3,2,1,0]);
-        self.acts.append([3,2,0,0]);
-        self.acts.append([3,1,0,0]);
-        self.acts.append([4,1,0,0]);
-        self.acts.append([5,1,1,0]);
-        #"""
-        self.acts[0].append({"MAIN" : [0], "M": [0]})#, "mod": [0]})
-        self.acts[0].append({"MAIN" : [0], "M": [1]})#, "mod": [0]})
-        self.acts[0].append({"MAIN" : [0], "M": [2]})#, "mod": [0]})
-        #self.acts[0].append({"MAIN" : [0], "M": [2], "mod": [1]})
-        
-        self.acts[1].append({"MAIN" : [0], "M": [3], "mod": [0]})
-        self.acts[1].append({"MAIN" : [0], "M": [4], "mod": [0]})
-        self.acts[1].append({"MAIN" : [0], "M": [4], "mod": [1]})
-        self.acts[1].append({"MAIN" : [0], "M": [5], "mod": [1]})
+    def generate_acts(self, params = None,  params_file = "expe_seq",directory = "sequence_def"):
+        params = params or func.load_json(params_file,directory)
+        self.acts = []
+        for key,act_groups  in params["activity"].items():
+            self.acts.append(act_groups)
 
-        self.acts[2].append({"MAIN" : [1], "R": [0]})#, "mod": [0]})
-        self.acts[2].append({"MAIN" : [1], "R": [1]})#, "mod": [0]})
-
-        self.acts[2].append({"MAIN" : [1], "R": [2], "mod": [0]})
-        #self.acts[2].append({"MAIN" : [1], "R": [2], "mod": [1]})
-        self.acts[2].append({"MAIN" : [1], "R": [2], "mod": [0]})
-        self.acts[2].append({"MAIN" : [1], "R": [3], "mod": [1]})
-
-        self.acts[3].append({"MAIN" : [2], "MM": [0], "UR": [0]})
-        self.acts[3].append({"MAIN" : [2], "MM": [0], "UR": [1]})
-        self.acts[3].append({"MAIN" : [2], "MM": [1], "UR": [0]})
-        self.acts[3].append({"MAIN" : [2], "MM": [1], "UR": [1]})
-
-        self.acts[3].append({"MAIN" : [2], "MM": [2], "Car": [0], "UR": [0]})
-        self.acts[3].append({"MAIN" : [2], "MM": [2], "Car": [0], "UR": [1]})
-        self.acts[3].append({"MAIN" : [2], "MM": [3], "M4": [0], "Car": [1], "DR": [0]})
-        self.acts[3].append({"MAIN" : [2], "MM": [3], "M4": [1], "Car": [1], "DR": [1]})
-
-        self.acts[4].append({"MAIN" : [3], "RM": [0], "UR": [0]})
-        self.acts[4].append({"MAIN" : [3], "RM": [0], "UR": [1]})
-        self.acts[4].append({"MAIN" : [3], "RM": [1], "UR": [0]})
-        self.acts[4].append({"MAIN" : [3], "RM": [1], "UR": [1]})
-
-        self.acts[4].append({"MAIN" : [3], "RM": [2], "Car": [0], "UR": [0]})
-        self.acts[4].append({"MAIN" : [3], "RM": [2], "Car": [0], "UR": [1]})
-        self.acts[4].append({"MAIN" : [3], "RM": [3], "M4": [0], "Car": [1], "DR": [0]})
-        self.acts[4].append({"MAIN" : [3], "RM": [3], "M4": [1], "Car": [1], "DR": [1]})
-        
         return
