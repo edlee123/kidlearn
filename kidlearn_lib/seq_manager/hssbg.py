@@ -107,9 +107,9 @@ class HierarchySSBG(object):
         return
 
     def addSSBG(self,ssbg_father):
-        for actRT,i in zip(ssbg_father.using_RT,range(len(ssbg_father.using_RT))):
-            for nameRT in actRT :
-                if nameRT[0:2] != 'NO' and nameRT not in self.SSBGs.keys():
+        for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
+            for nameRT,hierar in zip(actRT,hierarchy) :
+                if hierar and nameRT not in self.SSBGs.keys():
                     RT = {"name": nameRT, "path": self.path}
                     #RT = "%s/%s.txt" % (self.path, nameRT)
                     nssbg = self.instantiate_ssbg(RT)
@@ -122,7 +122,7 @@ class HierarchySSBG(object):
         return 0
 
     def sample(self):
-        act = {}
+        act = {} #FIXME FIXME FIXME PLEASE GOD OH GOD
         act = self.speSample(self.SSBGs[self.main_act],act)
         #self.lastAct = act
         return act
@@ -130,8 +130,9 @@ class HierarchySSBG(object):
     def speSample(self,ssbgToS,act): 
         act[ssbgToS.ID] = ssbgToS.sample()
         for actRT in range(len(act[ssbgToS.ID])):
-            nameRT = ssbgToS.using_RT[actRT][act[ssbgToS.ID][actRT]]
-            if nameRT[0:2] != 'NO':
+            hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]
+            if hierar:
+                nameRT = ssbgToS.param_values[actRT][act[ssbgToS.ID][actRT]]
                 self.speSample(self.SSBGs[nameRT],act)
         return act
 
@@ -149,13 +150,10 @@ class SSBanditGroup(object):
         #params : RT
         self.params = params
         #self.sonSSBG = {}
-        self.loadRT(self.params["RT"])
 
         return
 
     def __repr__(self):
-        return self.ID
-    def __str__(self):
         return self.ID
 
     def getSuccess(self):
@@ -196,7 +194,7 @@ class SSBanditGroup(object):
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
-        return SSbandit(ii,len(self.RT[ii]),self.ncompetences,is_hierarchical, using_RT = self.using_RT[ii], params = self.params)
+        return SSbandit(ii,len(self.RT[ii]),self.ncompetences,is_hierarchical, param_values = self.param_values[ii], params = self.params)
 
     def CreateSSBs(self):
         self.SSB = [[] for i in range(self.nactions)]
@@ -232,7 +230,7 @@ class SSBanditGroup(object):
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, ntask, is_hierarchical = 0, using_RT = [], params = {}):
+    def __init__(self,id, nval, ntask, is_hierarchical = 0, param_values = [], params = {}):
         # params : filter1, filter2, uniformval,
 
         self.params = params
@@ -246,7 +244,7 @@ class SSbandit(object):
 
         self.success = [[] for x in xrange(nval)]
         self.is_hierarchical = is_hierarchical
-        self.using_RT = using_RT
+        self.param_values = param_values
         self.sonSSBG = {}
         return
 
@@ -293,7 +291,7 @@ class SSbandit(object):
         
         if nb_0 == len(nn):
             print self.params["name"]
-            print "Prob : %s : %s " % (str(self.using_RT),str(nn))
+            print "Prob : %s : %s " % (str(self.param_values),str(nn))
             print self.bandval
             print self.success
         #nn = exp(nn)-1

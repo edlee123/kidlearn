@@ -50,7 +50,7 @@ class ZPDES_ssbg(RIARIT_ssbg):
     def instanciate_ssb(self,ii,is_hierarchical):
         params = self.params["ZPDES_ssb"]
 
-        return ZPDES_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, using_RT = self.using_RT[ii],params = params)
+        return ZPDES_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii],params = params)
 
     def calcul_reward(self,act,answer_impact):
         coeff_ans = mean(answer_impact)
@@ -69,7 +69,7 @@ class ZPDES_ssbg(RIARIT_ssbg):
         for ii in range(self.nactions):
             self.nbturn[ii] += 1
             #if len(self.SSB[ii].sonSSBG.keys()) > 0:
-            #    r_ES[ii] += pow(10,-5)*all_act[self.using_RT[ii][act[ii]]][0]/len(self.SSB[ii].sonSSBG[self.using_RT[ii][act[ii]]].SSB[0].bandval)
+            #    r_ES[ii] += pow(10,-5)*all_act[self.param_values[ii][act[ii]]][0]/len(self.SSB[ii].sonSSBG[self.param_values[ii][act[ii]]].SSB[0].bandval)
                 #raw_input()
             self.SSB[ii].update(act[ii], max(0,r_ES[ii]))
             self.SSB[ii].promote()
@@ -84,10 +84,10 @@ ZPDES_hssbg.ssbgClasse = ZPDES_ssbg
 ## class ZPDES_ssb
 
 class ZPDES_ssb(RIARIT_ssb):
-    def __init__(self,id, nval, ntask, requer, stop,is_hierarchical = 0, using_RT = [], params = {}):
+    def __init__(self,id, nval, ntask, requer, stop,is_hierarchical = 0, param_values = [], params = {}):
         # params : 
 
-        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,using_RT, params = params)
+        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
         self.stepUpdate = params['stepUpdate']
         self.size_window = min(len(self.bandval),params['size_window'])
         self.promote(True)
@@ -96,9 +96,9 @@ class ZPDES_ssb(RIARIT_ssb):
         for i in range(1,self.nval):
             if(self.bandval[i]== 0):
                 try:
-                    ssbg = self.sonSSBG[self.using_RT[i-1]]
+                    ssbg = self.sonSSBG[self.param_values[i-1]]
                 except:
-                    print "son : %s, i : %s, lenact : %s, uRT : %s" % (self.sonSSBG,i,self.nval,self.using_RT) 
+                    print "son : %s, i : %s, lenact : %s, uRT : %s" % (self.sonSSBG,i,self.nval,self.param_values) 
                     crash()
                 successUsed = []
                 sumSucess = 0
@@ -127,9 +127,9 @@ class ZPDES_ssb(RIARIT_ssb):
     def promote(self,init = False):
         stepMax = self.stepUpdate/2
         stepSuccess = min(len(self.success),stepMax)
-        #if "mod" in self.using_RT :#and self.algo == "ZPDES":
+        #if "mod" in self.param_values :#and self.algo == "ZPDES":
         #    print "YOLO"
-        #print self.using_RT
+        #print self.param_values
         #print self.sonSSBG
         #raw_input()
         if init == True :

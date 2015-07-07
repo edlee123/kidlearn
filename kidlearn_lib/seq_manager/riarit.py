@@ -11,7 +11,8 @@
 #-------------------------------------------------------------------------------
 
 from hssbg import *
-
+import os
+import functions as func
 # class RIARIT_ssbg(object): pass
 # class RIARIT_ssb(object): pass
 
@@ -79,9 +80,10 @@ class RIARIT_hssbg(HierarchySSBG):
         #    lvl = [1]*self.ncompetences
         #print pre_ssbg.ID
         #print act
-        for actRT in range(len(pre_ssbg.using_RT)):
-            nameRT = pre_ssbg.using_RT[actRT][act[pre_ssbg.ID][actRT]]
-            if nameRT[0:2] != 'NO':
+        for actRT in range(len(pre_ssbg.param_values)):
+            hierar = pre_ssbg.values_children[actRT][act[pre_ssbg.ID][actRT]]
+            if hierar:
+                nameRT = pre_ssbg.param_values[actRT][act[pre_ssbg.ID][actRT]]
                 self.ssbg_used.append(nameRT)
                 lvl = self.addSsbgToCompute(self.SSBGs[nameRT],act,lvl, **kwargs)
 
@@ -138,14 +140,16 @@ class RIARIT_ssbg(SSBanditGroup):
 
     def __init__(self,params = None, params_file = "Rssb_test_1", directory = "params_files"):
         SSBanditGroup.__init__(self,params = params)
-        self.levelupdate = params["levelupdate"]
+
+        self.loadRT(self.params["RT"])
+        self.levelupdate = self.params["levelupdate"]
         
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
         params = self.params["RIARIT_ssb"]
 
-        return RIARIT_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, using_RT = self.using_RT[ii], params = params)
+        return RIARIT_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii], params = params)
 
     def get_estim_level(self,**kwargs):
         if "dict_form" in kwargs.keys():
@@ -161,9 +165,48 @@ class RIARIT_ssbg(SSBanditGroup):
         for i in range(self.ncompetences):
             lvlDiff.append(lvl[i]-self.estim_level[i])
         return lvlDiff
-        
+    
     def loadRT(self,RT):
-        path_RT = "%s/%s.txt" % (RT["path"], RT["name"])
+        if os.path.exists(os.path.join(RT["path"],RT["name"]+".json")):
+            self.load_jsonRT(RT)
+        else:
+            self.load_textRT(RT)
+        return
+
+    def load_jsonRT(self,RT):
+        self.ID = RT["name"]
+        params_RT = func.load_json(RT["name"],RT["path"])
+        self.competences = params_RT["competencies"]
+        self.ncompetences = len(self.competences)
+        self.estim_level = [0]*self.ncompetences
+        self.actions = params_RT["parameters"]
+        self.nactions = len(self.actions)
+        self.act = [0]*self.nactions
+        self.nbturn = [0]*self.nactions
+        self.nb_stay = func.fill_data(params_RT["nb_stay"],self.nactions)
+        #self.nb_stay = params_RT["nb_stay"] + [params_RT["nb_stay"][-1]]*(self.nactions-(len(params_RT["nb_stay"])-1))
+        self.RT = [[] for i in range(self.nactions)]
+        self.requer = [[] for i in range(self.nactions)]
+        self.stop = [[] for i in range(self.nactions)]
+        self.param_values = [[] for i in range(self.nactions)]
+        self.values_children = [[] for i in range(self.nactions)]
+        for num_act in range(len(self.actions)):
+            for key,val in params_RT["table"][self.actions[num_act]].items():
+                self.param_values[num_act].append(key)
+                if "hierarchical" in val.keys():
+                    self.values_children[num_act].append(int(val["hierarchical"]))
+                else:
+                    self.values_children[num_act].append(0)
+
+                self.RT[num_act].append(val["impact"])
+                self.requer[num_act].append(func.fill_data(val["requir"],self.ncompetences))
+                self.stop[num_act].append(func.fill_data(val["deacti"],self.ncompetences))
+        self.CreateSSBs()
+
+        return
+
+    def load_textRT(self,RT):
+        path_RT = os.path.join(RT["path"],RT["name"])+".txt"
         reader = open(path_RT, 'rb')
         self.ID = ((path_RT.split("/")[-1]).split(".")[0])
         #self.ID = ((path_RT.split("/")[-1]).split(".")[0]).split("_")[1]
@@ -171,7 +214,7 @@ class RIARIT_ssbg(SSBanditGroup):
         lines = reader.readlines()
         tmp = spe_split('\W',lines[0])
         self.competences = tmp[1:len(tmp)]
-        self.ncompetences = len(self.competences)   
+        self.ncompetences = len(self.competences)
         self.estim_level = [0]*self.ncompetences
 
         tmp = spe_split('\W',lines[1])
@@ -180,18 +223,19 @@ class RIARIT_ssbg(SSBanditGroup):
         self.act = [0]*self.nactions
         self.nbturn = [0]*self.nactions
 
-        tmp = spe_split('\W',lines[3])
+        tmp = spe_split('\W',lines[2])
         self.nb_stay = [int(x) for x in tmp[1:len(tmp)]] + [int(x)]*(self.nactions-(len(tmp)-1))
 
         self.RT = [[] for i in range(self.nactions)]
         self.requer = [[] for i in range(self.nactions)]
         self.stop = [[] for i in range(self.nactions)]
-        self.using_RT = [[] for i in range(self.nactions)]
+        self.param_values = [[] for i in range(self.nactions)]
+        self.values_children = [[] for i in range(self.nactions)]
         self.nvalue = []
         
         param = 1
         nval = 0
-        for lin in lines[4:]:
+        for lin in lines[3:]:
             tmp=spe_split('\s(\d*\.\d*|\d+)|\s([a-zA-Z0-9_]*)',lin)
             if int(tmp[0]) == param:
                 nval += 1
@@ -199,8 +243,9 @@ class RIARIT_ssbg(SSBanditGroup):
                 param+=1
                 self.nvalue.append(nval)
                 nval = 1
-            aux = [float(x) for x in tmp[2:len(tmp)]]
-            self.using_RT[int(tmp[0])-1].append(tmp[1])
+            aux = [float(x) for x in tmp[3:len(tmp)]]
+            self.param_values[int(tmp[0])-1].append(tmp[2])
+            self.values_children[int(tmp[0])-1].append(int(tmp[1]))
             self.RT[int(tmp[0])-1].append(aux[0:self.ncompetences])
             self.requer[int(tmp[0])-1].append(aux[self.ncompetences:2*self.ncompetences])
             self.stop[int(tmp[0])-1].append(aux[2*self.ncompetences:])
@@ -259,10 +304,10 @@ RIARIT_hssbg.ssbgClasse = RIARIT_ssbg
 
 class RIARIT_ssb(SSbandit):
 
-    def __init__(self,id, nval, ntask, requer, stop, is_hierarchical = 0, using_RT = [], params = {}):
+    def __init__(self,id, nval, ntask, requer, stop, is_hierarchical = 0, param_values = [], params = {}):
         # params : 
 
-        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,using_RT, params = params)
+        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
 
         self.requer = requer
         self.stop = stop

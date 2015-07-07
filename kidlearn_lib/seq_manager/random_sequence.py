@@ -43,7 +43,7 @@ class Random_sequence(RIARIT_hssbg):
     def speSample(self,ssbgToS,act,use_nb_turn = 0):
         act[ssbgToS.ID] = ssbgToS.random_sample(self.lastAct,use_nb_turn)
         for actRT in range(len(act[ssbgToS.ID])):
-            nameRT = ssbgToS.using_RT[actRT][act[ssbgToS.ID][actRT]]
+            nameRT = ssbgToS.param_values[actRT][act[ssbgToS.ID][actRT]]
             if nameRT[0:2] != 'NO':
                 self.speRandom_Sample(self.SSBGs[nameRT],act)
         return act

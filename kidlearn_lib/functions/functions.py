@@ -97,3 +97,11 @@ def load_json(file_name, dir_path = ""):
 
     return json_data
 
+###############################################################################
+# Data gestion functions
+###############################################################################
+
+# RiARiT : function to let empty space in table déclaration 
+def fill_data(data,nb_data_expected):
+    complete_data = data + [data[-1]]*(nb_data_expected-len(data))
+    return complete_data

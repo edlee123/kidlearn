@@ -71,7 +71,7 @@ def generate_pstudent_population():
     population_q_profiles = generate_q_profiles()
     population = []
     for i in range(nb_students):
-        population.append(Pstudent(params = population_p_profiles[i],knowledge_levels = population_q_profiles[i], knowledge_names = knowledge_names))
+        population.append(Pstudent(params = population_p_profiles[i], knowledge_levels = population_q_profiles[i], knowledge_names = knowledge_names))
     return population
 
 def generate_ktstudent_population(kt_profil = 0):
@@ -91,7 +91,6 @@ def generate_ktfeatures_population(kt_profil = 0):
 # Generate population parameters
 ##############################################################
 def generate_kt_parametrisation():
-
     return
 
 def generate_q_profiles(nb_students,mean,var):

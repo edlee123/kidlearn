@@ -12,7 +12,7 @@
 
 import os
 import sys
-from seq_manager import * #Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
+from seq_manager import Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
 from exercise import Exercise
 from student import *
 import functions as func
@@ -29,39 +29,28 @@ import time
 ## class Session_step
 
 class Session_step(object):
+    """\
+        SessionStep Definition
+    """
+
     def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
-        self._student = student_state
-        self._seq_manager = seq_manager_state
-        self._exercise = exercise
+        self.student = student_state
+        self.seq_manager = seq_manager_state
+        self.exercise = exercise
 
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
-
-    @property
-    def exercise(self):
-        return self._exercise
     
     @property
     def act(self):
-        return self._exercise.act
+        return self.exercise.act
 
     @property
     def ex_answer(self):
-        return self._exercise.answer
-
-    @property
-    def student(self):
-        return self._student
-    
-    @property
-    def seq_manager(self):
-        return self._seq_manager
+        return self.exercise.answer
     
     def __repr__(self):
-        return  "act : %s, student skill: %s" % (self._exercise.__str__(), self._student["knowledges"].__str__())
-    
-    def __str__(self):
-        return self.__repr__()
+        return  "act : {}, student skill: {}".format(self.exercise, self.student["knowledges"])
 
     ###########################################################################
     ##### Data Analysis tools 
@@ -75,14 +64,12 @@ class Session_step(object):
     def base(self):
         return
 
-
     ##### Data Analysis tools 
     ###########################################################################
 
-
-
 ## class Session_step
 #########################################################
+
 
 #########################################################
 #########################################################
@@ -99,20 +86,22 @@ class Session_step(object):
 ## class Working_session
 
 class Working_session(object):
+    """TODO"""
+
     def __init__(self, params = None, params_file = None, directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
 
         if params != None or params_file != None:
             params = params or func.load_json(params_file,directory)
-        
         self.params = params
-        self.logs = {}
-        
+
         self._student = student or config.student(self.params["student"])
         self._seq_manager = seq_manager or config.seq_manager(self.params["seq_manager"])
 
         self._KC = self._seq_manager.get_KC()
+        
         self._step = []
         self._current_ex = None
+        #self.log = SessionLog
 
     @property
     def student(self):
@@ -133,44 +122,39 @@ class Working_session(object):
     @property
     def KC(self):
         return self._KC
-    
-    
 
-    def get_working_session_logs(self):
-        session_logs = {}
-        session_logs["stude_ID"] = self._student.id
-        session_logs["RT"] = self._seq_manager.getRTnames()
-        session_logs["KC"] = self._KC
-        session_logs["nbValueParam"] = self._seq_manager.getNbValueParam()
-        session_logs["step"] = self._step
-        return session_logs
+    # methods
 
-    def run(self,nb_ex):
+    def run(self, nb_ex):
         for i in range(nb_ex):
             self.step_forward()
+
+    def step_forward(self):
+        ex = self.new_exercise()
+        self.student_answer(ex)
+        self.save_actual_step(ex)
+        #self.log.log(new_ex, student_answer)
+        self.update_manager(ex)
 
     def new_exercise(self):
         act = self._seq_manager.sample()
         ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
         self._current_ex = Exercise(act,ex_skill_lvl,self._KC)
+        return self._current_ex
 
-    def student_answer(self,answer = None, nb_try = 0):
-        self._student.answer(self._current_ex,answer, nb_try = nb_try)
-        self.save_actual_step()
+    def student_answer(self, ex, answer=None, nb_try=0):
+        self._student.answer(ex, answer, nb_try=nb_try)
     
-    def update_manager(self):
-        self._seq_manager.update(self._current_ex.act,self._current_ex._answer)
+    def update_manager(self, ex):
+        self._seq_manager.update(ex.act, ex._answer)
 
-    def step_forward(self):
-        self.new_exercise()
-        self.student_answer()
-        self.update_manager()
+    # to delete
 
-    def actual_step(self):
-        return Session_step(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(self._current_ex))
+    def actual_step(self,ex = None):
+        return Session_step(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(ex or self._current_ex))
         
-    def save_actual_step(self):
-        self._step.append(self.actual_step())
+    def save_actual_step(self,ex):
+        self._step.append(self.actual_step(ex))
 
     ###########################################################################
     ##### Data Analysis tools 
@@ -244,17 +228,14 @@ class Working_group(object):
                 data.append(ws.step[time])
         return data
 
-    def get_ex_repartition_time(self,nb_ex = 100):
-        type_ex = ["M","R","MM","RM"]
-        nb_ex_type = [6,4,4,4]
-        def repart_base(j):
-            return [0 for i in range(nb_ex_type[j])]
+    def get_ex_repartition_time(self, nb_ex=100, type_ex=["M","R","MM","RM"], 
+                                nb_ex_type=[6,4,4,4]):
         
         repart = [[],[],[],[]]
         for i in range(nb_ex):
             exs = self.get_data_time(i,"_exercise","_act")
             for nbType in range(len(type_ex)):
-                repart[nbType].append(repart_base(nbType))
+                repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
             for j in range(len(exs)):
                 repart[exs[j]["MAIN"][0]][i][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
 
@@ -272,7 +253,8 @@ class Working_group(object):
 ## class Experiment
 
 class Experiment(object):
-    def __init__(self,params = None, params_file = None, directory = "params_files", working_groups = None, *args, **kwargs):
+    def __init__(self,params = None, params_file = None, directory = "params_files",
+                 working_groups = None, *args, **kwargs):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()
@@ -398,6 +380,8 @@ class Experiment(object):
     ## Population generation functions
     ##############################################################
 
+    """ TO DO and rework next methods """
+
     # Generate population
     ##############################################################
 
@@ -450,7 +434,7 @@ class Experiment(object):
     def generate_ktfeatures_population(self,kt_profil = 0):
         population = []
         for i in range(self._nb_students):
-            population.append(KT_student(self.config._knowledges_conf))
+            population.append(KT_student(self.config.knowledges_conf))
         return population
 
         return population
