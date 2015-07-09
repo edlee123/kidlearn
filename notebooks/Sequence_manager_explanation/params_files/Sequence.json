@@ -1,0 +1,21 @@
+{
+    "name" : "Sequence",
+     "RT": { 
+        "name": "MAIN",
+        "path" : "RT/expe"
+    },
+
+    "toLvlYp": 12,
+    "sizeSerie": 4,
+    "minAns": 4,
+
+    "RIARIT_ssbg": {
+        "levelupdate": 0.6,
+
+        "RIARIT_ssb": {
+            "filter1": 0.2, 
+            "filter2": 0.8, 
+            "uniformval": 0.05
+        }
+    }
+}
