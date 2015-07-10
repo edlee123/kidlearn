@@ -11,17 +11,17 @@
 
     "seq_manager": {
 
-        "name" : "RIARIT_hssbg",
+        "name" : "RiaritHssbg",
         "RT": { 
             "name":"N1",
             "path" : "RT/test1"
             },
 
-        "RIARIT_ssbg": {
-            "name" : "RIARIT_ssbg",
+        "RiaritSsbg": {
+            "name" : "RiaritSsbg",
             "levelupdate": 0.6,
 
-            "RIARIT_ssb": {
+            "RiaritSsb": {
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05

@@ -22,7 +22,7 @@ from knowledge import *
 ################################################################################
 ## Class KT Knowledge basic
 
-class KT_knowledge(Knowledge):
+class KTKnowledge(Knowledge):
     def __init__(self,name, KT_params = None, level = 0, num_id = None):
         Knowledge.__init__(self,name,level,num_id)
         KT_params = KT_params or {"L0" : 0.02,"T": 0.01, "G" : 0.1, "S" : 0.1}

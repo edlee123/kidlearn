@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        kt_student
+# Name:        KTStudent
 #Purpose:
 #
 # Author:      Bclement
@@ -19,11 +19,11 @@ from student import *
 ## Class KT student
 ################################################################################
 
-class KT_student(Student):
+class KTStudent(Student):
     def __init__(self,kc_params,id = "x"):
         Student.__init__(self,id)
         for i in range(len(kc_params)):
-            self._knowledges.append(KT_features(**kc_params[i]))
+            self._knowledges.append(KTFeatures(**kc_params[i]))
 
     def __repr__(self):
         str = ""

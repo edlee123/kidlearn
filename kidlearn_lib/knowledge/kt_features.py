@@ -24,7 +24,7 @@ import math
 ################################################################################
 ## Class KT Knowledge feature
 
-class KT_features(KT_knowledge):
+class KTFeatures(KTKnowledge):
     def __init__(self,name, num_id, beta_0 = None, beta = None,level = 0, *args,**kwargs):# knowledge_params = {},
     #,subs_names = None, subs_levels = None, subs_trans_param = None, subs_emission_param= None):
         Knowledge.__init__(self,name,level,num_id,**kwargs)
@@ -34,7 +34,7 @@ class KT_features(KT_knowledge):
         self._p_Lt = []
         #self._subskills = subskills or []
         #if subskills != None or subs_trans_param != None:
-        #    self._subskills = subskills or [KT_features(sn,sl,beta = stp) for (sn,sl,stp) in zip(subs_names,subs_levels,subs_trans_param)]
+        #    self._subskills = subskills or [KTFeatures(sn,sl,beta = stp) for (sn,sl,stp) in zip(subs_names,subs_levels,subs_trans_param)]
         #    self.transition_prob([subs._name for subs in self._subskills],step = 0)
         self.update_knowledge(prob = self._beta_0)
 
@@ -59,7 +59,7 @@ class KT_features(KT_knowledge):
             self._p_T = prob 
         else: 
             self._p_T = self.transition_prob(exercise,stud_knowledge)
-        KT_knowledge.update_knowledge(self)
+        KTKnowledge.update_knowledge(self)
 
     def transition_prob(self,exercise,stud_knowledge = None):
         subskill_mastery = stud_knowledge #or np.array([subskill._level for subskill in self._subskills])

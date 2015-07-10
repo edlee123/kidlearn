@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        random_sequence
+# Name:        RandomSequence
 # Purpose:
 #
 # Author:      Bclement
@@ -16,11 +16,11 @@ import operator
 import copy
 import numpy as np
 
-class Random_sequence(RIARIT_hssbg):
+class RandomSequence(RiaritHssbg):
 
     def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
 
-        RIARIT_hssbg.__init__(self, params = params)
+        RiaritHssbg.__init__(self, params = params)
         self.all_ExPossible()
         self.calcul_all_Ex_lvl()
 

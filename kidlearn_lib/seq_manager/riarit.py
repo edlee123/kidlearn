@@ -13,16 +13,16 @@
 from hssbg import *
 import os
 import functions as func
-# class RIARIT_ssbg(object): pass
-# class RIARIT_ssb(object): pass
+# class RiaritSsbg(object): pass
+# class RiaritSsb(object): pass
 
 #########################################################
 #########################################################
 ## class RIARIT_hssb
 
-class RIARIT_hssbg(HierarchySSBG):
+class RiaritHssbg(HierarchicalSSBG):
 
-    # ssbgClasse = RIARIT_ssbg
+    # ssbgClasse = RiaritSsbg
 
     def __init__(self, params = None, params_file = "seq_test_1", directory = "params_files"):
         # params : RT, path
@@ -30,7 +30,7 @@ class RIARIT_hssbg(HierarchySSBG):
         params = params or func.load_json(params_file,directory)
         self.current_lvl_ex = {}
         
-        HierarchySSBG.__init__(self, params = params)
+        HierarchicalSSBG.__init__(self, params = params)
         self.load_Error()
         #self.CreateHSSBG(RT)
 
@@ -39,7 +39,7 @@ class RIARIT_hssbg(HierarchySSBG):
         return self.SSBGs[self.main_act].competences
 
     def get_state(self):
-        state = HierarchySSBG.get_state(self)
+        state = HierarchicalSSBG.get_state(self)
         state["estim_lvl"] = self.get_estim_level(self.main_act, dict_form = 1)
         return state
 
@@ -57,9 +57,9 @@ class RIARIT_hssbg(HierarchySSBG):
         return
 
     def instantiate_ssbg(self,RT):
-        params = self.params["RIARIT_ssbg"]
+        params = self.params["RiaritSsbg"]
         params["RT"] = RT
-        return RIARIT_ssbg(params = params)
+        return RiaritSsbg(params = params)
 
     def compute_act_lvl(self, act, RT = None, **kwargs):
         lvl = {}
@@ -135,8 +135,8 @@ class RIARIT_hssbg(HierarchySSBG):
 
 #########################################################
 #########################################################
-## class RIARIT_ssbg
-class RIARIT_ssbg(SSBanditGroup):
+## class RiaritSsbg
+class RiaritSsbg(SSBanditGroup):
 
     def __init__(self,params = None, params_file = "Rssb_test_1", directory = "params_files"):
         SSBanditGroup.__init__(self,params = params)
@@ -147,9 +147,9 @@ class RIARIT_ssbg(SSBanditGroup):
         return
 
     def instanciate_ssb(self,ii,is_hierarchical):
-        params = self.params["RIARIT_ssb"]
+        params = self.params["RiaritSsb"]
 
-        return RIARIT_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii], params = params)
+        return RiaritSsb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii], params = params)
 
     def get_estim_level(self,**kwargs):
         if "dict_form" in kwargs.keys():
@@ -293,16 +293,16 @@ class RIARIT_ssbg(SSBanditGroup):
             self.SSB[ii].update(act[ii], r_KC)
             self.SSB[ii].promote(self.estim_level)
 
-RIARIT_hssbg.ssbgClasse = RIARIT_ssbg
+RiaritHssbg.ssbgClasse = RiaritSsbg
 
-## class RIARIT_ssbg
+## class RiaritSsbg
 #########################################################
 
 #########################################################
 #########################################################
-## class RIARIT_ssb
+## class RiaritSsb
 
-class RIARIT_ssb(SSbandit):
+class RiaritSsb(SSbandit):
 
     def __init__(self,id, nval, ntask, requer, stop, is_hierarchical = 0, param_values = [], params = {}):
         # params : 
@@ -328,5 +328,5 @@ class RIARIT_ssb(SSbandit):
 
         return
 
-## class RIARIT_ssb
+## class RiaritSsb
 #########################################################

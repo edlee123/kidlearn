@@ -1189,7 +1189,7 @@ def all_bot2(data1):
 
 
 #Plot cluster P student with subplot
-def plot_cluster_lvl_sub(data,nb_stud = 1000,nb_ex = None,title = 'Number of student doing each level at each time per cluster', legend = ("1","2","3","4","5","6","7","8","9","10"),labels = ['Time','Number of student'], yerr_al=None, yerr_def=None, path = "", ref = "haha", dataToUse = [0,1,2]):
+def plot_cluster_lvl_sub(data,nb_stud = 1000,nb_ex = None,title = 'Number of student doing each level at each time per cluster', legend = ("1","2","3","4","5","6","7","8","9","10"),labels = ['Time','Number of student'], yerr_al=None, yerr_def=None, path = "", ref = "haha", dataToUse = [0,1,2], show = 0, save = 1):
     data = [data[x] for x in dataToUse]
     plt.cla()
     plt.clf()
@@ -1277,13 +1277,14 @@ def plot_cluster_lvl_sub(data,nb_stud = 1000,nb_ex = None,title = 'Number of stu
     
     #plt.xticks(ind+width/2., (labelaxe) )
     
-
-    #plt.show()
-    plt.draw()
-    print path
-    if path != "0000" :
+    if save :
+        plt.draw()
         path_f = path + ref
         plt.savefig(path_f)
+    
+    if show :
+        plt.show()
+
     
     return
 

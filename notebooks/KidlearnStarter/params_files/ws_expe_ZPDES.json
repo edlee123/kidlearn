@@ -7,17 +7,17 @@
 
     "seq_manager": {
 
-        "name" : "ZPDES_hssbg",
+        "name" : "ZpdesHssbg",
         "RT": { 
             "name": "MAIN",
             "path" : "RT/expe"
         },
 
-        "ZPDES_ssbg": {
-            "name" : "ZPDES_ssbg",
+        "ZpdesSsbg": {
+            "name" : "ZpdesSsbg",
             "levelupdate": 0.6,
 
-            "ZPDES_ssb" :{
+            "ZpdesSsb" :{
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05,

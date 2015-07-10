@@ -1,13 +1,13 @@
-from .hssbg import * #HierarchySSBG 
-from .riarit import *  #RIARIT_hssbg
-from .zpdes import * #ZPDES_hssbg
+from .hssbg import * #HierarchicalSSBG 
+from .riarit import *  #RiaritHssbg
+from .zpdes import * #ZpdesHssbg
 from .teacher_sequence import Sequence
-from .random_sequence import Random_sequence
+from .random_sequence import RandomSequence
 
 seq_dict_gen = {}
-seq_dict_gen["RIARIT_hssbg"] = RIARIT_hssbg
-seq_dict_gen["RIARIT_ssbg"] = RIARIT_ssbg
-seq_dict_gen["ZPDES_hssbg"] = ZPDES_hssbg
-seq_dict_gen["ZPDES_ssbg"] = ZPDES_ssbg
+seq_dict_gen["RiaritHssbg"] = RiaritHssbg
+seq_dict_gen["RiaritSsbg"] = RiaritSsbg
+seq_dict_gen["ZpdesHssbg"] = ZpdesHssbg
+seq_dict_gen["ZpdesSsbg"] = ZpdesSsbg
 seq_dict_gen["Sequence"] = Sequence
-seq_dict_gen["Random_sequence"] = Random_sequence
+seq_dict_gen["RandomSequence"] = RandomSequence

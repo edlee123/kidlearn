@@ -12,7 +12,7 @@
 
 import os
 import sys
-from seq_manager import Sequence, ZPDES_hssbg, RIARIT_hssbg, Random_sequence
+from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence
 from exercise import Exercise
 from student import *
 import functions as func
@@ -26,9 +26,9 @@ import time
 
 #########################################################
 #########################################################
-## class Session_step
+## class SessionStep
 
-class Session_step(object):
+class SessionStep(object):
     """\
         SessionStep Definition
     """
@@ -67,7 +67,7 @@ class Session_step(object):
     ##### Data Analysis tools 
     ###########################################################################
 
-## class Session_step
+## class SessionStep
 #########################################################
 
 
@@ -83,9 +83,9 @@ class Session_step(object):
 
 #########################################################
 #########################################################
-## class Working_session
+## class WorkingSession
 
-class Working_session(object):
+class WorkingSession(object):
     """TODO"""
 
     def __init__(self, params = None, params_file = None, directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
@@ -151,7 +151,7 @@ class Working_session(object):
     # to delete
 
     def actual_step(self,ex = None):
-        return Session_step(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(ex or self._current_ex))
+        return SessionStep(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(ex or self._current_ex))
         
     def save_actual_step(self,ex):
         self._step.append(self.actual_step(ex))
@@ -166,15 +166,15 @@ class Working_session(object):
     ##### Data Analysis tools 
     ###########################################################################
 
-## class Working_session
+## class WorkingSession
 #########################################################
 
 
 #########################################################
 #########################################################
-## class Working_group
-class Working_group(object):
-    def __init__(self, params = None, params_file = None, directory = "params_files",population = None, working_sessions = None, *args, **kwargs):
+## class WorkingGroup
+class WorkingGroup(object):
+    def __init__(self, params = None, params_file = None, directory = "params_files",population = None, WorkingSessions = None, *args, **kwargs):
         #params : 
 
         params = params or func.load_json(params_file,directory)
@@ -182,46 +182,46 @@ class Working_group(object):
         self.population = population or config.population(params = params["population"])
         self.logs = {}
 
-        if working_sessions:
-            self._working_sessions = working_sessions
+        if WorkingSessions:
+            self._WorkingSessions = WorkingSessions
         else:
-            self._working_sessions = []
+            self._WorkingSessions = []
             for student_params in self.population:
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
-                self._working_sessions.append(Working_session(params = params))
+                self._WorkingSessions.append(WorkingSession(params = params))
 
 
     @property
-    def working_sessions(self):
-        return self._working_sessions
+    def WorkingSessions(self):
+        return self._WorkingSessions
 
     @property
     def students(self):
-        students = [ws.student for ws in self._working_sessions]
+        students = [ws.student for ws in self._WorkingSessions]
         return students
     
 
-    def get_working_session(self,num_stud = 0, id_stud = None):
+    def get_WorkingSession(self,num_stud = 0, id_stud = None):
         if id_stud:
-            for ws in self._working_sessions:
+            for ws in self._WorkingSessions:
                 if ws.student.id == id_stud:
                     return ws
 
-        return self._working_sessions[num_stud]
+        return self._WorkingSessions[num_stud]
 
     def run(self,nb_ex):
-        for ws in self._working_sessions:
+        for ws in self._WorkingSessions:
             ws.run(nb_ex)
     
     def add_student(self,student,seq_manager):
-        self._working_sessions.append(Working_session(student,seq_manager))
+        self._WorkingSessions.append(WorkingSession(student,seq_manager))
 
     ###########################################################################
     ##### Data Analysis tools 
     
     def get_data_time(self,time = 0, attr = None,*arg, **kwargs):
         data = []
-        for ws in self._working_sessions:
+        for ws in self._WorkingSessions:
             if attr:
                 data.append(ws.step[time].get_attr(attr,*arg))
             else: 
@@ -232,12 +232,13 @@ class Working_group(object):
                                 nb_ex_type=[6,4,4,4]):
         
         repart = [[],[],[],[]]
-        for i in range(nb_ex):
-            exs = self.get_data_time(i,"_exercise","_act")
+        for num_ex in range(nb_ex):
+            exs = self.get_data_time(num_ex,"exercise","_act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
+                #print repart
             for j in range(len(exs)):
-                repart[exs[j]["MAIN"][0]][i][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
+                repart[exs[j]["MAIN"][0]][num_ex][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
 
         return repart
 
@@ -245,7 +246,7 @@ class Working_group(object):
     ###########################################################################
 
 
-## class Working_group
+## class WorkingGroup
 #########################################################
 
 #########################################################
@@ -254,7 +255,7 @@ class Working_group(object):
 
 class Experiment(object):
     def __init__(self,params = None, params_file = None, directory = "params_files",
-                 working_groups = None, *args, **kwargs):
+                 WorkingGroups = None, *args, **kwargs):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()
@@ -263,9 +264,9 @@ class Experiment(object):
         self.logs = {}
 
         self._seq_manager_list_name = self.params["seq_manager_list"]
-        self._nb_students = self.params["nb_students"]
+        self._nb_students = self.params["population"]["nb_students"]
         self._nb_step = self.params["nb_step"]
-        self._model_student = self.params["student"]["model"]
+        self._model_student = self.params["population"]["model"]
         
         self.do_simu_path(self.params["ref_expe"])
 
@@ -273,18 +274,18 @@ class Experiment(object):
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
         
-        if working_groups:
-            self._groups = working_groups
+        if WorkingGroups:
+            self._groups = WorkingGroups
 
         else:
             self._groups = {key: [] for key in self._seq_manager_list_name}
             
-            self._population = self.define_population()
+            self._population = config.population(self.params["population"])
             for seq_manager_name in self._seq_manager_list_name:
-                params = self.params["working_group"]
+                params = self.params["WorkingGroup"]
                 params["seq_manager"] = self.params["seq_managers"][seq_manager_name]
                 params["population"] = self._population
-                self.add_working_group(params)
+                self.add_WorkingGroup(params)
 
         #self.population_simulation()
         #self.population = []
@@ -303,9 +304,9 @@ class Experiment(object):
         
         return 
 
-    def add_working_group(self,params):
-        self._groups[params["seq_manager"]["name"]].append(Working_group(params = params, population = self._population))
-        #self._groups[seq_manager_name].append(Working_group(population,self.define_seq_manager(seq_manager_name)))
+    def add_WorkingGroup(self,params):
+        self._groups[params["seq_manager"]["name"]].append(WorkingGroup(params = params, population = self._population))
+        #self._groups[seq_manager_name].append(WorkingGroup(population,self.define_seq_manager(seq_manager_name)))
 
     def do_simu_path(self,ref = ""):
         directory = ""
@@ -316,10 +317,10 @@ class Experiment(object):
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_step,ref)
 
     #def student_simulation(self, student, seq_manager_name):
-    #    working_session = Working_session(student,self.define_seq_manager(seq_manager_name))
-    #    working_session.run(self._nb_step)
-    #    #print working_session.get_working_session_logs()
-    #    self._groups[seq_manager_name].append(working_session)
+    #    WorkingSession = WorkingSession(student,self.define_seq_manager(seq_manager_name))
+    #    WorkingSession.run(self._nb_step)
+    #    #print WorkingSession.get_WorkingSession_logs()
+    #    self._groups[seq_manager_name].append(WorkingSession)
 
     #def population_simulation(self):
     #    for seq_manager_name in self._seq_manager_list_name:
@@ -362,17 +363,17 @@ class Experiment(object):
     #     #seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
         
     #     if seq_manager_name == "RiARiT":
-    #         #seq_manager = RIARIT_hssbg(self.RT_main, params = ssb_data)
-    #         seq_manager = RIARIT_hssbg(params = ssb_data[seq_manager_name])
+    #         #seq_manager = RiaritHssbg(self.RT_main, params = ssb_data)
+    #         seq_manager = RiaritHssbg(params = ssb_data[seq_manager_name])
     #     elif seq_manager_name == "ZPDES":
-    #         #seq_manager = ZPDES_hssbg(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = ZPDES_hssbg(params = ssb_data[seq_manager_name])
+    #         #seq_manager = ZpdesHssbg(self.RT_main, params = ssb_data[seq_manager_name])
+    #         seq_manager = ZpdesHssbg(params = ssb_data[seq_manager_name])
     #     elif seq_manager_name == "Sequence":
     #         #seq_manager = Sequence(self.RT_main, params = ssb_data[seq_manager_name])
     #         seq_manager = Sequence(params = ssb_data[seq_manager_name])
     #     else :
-    #         #seq_manager = Random_sequence(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = Random_sequence(params = ssb_data["Random"])
+    #         #seq_manager = RandomSequence(self.RT_main, params = ssb_data[seq_manager_name])
+    #         seq_manager = RandomSequence(params = ssb_data["Random"])
         
     #     return seq_manager
 
@@ -387,7 +388,7 @@ class Experiment(object):
 
     def define_population(self, config = None):
         self.population_generation_parameters()
-        if self._model_student == 0:
+        if self._model_student == "Qstudent":
             population = self.generate_qstudent_population()
 
         elif self._model_student == 1:
@@ -409,7 +410,7 @@ class Experiment(object):
         population = []
 
         for stud_skills in population_q_profiles:
-            params = self.params["student"]
+            params = self.params["population"]
             params["knowledge_levels"] = stud_skills
             params["knowledge_names"] = self._knowledge_names
 
@@ -428,13 +429,13 @@ class Experiment(object):
     def generate_ktstudent_population(self,kt_profil = 0):
         population = []
         for i in range(self._nb_students):
-            population.append(KT_student(knowledge_names = self._knowledge_names, knowledge_params = self._kt_student_profils[kt_profil]))
+            population.append(KTStudent(knowledge_names = self._knowledge_names, knowledge_params = self._KTStudent_profils[kt_profil]))
         return population
 
     def generate_ktfeatures_population(self,kt_profil = 0):
         population = []
         for i in range(self._nb_students):
-            population.append(KT_student(self.config.knowledges_conf))
+            population.append(KTStudent(self.config.knowledges_conf))
         return population
 
         return population
@@ -535,14 +536,14 @@ class Experiment(object):
         ## Definition of KT student profils
         ################################################################################
         
-        self._kt_student_profils = []
-        self._kt_student_profils.append([{"L0" : 0.01,"T": 0.02, "G" : 0.1, "S" : 0.1}])
-        #self._kt_student_profils.append({"KnowMoney":0,"IntSum":0, "IntSub":0, "IntDec":0, "DecSum":0, "DecSub":0, "DecDec":0})
+        self._KTStudent_profils = []
+        self._KTStudent_profils.append([{"L0" : 0.01,"T": 0.02, "G" : 0.1, "S" : 0.1}])
+        #self._KTStudent_profils.append({"KnowMoney":0,"IntSum":0, "IntSub":0, "IntDec":0, "DecSum":0, "DecSub":0, "DecDec":0})
 
         ################################################################################
         ## Definition of KT student profils
         ################################################################################
         
-        self._kt_student_profils = []
-        self._kt_student_profils.append([{"beta_0": 0.1,"beta":[0,0,0]}])
+        self._KTStudent_profils = []
+        self._KTStudent_profils.append([{"beta_0": 0.1,"beta":[0,0,0]}])
 

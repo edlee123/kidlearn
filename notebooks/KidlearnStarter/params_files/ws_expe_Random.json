@@ -7,17 +7,17 @@
 
     "seq_manager": {
 
-        "name" : "Random_sequence",
+        "name" : "RandomSequence",
 
          "RT": { 
             "name": "MAIN",
             "path" : "RT/expe"
         },
 
-        "RIARIT_ssbg": {
+        "RiaritSsbg": {
             "levelupdate": 0.6,
 
-            "RIARIT_ssb": {
+            "RiaritSsb": {
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05

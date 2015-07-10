@@ -43,7 +43,7 @@ A = k_lib.config.seq_manager(params_file="RIARIT",directory="params_files/notebo
 
 # We crate a working session base on the student and the algorithm.
 
-workSession = k_lib.experimentation.Working_session(student=s,seq_manager=A)
+workSession = k_lib.experimentation.WorkingSession(student=s,seq_manager=A)
 
 # To run one step, you can use the "*step_forward()*" function. 
 
@@ -70,9 +70,9 @@ workSession.step[0:10] # show the first 10 step
 
 ##### Use of  and 3 sequences managers (RiARiT, ZPDES, Random)
 
-wsRiarit = k_lib.experimentation.Working_session(params_file="ws_expe_RiARiT")
-wsZpdes = k_lib.experimentation.Working_session(params_file="ws_expe_ZPDES")
-wsRandom = k_lib.experimentation.Working_session(params_file="ws_expe_Random")
+wsRiarit = k_lib.experimentation.WorkingSession(params_file="ws_expe_RiARiT")
+wsZpdes = k_lib.experimentation.WorkingSession(params_file="ws_expe_ZPDES")
+wsRandom = k_lib.experimentation.WorkingSession(params_file="ws_expe_Random")
 
 wsRiarit.run(100)
 wsZpdes.run(100)

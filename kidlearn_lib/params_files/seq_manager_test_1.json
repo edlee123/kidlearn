@@ -1,16 +1,16 @@
 {
-    "RIARIT_hssbg": {
+    "RiaritHssbg": {
         
         "main_RT": "MAIN", 
         "path_RT" : "hierarchyRT",
-        "RIARIT_ssbg": {
+        "RiaritSsbg": {
             
         }
         
 
     },
 
-    "ZPDES_hssbg":{
+    "ZpdesHssbg":{
 
     }
 }

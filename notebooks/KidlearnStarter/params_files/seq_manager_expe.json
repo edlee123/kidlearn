@@ -1,16 +1,16 @@
 {
-    "RIARIT_hssbg":{
-        "name" : "RIARIT_hssbg",
+    "RiaritHssbg":{
+        "name" : "RiaritHssbg",
         "RT": { 
             "name": "MAIN",
             "path" : "RT/hierarchyRT/expe"
         },
 
-        "RIARIT_ssbg": {
-            "name" : "RIARIT_ssbg",
+        "RiaritSsbg": {
+            "name" : "RiaritSsbg",
             "levelupdate": 0.6,
 
-            "RIARIT_ssb": {
+            "RiaritSsb": {
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05
@@ -18,18 +18,18 @@
         }
     },
 
-    "ZPDES_hssbg":{
-        "name" : "ZPDES_hssbg",
+    "ZpdesHssbg":{
+        "name" : "ZpdesHssbg",
         "RT": { 
             "name": "MAIN",
             "path" : "RT/hierarchyRT/expe"
         },
 
-        "ZPDES_ssbg": {
-            "name" : "ZPDES_ssbg",
+        "ZpdesSsbg": {
+            "name" : "ZpdesSsbg",
             "levelupdate": 0.6,
 
-            "ZPDES_ssb" :{
+            "ZpdesSsb" :{
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05,
@@ -50,10 +50,10 @@
         "sizeSerie": 4,
         "minAns": 4,
 
-        "RIARIT_ssbg": {
+        "RiaritSsbg": {
             "levelupdate": 0.6,
 
-            "RIARIT_ssb": {
+            "RiaritSsb": {
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05
@@ -61,18 +61,18 @@
         }
     },
 
-    "Random_sequence":{
-        "name" : "Random_sequence",
+    "RandomSequence":{
+        "name" : "RandomSequence",
 
          "RT": { 
             "name": "MAIN",
             "path" : "RT/hierarchyRT/expe"
         },
 
-        "RIARIT_ssbg": {
+        "RiaritSsbg": {
             "levelupdate": 0.6,
 
-            "RIARIT_ssb": {
+            "RiaritSsb": {
                 "filter1": 0.2, 
                 "filter2": 0.8, 
                 "uniformval": 0.05

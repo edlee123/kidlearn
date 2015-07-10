@@ -20,9 +20,9 @@ def dissample(p):
 #########################################################
 #########################################################
 #########################################################
-## class HierarchySSBG
+## class HierarchicalSSBG
 
-class HierarchySSBG(object):
+class HierarchicalSSBG(object):
 
     #ssbgClasse = SSBanditGroup
 
@@ -136,7 +136,7 @@ class HierarchySSBG(object):
                 self.speSample(self.SSBGs[nameRT],act)
         return act
 
-## class HierarchySSBG
+## class HierarchicalSSBG
 #########################################################
 
 #########################################################
@@ -217,7 +217,7 @@ class SSBanditGroup(object):
                 self.nbturn[i] = 0
         return self.act
 
-#HierarchySSBG.ssbgClasse = SSBanditGroup
+#HierarchicalSSBG.ssbgClasse = SSBanditGroup
 
 ## class SSBanditGroup
 #########################################################
