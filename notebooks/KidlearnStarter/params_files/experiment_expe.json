@@ -94,7 +94,7 @@
 
         "RandomSequence":{
             "name" : "RandomSequence",
-            "random_type" : 2,
+            "random_type" : 0,
             "seq_path": {
                 "params_file" : "expe_seq",
                 "directory" : "sequence_def"
