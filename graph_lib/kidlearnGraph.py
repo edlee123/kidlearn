@@ -943,12 +943,13 @@ def draw_p_learn_curve(p_al,p_def,nbstud,path = ""):
         
     return
 
-def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb_ex = 100, typeData = "successRate",type_data_spe = "MAIN", ref = "", markers = None, titleC = "", colors = [["#00BBBB","black",'#FF0000']], line_type = ['dashed','solid','dashdot','dotted'], legend_position = 1,showPlot = False,std_data = None):
+def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb_ex = 100, typeData = "successRate",type_data_spe = "MAIN", ref = "", markers = None, titleC = "", colors = [["#00BBBB","black",'#FF0000']], line_type = ['dashed','solid','dashdot','dotted'], legend_position = 1,showPlot = True,std_data = None):
 
     plt.cla()
     plt.clf()
     plt.close()
-    fig = plt.figure()#figsize=(20, 13))
+    #plt.figure()
+    fig = plt.figure(figsize=(20, 13))
     ax = fig.add_subplot(111)
 
     xylabels = ["Time",typeData]
@@ -987,8 +988,9 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
             if std_data == None : 
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             else:
-                y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(2001)]
-                y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i] for i in range(2001)]
+
+                y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i]/2 for i in range(100)]
+                y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i]/2 for i in range(100)]
 
                 plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.2)
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
@@ -1013,17 +1015,19 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
     #    plt.legend(bbox_to_anchor=(0,0,0.3,1),ncol=1, fancybox=True, shadow=True, prop={'size':14})
     #else:
     
-    plt.legend(bbox_to_anchor=(0,0,1.1,0.5),ncol=1, fancybox=True, shadow=True, prop={'size':8})
+    plt.legend(bbox_to_anchor=(0,0,1.1,0),ncol=1, fancybox=True, shadow=True, prop={'size':20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
     if showPlot:
         plt.show()
-    else:
+
+    if path != "" :
         plt.draw()
-        if path != "" :
-            path_f = path + "Curve_%s_%s_%s" % (typeData,type_data_spe,ref)
-            #print path_f
-            plt.savefig(path_f)
+        path_f = path + "Curve_%s_%s_%s" % (typeData,type_data_spe,ref)
+        #print path_f
+        plt.savefig(path_f)
+
+    return
 
 def draw_fill():
     x = np.linspace(0, 2 * np.pi, 100)
@@ -1085,8 +1089,9 @@ def draw_learn_curve(gr1, gr2 = 0,path = "", labels = [["estimated RiARiT", "sim
         mean_data.append([])
         std_data.append([])
         for sd in data[type_d] :
-             mean_data[type_d].append(make_mean(sd)[0])
-             std_data[type_d].append(make_mean(sd)[1])
+            mean_std = make_mean(sd)
+            mean_data[type_d].append(mean_std[0])
+            std_data[type_d].append(mean_std[1])
 
     mean_data_skill = []
     std_data_skill = []
