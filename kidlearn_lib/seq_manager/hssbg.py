@@ -209,6 +209,15 @@ class SSBanditGroup(object):
     def calcul_reward(self):
         return 0
 
+    def random_sample(self,nb_stay = None):
+
+        for i in range(self.nactions):
+            nb_stay = nb_stay or self.nb_stay[i]
+            if self.nbturn[i] % nb_stay == 0:
+                self.act[i] = int(self.SSB[i].random_sample())
+                self.nbturn[i] = 0
+        return self.act
+
     def sample(self):
 
         for i in range(self.nactions):
@@ -275,6 +284,10 @@ class SSbandit(object):
 
     def promote(self):
         return
+
+    def random_sample(self):
+        nn = [1.0/self.nval]*self.nval
+        return dissample(nn)
 
     def sample(self, exploration_coeff = 10):
         

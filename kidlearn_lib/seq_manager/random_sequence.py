@@ -10,7 +10,9 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
-from teacher_sequence import *
+#from teacher_sequence import Sequence
+from riarit import RiaritHssbg
+import functions as func
 #import random
 import operator
 import copy
@@ -21,31 +23,32 @@ class RandomSequence(RiaritHssbg):
     def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
 
         RiaritHssbg.__init__(self, params = params)
-        self.all_ExPossible()
+        self.generate_acts(**params["seq_path"])
         self.calcul_all_Ex_lvl()
+        self.random_type = params["random_type"]
 
         return
 
-    def sample(self,sample_mod = 0,use_nb_turn = 0):
-        if sample_mod == 0:
-            r = random.randint(0,len(self.all_ex))
-            return  self.all_ex[r]
+    def sample(self, nb_stay = 0):
+        if self.random_type == 0:
+            r = random.randint(0,len(self.acts))
+            return  self.acts[r]
 
-        elif sample_mod == 1:
-            return self.choose_lvl_random_ex
+        elif self.random_type == 1:
+            return self.choose_lvl_random_ex()
 
         else:
             act = {}
-            act = self.speSample(self.SSBGs[self.mainName],act,use_nb_turn)
-            self.lastAct = act
+            act = self.speSample(self.SSBGs[self.main_act],act,nb_stay)
+            #self.lastAct = act
             return act
 
-    def speSample(self,ssbgToS,act,use_nb_turn = 0):
-        act[ssbgToS.ID] = ssbgToS.random_sample(self.lastAct,use_nb_turn)
+    def speSample(self,ssbgToS,act,nb_stay = 0):
+        act[ssbgToS.ID] = ssbgToS.random_sample(nb_stay)
         for actRT in range(len(act[ssbgToS.ID])):
             nameRT = ssbgToS.param_values[actRT][act[ssbgToS.ID][actRT]]
             if nameRT[0:2] != 'NO':
-                self.speRandom_Sample(self.SSBGs[nameRT],act)
+                self.speSample(self.SSBGs[nameRT],act)
         return act
     
     def choose_lvl_random_ex(self):
@@ -74,73 +77,21 @@ class RandomSequence(RiaritHssbg):
 
         exToChoose = newDic[dist.index(min(dist))]
 
-        return self.all_ex[int(exToChoose[0])]
+        return self.acts[int(exToChoose[0])]
 
     def calcul_all_Ex_lvl(self):
         all_lvl = {}
-        for i in range(len(self.all_ex)):
-            all_lvl[str(i)] = mean(self.compute_act_lvl(self.all_ex[i],"MAIN"))
+        for i in range(len(self.acts)):
+            all_lvl[str(i)] = np.mean(self.compute_act_lvl(self.acts[i],"MAIN"))
         self.all_lvl = sorted(all_lvl.items(), key=operator.itemgetter(1))
         #print sorted_lvl
         return 
 
-    def all_ExPossible(self):
-        self.all_ex = []
-        self.all_ex.append({"MAIN" : [0], "M": [0]})
-        self.all_ex.append({"MAIN" : [0], "M": [1]})
-        self.all_ex.append({"MAIN" : [0], "M": [2]})
+    def generate_acts(self, params = None,  params_file = "expe_seq",directory = "sequence_def"):
+        params = params or func.load_json(params_file,directory)
+        self.acts = []
+        for act_groups  in params["activity"]:
+            for act in act_groups:
+                self.acts.append(act)
 
-        self.all_ex.append({"MAIN" : [0], "M": [3], "mod": [0]})
-        self.all_ex.append({"MAIN" : [0], "M": [3], "mod": [1]})
-        self.all_ex.append({"MAIN" : [0], "M": [4], "mod": [0]})
-        self.all_ex.append({"MAIN" : [0], "M": [4], "mod": [1]})
-        self.all_ex.append({"MAIN" : [0], "M": [5], "mod": [0]})
-        self.all_ex.append({"MAIN" : [0], "M": [5], "mod": [1]})
-
-        self.all_ex.append({"MAIN" : [1], "R": [0]})
-        self.all_ex.append({"MAIN" : [1], "R": [1]})
-
-        self.all_ex.append({"MAIN" : [1], "R": [2], "mod": [0]})
-        self.all_ex.append({"MAIN" : [1], "R": [2], "mod": [1]})
-        self.all_ex.append({"MAIN" : [1], "R": [3], "mod": [0]})
-        self.all_ex.append({"MAIN" : [1], "R": [3], "mod": [1]})
-
-        self.all_ex.append({"MAIN" : [2], "MM": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [2], "MM": [1], "UR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [1], "UR": [1]})
-
-        self.all_ex.append({"MAIN" : [2], "MM": [2], "Car": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [2], "Car": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [2], "MM": [2], "Car": [1], "DR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [2], "Car": [1], "DR": [1]})
-
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [0], "Car": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [0], "Car": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [1], "Car": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [1], "Car": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [0], "Car": [1], "DR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [0], "Car": [1], "DR": [1]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [1], "Car": [1], "DR": [0]})
-        self.all_ex.append({"MAIN" : [2], "MM": [3], "M4": [1], "Car": [1], "DR": [1]})
-
-        self.all_ex.append({"MAIN" : [3], "RM": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [3], "RM": [1], "UR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [1], "UR": [1]})
-
-        self.all_ex.append({"MAIN" : [3], "RM": [2], "Car": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [2], "Car": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [3], "RM": [2], "Car": [1], "DR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [2], "Car": [1], "DR": [1]})
-
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [0], "Car": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [0], "Car": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [0], "Car": [1], "DR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [0], "Car": [1], "DR": [1]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [1], "Car": [0], "UR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [1], "Car": [0], "UR": [1]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [1], "Car": [1], "DR": [0]})
-        self.all_ex.append({"MAIN" : [3], "RM": [3], "M4": [1], "Car": [1], "DR": [1]})
-
-        return 
+        return

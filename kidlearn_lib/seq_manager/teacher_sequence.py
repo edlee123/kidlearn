@@ -27,7 +27,7 @@ class Sequence(RiaritHssbg):
         sizeSerie = params['sizeSerie']
         RiaritHssbg.__init__(self, params = params)
         #self.fault = [0]*sizeSerie utsing ?
-        self.generate_acts()
+        self.generate_acts(**params["seq_path"])
         self.answers = [0]*sizeSerie
         self.seqLevels = [0]*len(self.acts)
         self.currentGroup = 0

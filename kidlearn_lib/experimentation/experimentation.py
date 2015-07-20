@@ -57,7 +57,10 @@ class SessionStep(object):
     def get_attr(self,attr,*arg,**kwargs):
         data = getattr(self,attr)
         if len(arg)>0:
-            data = getattr(data,arg[0])
+            if isinstance(data,dict) :
+                return data[arg[0]]
+            else:
+                data = getattr(data,arg[0])
 
         return data
 
@@ -106,7 +109,7 @@ class WorkingSession(object):
     @property
     def student(self):
         return self._student
-    
+
     @property
     def step(self):
         return self._step
@@ -159,6 +162,9 @@ class WorkingSession(object):
     ###########################################################################
     ##### Data Analysis tools 
     
+    def student_level_time(self,time = 0, kc = 0):
+        return self._step[time].student["knowledges"][kc].level
+
     def base(self):
         return
 
@@ -183,45 +189,51 @@ class WorkingGroup(object):
         self.logs = {}
 
         if WorkingSessions:
-            self._WorkingSessions = WorkingSessions
+            self._working_sessions = WorkingSessions
         else:
-            self._WorkingSessions = []
+            self._working_sessions = []
             for student_params in self.population:
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
-                self._WorkingSessions.append(WorkingSession(params = params))
+                self._working_sessions.append(WorkingSession(params = params))
 
 
     @property
-    def WorkingSessions(self):
-        return self._WorkingSessions
+    def working_sessions(self):
+        return self._working_sessions
 
     @property
     def students(self):
-        students = [ws.student for ws in self._WorkingSessions]
+        students = [ws.student for ws in self._working_sessions]
         return students
     
 
     def get_WorkingSession(self,num_stud = 0, id_stud = None):
         if id_stud:
-            for ws in self._WorkingSessions:
+            for ws in self._working_sessions:
                 if ws.student.id == id_stud:
                     return ws
 
-        return self._WorkingSessions[num_stud]
+        return self._working_sessions[num_stud]
 
     def run(self,nb_ex):
-        for ws in self._WorkingSessions:
+        for ws in self._working_sessions:
             ws.run(nb_ex)
     
     def add_student(self,student,seq_manager):
-        self._WorkingSessions.append(WorkingSession(student,seq_manager))
+        self._working_sessions.append(WorkingSession(student,seq_manager))
 
     ###########################################################################
     ##### Data Analysis tools 
     
-    def get_data_time(self,time = 0, attr = None,*arg, **kwargs):
+    def get_students_level(self, time = 0, kc = 0):
+        skill_level = []
+        for ws in self._working_sessions:
+            skill_level.append(ws.student_level_time(time,kc))
+        return skill_level
+
+    def get_data_time(self, time = 0, attr = None, *arg, **kwargs):
         data = []
-        for ws in self._WorkingSessions:
+        for ws in self._working_sessions:
             if attr:
                 data.append(ws.step[time].get_attr(attr,*arg))
             else: 
@@ -339,14 +351,16 @@ class Experiment(object):
         #TODO
         return
 
-    def run(self):
+    def run(self, nb_ex = None):
+        nb_ex = nb_ex or self._nb_step
         for name,group in self._groups.items():
             print name
-            self.lauch_group_simulation(group)
+            self.lauch_group_simulation(group, nb_ex)
 
-    def lauch_group_simulation(self,group):
+    def lauch_group_simulation(self, group, nb_ex = None):
+        nb_ex = nb_ex or self._nb_step
         for sub_group in group:
-            sub_group.run(self._nb_step)
+            sub_group.run(nb_ex)
 
     # Define sequence manager
     ##############################################################
