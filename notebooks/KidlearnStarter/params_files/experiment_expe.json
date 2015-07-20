@@ -67,6 +67,11 @@
 
         "Sequence":{
             "name" : "Sequence",
+            "seq_path": {
+                "params_file" : "expe_seq",
+                "directory" : "sequence_def"
+            },
+
              "RT": { 
                 "name": "MAIN",
                 "path" : "RT/expe"
@@ -89,6 +94,11 @@
 
         "RandomSequence":{
             "name" : "RandomSequence",
+            "random_type" : 2,
+            "seq_path": {
+                "params_file" : "expe_seq",
+                "directory" : "sequence_def"
+            },
 
              "RT": { 
                 "name": "MAIN",
