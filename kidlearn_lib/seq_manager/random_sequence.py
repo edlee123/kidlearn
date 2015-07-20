@@ -31,7 +31,7 @@ class RandomSequence(RiaritHssbg):
 
     def sample(self, nb_stay = 0):
         if self.random_type == 0:
-            r = random.randint(0,len(self.acts))
+            r = np.random.randint(0,len(self.acts))
             return  self.acts[r]
 
         elif self.random_type == 1:
