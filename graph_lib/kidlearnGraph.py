@@ -9,6 +9,9 @@ from matplotlib.patches import Rectangle
 import pylab as pylab
 #from my_functions import *
 
+import seaborn
+seaborn.set_style("darkgrid")
+
 from scipy.cluster.vq import vq, kmeans, whiten, kmeans2
 import copy
 
@@ -989,8 +992,8 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             else:
 
-                y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i]/2 for i in range(100)]
-                y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i]/2 for i in range(100)]
+                y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i]/2 for i in range(nb_ex)]
+                y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i]/2 for i in range(nb_ex)]
 
                 plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.2)
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
@@ -1194,7 +1197,7 @@ def all_bot2(data1):
 
 
 #Plot cluster P student with subplot
-def plot_cluster_lvl_sub(data,nb_stud = 1000,nb_ex = None,title = 'Number of student doing each level at each time per cluster', legend = ("1","2","3","4","5","6","7","8","9","10"),labels = ['Time','Number of student'], yerr_al=None, yerr_def=None, path = "", ref = "haha", dataToUse = [0,1,2], show = 0, save = 1):
+def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of student doing each level at each time per cluster', legend = ("1","2","3","4","5","6","7","8","9","10"),labels = ['Time','Number of student'], yerr_al=None, yerr_def=None, path = "", ref = "haha", dataToUse = [0,1,2], show = 0, save = 1):
     data = [data[x] for x in dataToUse]
     plt.cla()
     plt.clf()
