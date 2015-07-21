@@ -239,7 +239,7 @@ def perseus(pomdp = None, D = None):
     print "R %s" % pomdp._R
     print "rmin %s"  % pomdp._R.min(axis = 0)
 
-    V = min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._Gamma)
+    V = np.matrix(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._Gamma))
     print "V %s" %  V
     
     while Quit == 0:
@@ -344,10 +344,12 @@ def perseusBackup(pomdp, V, D):
             """
             # bug for NOW TO DO DEbugging 
             """
-            
-            Idx = V * bnew
-            Idx = np.amax(Idx, 0)
-            Vupd = V[Idx, :]
+
+            idx = V * bnew
+            print idx
+            idx = np.amax(idx, 1)
+            print idx
+            Vupd = V[idx, :]
 
             # Compute observation probabilities and multiply
             
@@ -355,7 +357,42 @@ def perseusBackup(pomdp, V, D):
             g[:, a] = pomdp._R[:, a] + pomdp._Gamma * pomdp._P[a] * OxVupd
 
             # To make g and V same dimensional
+        
             g = g.T
-
+        
+        # Compute new vector to add to new basis
+    
         [vNew, kNew] = np.amax(b * g.T, 2)
         [vOld, kOld] = np.amax(b * V.T, 2)
+
+        if vNew >= vOld:
+            aNew = g[kNew, :]
+        else :
+            aNew = V[kOld, :]
+         
+        # Add new vector to basis
+        print Vnew
+        #if isempty(Vnew):
+        #    tmp = 0
+        #else:
+        #    tmp = aNew(ones(size(Vnew, 1), 1),:) == Vnew
+        #    tmp = sum(double(tmp), 2)
+        #
+        #if (all(tmp ~= POMDP.nS)):
+        #    Vnew = [Vnew; aNew]
+        #
+        ## Recompute Dqueue
+        #
+        #Vaux = Dqueue * V'
+        #vOld = max(Vaux, [], 2)
+        #
+        #Vaux = Dqueue * Vnew'
+        #vNew = max(Vaux, [], 2)
+        #
+        #Dqueue = Dqueue(vNew <= vOld, :)
+        #
+        #if (isempty(Dqueue) || Iter == MAX_ITER):
+        #    Quit = 1
+        #else:
+        #    Iter = Iter + 1
+

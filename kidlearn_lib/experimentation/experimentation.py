@@ -104,6 +104,7 @@ class WorkingSession(object):
         
         self._step = []
         self._current_ex = None
+        self.save_actual_step()
         #self.log = SessionLog
 
     @property
@@ -156,14 +157,20 @@ class WorkingSession(object):
     def actual_step(self,ex = None):
         return SessionStep(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(ex or self._current_ex))
         
-    def save_actual_step(self,ex):
+    def save_actual_step(self,ex = None):
         self._step.append(self.actual_step(ex))
 
     ###########################################################################
     ##### Data Analysis tools 
     
     def student_level_time(self,time = 0, kc = 0):
-        return self._step[time].student["knowledges"][kc].level
+        if isinstance(kc,list):
+            return np.mean([self._step[time].student["knowledges"][k].level for k in kc])
+
+        elif kc >= len(self._step[time].student["knowledges"]):
+            return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
+        else:
+            return self._step[time].student["knowledges"][kc].level
 
     def base(self):
         return
@@ -240,17 +247,17 @@ class WorkingGroup(object):
                 data.append(ws.step[time])
         return data
 
-    def get_ex_repartition_time(self, nb_ex=100, type_ex=["M","R","MM","RM"], 
+    def get_ex_repartition_time(self,first_ex = 1, nb_ex=101, type_ex=["M","R","MM","RM"], 
                                 nb_ex_type=[6,4,4,4]):
         
         repart = [[],[],[],[]]
-        for num_ex in range(nb_ex):
+        for num_ex in range(first_ex,nb_ex):
             exs = self.get_data_time(num_ex,"exercise","_act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
                 #print repart
             for j in range(len(exs)):
-                repart[exs[j]["MAIN"][0]][num_ex][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
+                repart[exs[j]["MAIN"][0]][num_ex-first_ex][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
 
         return repart
 
