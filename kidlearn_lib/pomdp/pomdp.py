@@ -41,7 +41,7 @@ class POMDP(object):
         self._nA = 5
         self._nS = pow(2,self._nA)
         self._nZ = 2
-        self._Gamma = 0.99
+        self._gamma = 0.99
         #self._b0 = ones(1,self._nS)/self._nS;
         self._s0 = np.zeros(self._nS)
         self._s0[0] = 1
@@ -147,6 +147,9 @@ class POMDP(object):
             if len(S) > 1:
                 TMP = np.cumsum(S)
                 S = np.where(TMP >= np.random.rand())[0][0]
+                #print TMP
+                #print S
+                #raw_input()
         else:
             S = np.ceil(self._nS * np.random.rand())-1
 
@@ -176,21 +179,27 @@ class POMDP(object):
         #Compute reward
 
         Rnew = self._R[S,A]
+        #print self._R[S]
+        #print "Rnew %s, S %s, A %s" % (Rnew,S,A)
 
         # Simalte new state
+        #print "rand %s" % np.random.rand()
 
-        TMP = np.cumsum(T[S,:])
-        Snew = np.where(TMP >= np.random.rand())[0][0]
-
+        tmp = np.cumsum(T[S,:])
+        Snew = np.where(tmp >= np.random.rand())[0][0]
+        #print "Snew %s, tmp %s" % (Snew,tmp)
         # Simulate new observation
 
-        TMP = np.cumsum(O[Snew,:])
-        Znew = np.where(TMP >= np.random.rand())[0][0]
+        tmp = np.cumsum(O[Snew,:])
+        Znew = np.where(tmp >= np.random.rand())[0][0]
+        #print "Znew %s, tmp %s" % (Znew,tmp)
 
         # Update belief 
 
         if B != None:
             Bnew = self.blfUpdt(B,A,Znew)
+        #print "B %s, Bnew %s" % (B,Bnew)
+        #raw_input()
 
         return Snew, Rnew, Znew, Bnew
 
@@ -208,13 +217,85 @@ class POMDP(object):
 
         return Bnew
 
+    def traj(self,V,b0,s0,nsteps):
+        b = b0
+        S = s0
+        D = []
+        for ii in range(nsteps):
+            a = self.getAction(V, b)
+            if isinstance(a,int):
+                a = [a]
+            a = a[np.random.randint(len(a))]
+            np.random.rand()
+            [S, R, Z, b] = self.step(S, a, b) # we should not know the true state, check if code allows that
+            D.append([S,R,Z,a])
+            #print D
+            if(self._AS[S]==1):
+                break
+        return D
+
+
+    def getAction(self,V,b,isQMDP = False):
+        # If Q-MDP choose action directly
+        if isQMDP:
+            Q = V * b.T
+            A = greedy('samp',Q)
+
+        # else: Build Q-matrix
+        else:
+            Q = np.zeros( self._nA)
+            for a in range(self._nA):
+                b = np.matrix(b)
+                #print "b shape %s" % str(b.shape)
+                #print "P(a) shape %s" % str(self._P[a].shape)
+                # Compute updated beliefs for current action and all observations
+                Vaux = (b * self._P[a]).T
+                #print Vaux.shape
+                #print type(self._O[a])
+                Vaux = np.multiply(npmat.repmat(Vaux,1,self._nZ) , self._O[a])
+                Vaux = V * Vaux
+                #print Vaux.shape
+                #print Vaux
+                Vmax = np.amax(Vaux, 0)[0]
+                #print Vmax
+                
+                # Compute observation probabilities and multiply
+                #print b.shape
+                #print np.matrix(self._R[:, a]).T.shape
+                #print (self._gamma * sum(Vmax)).shape
+                #print (b * np.matrix(self._R[:, a]).T).item(0,0)
+                #print self._gamma * np.sum(Vmax)
+                Q[a] = (b * np.matrix(self._R[:, a]).T).item(0,0) + self._gamma * np.sum(Vmax)
+            #print Q
+            A = greedy('prob',Q)
+
+        return A
+
+
+
 #########################################################################################
 
+def greedy(mode,U):
+    Idx = np.argmax(U,axis = 0)
+
+    if mode == 'samp':
+        a = Idx[np.ceil(len(Idx) * np.random.rand())]
+    elif mode == 'prob':
+        a = Idx
+    
+    if isinstance(a,int):
+        p = 1
+    else:
+        p = 1/len(a);
+
+    return a
+
+
 def perseus_init():
-        ECHO = 1
-        MAX_ITER = 1000
-        EPS = 1e-9
-        return ECHO,MAX_ITER,EPS
+        echo = 1
+        max_iterr = 1000
+        eps = 1e-9
+        return echo,max_iterr,eps
 
 def perseus(pomdp = None, D = None):
     # Input (inputs marked with * are mandatory): 
@@ -224,7 +305,7 @@ def perseus(pomdp = None, D = None):
     # Output (outputs marked with * are mandatory): 
     # . V    (alpha-vector set)
 
-    ECHO,MAX_ITER,EPS = perseus_init()
+    echo,max_iterr,eps = perseus_init()
     
     # Parse arguments
     pomdp = pomdp or POMDP()
@@ -232,39 +313,47 @@ def perseus(pomdp = None, D = None):
     
     #print D[[1,2],:]
     
-    Quit = 0
-    Iter = 1
+    quit = 0
+    iterr = 1
 
     # Initialize V set
-    print "R %s" % pomdp._R
-    print "rmin %s"  % pomdp._R.min(axis = 0)
+  #  print "R %s" % pomdp._R
+  #  print "rmin %s"  % pomdp._R.min(axis = 0)
 
-    V = np.matrix(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._Gamma))
-    print "V %s" %  V
+    #V = np.ndarray(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
+    V = np.matrix(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
+  #  print "V %s" %  V
     
-    while Quit == 0:
+    while quit == 0:
 
-        return perseusBackup(pomdp, V, D)
+        #return perseusBackup(pomdp, V, D)
+        #print "iterr %s" % iterr
         Vnew = perseusBackup(pomdp, V, D)
-    
+        
         Vaux = D * Vnew.T
-        vNew = np.amax(Vaux,axis = 0)
-
+        vNew = np.amax(Vaux,axis = 1)
+        #print "vNew %s" % vNew
         Vaux = D * V.T
-        vOld = np.amax(Vaux,axis = 0)
+        vOld = np.amax(Vaux,axis = 1)
+        #print "vOld %s" % vOld
         
-        Err = full(max(np.abs(vOld - vNew)))
+        Err = np.max(np.abs(vOld - vNew))
+        #print Err
+        #raw_input()
 
-        #if ECHO:
-        #    print "Error at iteration %s : %s" % (Iter, Err)
+        #if echo:
+        #    print "Error at iterration %s : %s" % (iterr, Err)
 
         
-        if Err < EPS or Iter == MAX_ITER:
-            Quit = 1
+        if Err < eps or iterr == max_iterr:
+            print "iterr %s" % iterr 
+            print "err %s" % Err
+            quit = 1
         else :
-            Iter = Iter + 1
-        
+            iterr = iterr + 1
+
         V = Vnew
+    return pomdp,V,D
 
 def perseusBackup(pomdp, V, D):
     # function [Vnew] = perseusBackup(POMDP, V, D)
@@ -279,8 +368,8 @@ def perseusBackup(pomdp, V, D):
     #
     # Init parameters:
     #
-    # . MAX_ITER
-    # . EPS
+    # . max_iterr
+    # . eps
     # Perseus Backup:
     #
     # 1. Initialization
@@ -301,30 +390,30 @@ def perseusBackup(pomdp, V, D):
     #
     # References:
     #
-    # M. Spaan, N. Vlassis. Perseus: Randomized point-based value iteration for
+    # M. Spaan, N. Vlassis. Perseus: Randomized point-based value iterration for
     # POMDPs. In "Journal of Artificial Intelligence Research", vol. 24, pp.
     # 195-220, 2005.
-    ECHO,MAX_ITER,EPS = perseus_init()
+    echo,max_iterr,eps = perseus_init()
 
-    Quit = 0
-    Iter = 1
+    quit = 0
+    iterr = 1
 
     # 1a) Initialize new alpha-vector set
 
     Vnew = []
     Dqueue = D
-    while Quit == 0:
+    while quit == 0:
         nB = np.size(Dqueue, 0)
         nV = np.size(V, 0)
-        print "nV %s" % nV
         # 2a) Sample belief from Dqueue
 
         tmp = int(np.ceil(nB * np.random.rand())-1)
         b = Dqueue[tmp, :]
         indTable = range(tmp)+range(tmp+1,nB)
-        
-        Dqueue = Dqueue[indTable,:]
-        
+        try:
+            Dqueue = Dqueue[indTable,:]
+        except:
+            Dqueue = sparse.csr_matrix((0,pomdp._nS))
         # 2b) Compute a = backup(b)
 
         g = np.zeros((pomdp._nS, pomdp._nA))
@@ -338,61 +427,97 @@ def perseusBackup(pomdp, V, D):
             bnew = np.multiply(npmat.repmat(bnew,1,pomdp._nZ) , pomdp._O[a])
         
             # Multiply by alpha-vectors and maximize
-            
-            print V
-
-            """
-            # bug for NOW TO DO DEbugging 
-            """
 
             idx = V * bnew
-            print idx
-            idx = np.amax(idx, 1)
-            print idx
-            Vupd = V[idx, :]
+  #          print "idx %s" % idx
+            idx = np.argmax(idx, axis = 0)
+ #           print "V %s" % V
+            Vupd = V[idx,:][0]
+            #Vupd = np.repeat(V, idx.shape[1], axis=0)
 
-            # Compute observation probabilities and multiply
+#            print "Vupd %s" % Vupd 
             
-            OxVupd = np.sum(np.dot(pomdp._O[a], Vupd.T), 1)
-            g[:, a] = pomdp._R[:, a] + pomdp._Gamma * pomdp._P[a] * OxVupd
+            # Compute observation probabilities and multiply
+   #         print pomdp._O[a].shape 
+    #        print Vupd.T.shape
+            OxVupd = np.sum(np.multiply(pomdp._O[a], Vupd.T), 1)
+            #print "OxVupd %s" % OxVupd
+            #raw_input()
+            #print np.matrix(pomdp._R[:, a]).T.shape
+            #print np.asarray(np.matrix(pomdp._R[:, a]).T + pomdp._gamma * pomdp._P[a] * OxVupd)[:,0]
+            #print g[:, a]
+            g[:, a] = np.asarray(np.matrix(pomdp._R[:, a]).T + pomdp._gamma * pomdp._P[a] * OxVupd)[:,0]
+            #print "g shape %s" % str(g.shape)
 
-            # To make g and V same dimensional
-        
-            g = g.T
-        
-        # Compute new vector to add to new basis
+        # To make g and V same dimensional
+        g = g.T
     
-        [vNew, kNew] = np.amax(b * g.T, 2)
-        [vOld, kOld] = np.amax(b * V.T, 2)
+        # Compute new vector to add to new basis
+        
+        #print "g %s" %  str(g.shape)
+        #print type(g)
+        tmp = b * g.T
+        #print "tmp g %s" %  str(tmp.shape)
+        vNew = np.amax(tmp, 1)[0]
+        kNew = np.argmax(tmp, 1)[0]
+        #print "kNew %s" % kNew
+        
+        #V = np.asarray(V)
+        #print "V %s" %  str(V.shape)
+        #print type(V)
+        tmp = b * np.asarray(V).T
+        #print "tmp V %s" %  str(tmp.shape)
+        vOld = np.amax(tmp, 1)[0]
+        kOld = np.argmax(tmp, 1)[0]
+        #print "kOld %s" % kOld
 
         if vNew >= vOld:
             aNew = g[kNew, :]
+            #print "an new %s" % str(aNew.shape)
         else :
-            aNew = V[kOld, :]
+            aNew = np.asarray(V)[kOld, :]
+            #print "an old %s" % str(aNew.shape)
+        #print aNew
          
         # Add new vector to basis
-        print Vnew
-        #if isempty(Vnew):
-        #    tmp = 0
-        #else:
-        #    tmp = aNew(ones(size(Vnew, 1), 1),:) == Vnew
-        #    tmp = sum(double(tmp), 2)
-        #
-        #if (all(tmp ~= POMDP.nS)):
-        #    Vnew = [Vnew; aNew]
-        #
-        ## Recompute Dqueue
-        #
-        #Vaux = Dqueue * V'
-        #vOld = max(Vaux, [], 2)
-        #
-        #Vaux = Dqueue * Vnew'
-        #vNew = max(Vaux, [], 2)
-        #
-        #Dqueue = Dqueue(vNew <= vOld, :)
-        #
-        #if (isempty(Dqueue) || Iter == MAX_ITER):
-        #    Quit = 1
-        #else:
-        #    Iter = Iter + 1
+
+        if np.size(Vnew) == 0:
+            tmp = 0
+        else:
+            #tmp = aNew(ones(size(Vnew, 1), 1),:) == Vnew
+            tmp = np.equal(npmat.repmat(aNew,len(Vnew),1), Vnew)
+            tmp = np.sum(tmp.astype(float), axis =1)
+            #print tmp 
+
+        if np.all(tmp != pomdp._nS):
+            Vnew.append(aNew)
+        
+        # Recompute Dqueue
+        
+        Vaux = Dqueue * np.matrix(V).T
+        vOld = np.amax(Vaux, 1)
+        
+        #print "Vnew %s" % Vnew
+        #print "Vnew shape %s " % str(np.matrix(Vnew).T.shape)
+        #print "Dqueue shape %s " % str(Dqueue.shape)
+
+        Vaux = Dqueue * np.matrix(Vnew).T
+        vNew = np.amax(Vaux, 1)
+        tmp = np.asarray(np.less_equal(vNew, vOld).astype(float).T)[0]
+        idx = [x for x  in range(len(tmp)) if tmp[x] == 1]
+
+        try :
+            Dqueue = Dqueue[idx,:]
+        except: 
+            Dqueue = sparse.csr_matrix((0,pomdp._nS))
+
+        
+        if Dqueue.size == 0 or iterr == max_iterr:
+            quit = 1
+        else:
+            iterr = iterr + 1
+
+    return np.matrix(Vnew)
+
+
 
