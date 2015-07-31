@@ -1,0 +1,10 @@
+Competencies	S0
+Actions	Act1	Act2	Act3
+Nb_stay	2	1	1
+1   0   V1   0.2 0   1
+1   0   V2   0.6 0   1
+1   0   V3   1   0   1
+2   0   V1   0.3 0   1
+2   0   V2   0.8 0   1
+3   0   V1   0.5 0   1
+3   0   V2   1   0   1

@@ -1,14 +1,20 @@
 {
-    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence","RandomSequence"],
-    "nb_students" : 100,
+    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence"],
     "nb_step" : 100,
-    "ref_simu": "test1",
+    "ref_expe": "expe",
 
     "population":{
-            "model" : "Qstudent",
-            "logistic_vales" : {
-                "learn" : [-20,0.07],
-                "ans" : [-20,0.1]
+        "model": "q_population",
+        "nb_students" : 100,
+        "mean" : [0.2,0.2,0.1,0.1,0.1,0.1,0.1],
+        "var" : [0.005,0.005,0.01,0.01,0.01,0.005,0.01],
+        "student" :{
+            "model": "Qstudent",
+            "knowledge_names" : ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"], 
+            "logistic_values" : {
+                "learn" : [-10,0.07],
+                "ans" : [-10,0.1]
+                }
             }
         },
 
@@ -23,7 +29,7 @@
             "name" : "RiaritHssbg",
             "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "RT/expe"
             },
 
             "RiaritSsbg": {
@@ -42,7 +48,7 @@
             "name" : "ZpdesHssbg",
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "RT/expe"
             },
 
             "ZpdesSsbg": {
@@ -61,9 +67,14 @@
 
         "Sequence":{
             "name" : "Sequence",
+            "seq_path": {
+                "params_file" : "expe_seq",
+                "directory" : "sequence_def"
+            },
+
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "RT/expe"
             },
 
             "toLvlYp": 12,
@@ -83,10 +94,15 @@
 
         "RandomSequence":{
             "name" : "RandomSequence",
+            "random_type" : 0,
+            "seq_path": {
+                "params_file" : "expe_seq",
+                "directory" : "sequence_def"
+            },
 
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "RT/expe"
             },
 
             "RiaritSsbg": {

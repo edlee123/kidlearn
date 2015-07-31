@@ -54,7 +54,6 @@ docs/_build/
 
 # Project spe
 kidlearn_soft/
-pomdp/
 *data/
 *.ipynb_checkpoints/
 .ipynb_checkpoints/

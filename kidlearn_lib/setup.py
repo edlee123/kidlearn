@@ -21,10 +21,10 @@ import kidlearn_lib as k_lib
 import graph_lib as graph
 
 
-# example of working_session : one student and one seqequance manager
+# example of WorkingSession : one student and one seqequance manager
 
 def do_work_session():
-    working_session = k_lib.experimentation.Working_session(params_file = "worksess_test_1")
+    WorkingSession = k_lib.experimentation.WorkingSession(params_file = "worksess_test_1")
     
 
     return

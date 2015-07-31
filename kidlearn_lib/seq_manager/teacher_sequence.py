@@ -18,15 +18,16 @@ import re
 from zpdes import *
 import copy
 import functions as func
+import collections
 
-class Sequence(RIARIT_hssbg):
+class Sequence(RiaritHssbg):
      
     def __init__(self,params = None,  params_file = "seq_test_1", directory = "params_files"):
 
         sizeSerie = params['sizeSerie']
-        RIARIT_hssbg.__init__(self, params = params)
+        RiaritHssbg.__init__(self, params = params)
         #self.fault = [0]*sizeSerie utsing ?
-        self.generate_acts()
+        self.generate_acts(**params["seq_path"])
         self.answers = [0]*sizeSerie
         self.seqLevels = [0]*len(self.acts)
         self.currentGroup = 0
@@ -34,7 +35,7 @@ class Sequence(RIARIT_hssbg):
         self.nbPoint = 0
         self.toLvlYp = params['toLvlYp']
         self.minAns = params['minAns'] 
-        #self.ssbh = ZPDES_hssbg(RT, levelupdate, filter1, filter2, uniformval, algo = "RiARiT")
+        #self.ssbh = ZpdesHssbg(RT, levelupdate, filter1, filter2, uniformval, algo = "RiARiT")
         return
 
     def getSeqLevel(self):
@@ -68,7 +69,7 @@ class Sequence(RIARIT_hssbg):
         self.resetLevel();
 
     def update(self,act = None, corsol = True, nbFault = 0, *args, **kwargs):
-        RIARIT_hssbg.update(self,act,corsol)
+        RiaritHssbg.update(self,act,corsol)
         #print " Answer %s" % self.answers
         #print "corsol %s" % corsol
         #print "nbFaul %s" % nbFault
@@ -107,7 +108,9 @@ class Sequence(RIARIT_hssbg):
     def generate_acts(self, params = None,  params_file = "expe_seq",directory = "sequence_def"):
         params = params or func.load_json(params_file,directory)
         self.acts = []
-        for key,act_groups  in params["activity"].items():
+        #seq_dict = collections.OrderedDict(params["activity"])
+        #for key,act_groups  in params["activity"].items():
+        for act_groups  in params["activity"]:
             self.acts.append(act_groups)
 
         return

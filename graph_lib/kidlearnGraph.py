@@ -9,6 +9,9 @@ from matplotlib.patches import Rectangle
 import pylab as pylab
 #from my_functions import *
 
+import seaborn
+seaborn.set_style("darkgrid")
+
 from scipy.cluster.vq import vq, kmeans, whiten, kmeans2
 import copy
 
@@ -943,12 +946,13 @@ def draw_p_learn_curve(p_al,p_def,nbstud,path = ""):
         
     return
 
-def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb_ex = 100, typeData = "successRate",type_data_spe = "MAIN", ref = "", markers = None, titleC = "", colors = [["#00BBBB","black",'#FF0000']], line_type = ['dashed','solid','dashdot','dotted'], legend_position = 1,showPlot = False,std_data = None):
+def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb_ex = 100, typeData = "successRate",type_data_spe = "MAIN", ref = "", markers = None, titleC = "", colors = [["#00BBBB","black",'#FF0000']], line_type = ['dashed','solid','dashdot','dotted'], legend_position = 1,showPlot = True,std_data = None):
 
     plt.cla()
     plt.clf()
     plt.close()
-    fig = plt.figure()#figsize=(20, 13))
+    #plt.figure()
+    fig = plt.figure(figsize=(20, 13))
     ax = fig.add_subplot(111)
 
     xylabels = ["Time",typeData]
@@ -987,8 +991,9 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
             if std_data == None : 
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             else:
-                y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(2001)]
-                y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i] for i in range(2001)]
+
+                y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(nb_ex)]
+                y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i] for i in range(nb_ex)]
 
                 plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.2)
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
@@ -1013,17 +1018,19 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
     #    plt.legend(bbox_to_anchor=(0,0,0.3,1),ncol=1, fancybox=True, shadow=True, prop={'size':14})
     #else:
     
-    plt.legend(bbox_to_anchor=(0,0,1.1,0.5),ncol=1, fancybox=True, shadow=True, prop={'size':8})
+    plt.legend(bbox_to_anchor=(0,0,1.1,0),ncol=1, fancybox=True, shadow=True, prop={'size':20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
     if showPlot:
         plt.show()
-    else:
+
+    if path != "" :
         plt.draw()
-        if path != "" :
-            path_f = path + "Curve_%s_%s_%s" % (typeData,type_data_spe,ref)
-            #print path_f
-            plt.savefig(path_f)
+        path_f = path + "Curve_%s_%s_%s" % (typeData,type_data_spe,ref)
+        #print path_f
+        plt.savefig(path_f)
+
+    return
 
 def draw_fill():
     x = np.linspace(0, 2 * np.pi, 100)
@@ -1085,8 +1092,9 @@ def draw_learn_curve(gr1, gr2 = 0,path = "", labels = [["estimated RiARiT", "sim
         mean_data.append([])
         std_data.append([])
         for sd in data[type_d] :
-             mean_data[type_d].append(make_mean(sd)[0])
-             std_data[type_d].append(make_mean(sd)[1])
+            mean_std = make_mean(sd)
+            mean_data[type_d].append(mean_std[0])
+            std_data[type_d].append(mean_std[1])
 
     mean_data_skill = []
     std_data_skill = []
@@ -1189,7 +1197,7 @@ def all_bot2(data1):
 
 
 #Plot cluster P student with subplot
-def plot_cluster_lvl_sub(data,nb_stud = 1000,nb_ex = None,title = 'Number of student doing each level at each time per cluster', legend = ("1","2","3","4","5","6","7","8","9","10"),labels = ['Time','Number of student'], yerr_al=None, yerr_def=None, path = "", ref = "haha", dataToUse = [0,1,2]):
+def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of student doing each level at each time per cluster', legend = ("1","2","3","4","5","6","7","8","9","10"),labels = ['Time','Number of student'], yerr_al=None, yerr_def=None, path = "", ref = "haha", dataToUse = [0,1,2], show = 0, save = 1):
     data = [data[x] for x in dataToUse]
     plt.cla()
     plt.clf()
@@ -1277,13 +1285,14 @@ def plot_cluster_lvl_sub(data,nb_stud = 1000,nb_ex = None,title = 'Number of stu
     
     #plt.xticks(ind+width/2., (labelaxe) )
     
-
-    #plt.show()
-    plt.draw()
-    print path
-    if path != "0000" :
+    if save :
+        plt.draw()
         path_f = path + ref
         plt.savefig(path_f)
+    
+    if show :
+        plt.show()
+
     
     return
 

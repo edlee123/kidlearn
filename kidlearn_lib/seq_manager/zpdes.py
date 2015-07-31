@@ -13,21 +13,21 @@
 from riarit import *
 from hssbg import *
 
-# class ZPDES_ssbg(object): pass
-# class ZPDES_ssb(object): pass
+# class ZpdesSsbg(object): pass
+# class ZpdesSsb(object): pass
 
 #########################################################
 #########################################################
-## class ZPDES_hssbg
+## class ZpdesHssbg
 
-class ZPDES_hssbg(RIARIT_hssbg):
+class ZpdesHssbg(RiaritHssbg):
 
-    #ssbgClasse = ZPDES_ssbg
+    #ssbgClasse = ZpdesSsbg
 
     def instantiate_ssbg(self,RT):
-        params = self.params["ZPDES_ssbg"]
+        params = self.params["ZpdesSsbg"]
         params["RT"] = RT
-        return ZPDES_ssbg(params = params)
+        return ZpdesSsbg(params = params)
 
     def update(self, act, corsol = True, error_ID = None, *args):
         #if act is None:
@@ -39,18 +39,18 @@ class ZPDES_hssbg(RIARIT_hssbg):
             self.SSBGs[nameRT].update(self.current_lvl_ex[nameRT],act[nameRT], corsol, answer_impact,act)
         return
 
-## class RIARIT_hssbg
+## class RiaritHssbg
 #########################################################
 
 #########################################################
 #########################################################
-## class ZPDES_ssbg
-class ZPDES_ssbg(RIARIT_ssbg):
+## class ZpdesSsbg
+class ZpdesSsbg(RiaritSsbg):
 
     def instanciate_ssb(self,ii,is_hierarchical):
-        params = self.params["ZPDES_ssb"]
+        params = self.params["ZpdesSsb"]
 
-        return ZPDES_ssb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii],params = params)
+        return ZpdesSsb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii],params = params)
 
     def calcul_reward(self,act,answer_impact):
         coeff_ans = mean(answer_impact)
@@ -63,7 +63,7 @@ class ZPDES_ssbg(RIARIT_ssbg):
         r_ES = self.calcul_reward(act,answer_impact)
         
         ## For simulation
-        r_KC = RIARIT_ssbg.calcul_reward(self,lvl,corsol,answer_impact)
+        r_KC = RiaritSsbg.calcul_reward(self,lvl,corsol,answer_impact)
         ## For simulation
 
         for ii in range(self.nactions):
@@ -74,20 +74,21 @@ class ZPDES_ssbg(RIARIT_ssbg):
             self.SSB[ii].update(act[ii], max(0,r_ES[ii]))
             self.SSB[ii].promote()
 
-ZPDES_hssbg.ssbgClasse = ZPDES_ssbg
+ZpdesHssbg.ssbgClasse = ZpdesSsbg
 
-## class ZPDES_ssbg
+## class ZpdesSsbg
 #########################################################
 
 #########################################################
 #########################################################
-## class ZPDES_ssb
+## class ZpdesSsb
 
-class ZPDES_ssb(RIARIT_ssb):
+class ZpdesSsb(RiaritSsb):
     def __init__(self,id, nval, ntask, requer, stop,is_hierarchical = 0, param_values = [], params = {}):
         # params : 
 
         SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
+        self.name = "zssb"
         self.stepUpdate = params['stepUpdate']
         self.size_window = min(len(self.bandval),params['size_window'])
         self.promote(True)
@@ -203,5 +204,5 @@ class ZPDES_ssb(RIARIT_ssb):
         return r
 
 
-## class ZPDES_ssb
+## class ZpdesSsb
 #########################################################

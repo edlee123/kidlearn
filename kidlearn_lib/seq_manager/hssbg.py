@@ -20,9 +20,9 @@ def dissample(p):
 #########################################################
 #########################################################
 #########################################################
-## class HierarchySSBG
+## class HierarchicalSSBG
 
-class HierarchySSBG(object):
+class HierarchicalSSBG(object):
 
     #ssbgClasse = SSBanditGroup
 
@@ -136,7 +136,7 @@ class HierarchySSBG(object):
                 self.speSample(self.SSBGs[nameRT],act)
         return act
 
-## class HierarchySSBG
+## class HierarchicalSSBG
 #########################################################
 
 #########################################################
@@ -209,6 +209,15 @@ class SSBanditGroup(object):
     def calcul_reward(self):
         return 0
 
+    def random_sample(self,nb_stay = None):
+
+        for i in range(self.nactions):
+            nb_stay = nb_stay or self.nb_stay[i]
+            if self.nbturn[i] % nb_stay == 0:
+                self.act[i] = int(self.SSB[i].random_sample())
+                self.nbturn[i] = 0
+        return self.act
+
     def sample(self):
 
         for i in range(self.nactions):
@@ -217,7 +226,7 @@ class SSBanditGroup(object):
                 self.nbturn[i] = 0
         return self.act
 
-#HierarchySSBG.ssbgClasse = SSBanditGroup
+#HierarchicalSSBG.ssbgClasse = SSBanditGroup
 
 ## class SSBanditGroup
 #########################################################
@@ -246,6 +255,7 @@ class SSbandit(object):
         self.is_hierarchical = is_hierarchical
         self.param_values = param_values
         self.sonSSBG = {}
+        self.name = "ssb"
         return
 
     def getSuccess(self):
@@ -276,6 +286,10 @@ class SSbandit(object):
     def promote(self):
         return
 
+    def random_sample(self):
+        nn = [1.0/self.nval]*self.nval
+        return dissample(nn)
+
     def sample(self, exploration_coeff = 10):
         
         nn = array(self.bandval)
@@ -290,7 +304,7 @@ class SSbandit(object):
                 nb_0 += 1
         
         if nb_0 == len(nn):
-            print self.params["name"]
+            print self.name
             print "Prob : %s : %s " % (str(self.param_values),str(nn))
             print self.bandval
             print self.success
@@ -304,7 +318,7 @@ class SSbandit(object):
                 nb_0 += 1
         if nb_0 == len(nn):
             print "band : %s " % str(nn)
-        """    
+        """
         return dissample(nn)
 
 

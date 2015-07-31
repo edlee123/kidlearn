@@ -48,6 +48,13 @@ def student(stud_params = None, params_file = None, directory = None):
 # Generate population
 ##############################################################
 
+def population(pop_params = None, params_file = None, directory = None):
+    pop_dict_define = {}
+    pop_dict_define["q_population"] = q_population
+
+    pop_params = pop_params or func.load_json(params_file,directory)
+    return pop_dict_define[pop_params["model"]](pop_params)
+
 def population_profiles(model_student, stud_params):
     if model_student == 0:
         population = generate_q_profiles(stud_params)
@@ -77,13 +84,13 @@ def generate_pstudent_population():
 def generate_ktstudent_population(kt_profil = 0):
     population = []
     for i in range(nb_students):
-        population.append(KT_student(knowledge_names = knowledge_names, knowledge_params = kt_student_profils[kt_profil]))
+        population.append(KTStudent(knowledge_names = knowledge_names, knowledge_params = KTStudent_profils[kt_profil]))
     return population
 
 def generate_ktfeatures_population(kt_profil = 0):
     population = []
     for i in range(nb_students):
-        population.append(KT_student(config._knowledges_conf))
+        population.append(KTStudent(config._knowledges_conf))
     return population
 
     return population
@@ -93,7 +100,25 @@ def generate_ktfeatures_population(kt_profil = 0):
 def generate_kt_parametrisation():
     return
 
+def q_population(pop_params):
+    nb_students = pop_params["nb_students"]
+    mean = pop_params["mean"] 
+    var = pop_params["var"]
+
+    population_q_profiles = generate_q_profiles(nb_students,mean,var)
+    population = []
+
+    for stud_skills in population_q_profiles:
+        params = pop_params["student"]
+        params["knowledge_levels"] = stud_skills
+
+        population.append(params)
+
+    return population
+
+
 def generate_q_profiles(nb_students,mean,var):
+    
     population_q_profiles = generate_normal_population(nb_students,mean,var)
     for stud in population_q_profiles:
         stud = correct_skill_vector(stud)
