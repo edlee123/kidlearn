@@ -255,6 +255,7 @@ class SSbandit(object):
         self.is_hierarchical = is_hierarchical
         self.param_values = param_values
         self.sonSSBG = {}
+        self.name = "ssb"
         return
 
     def getSuccess(self):
@@ -303,7 +304,7 @@ class SSbandit(object):
                 nb_0 += 1
         
         if nb_0 == len(nn):
-            print self.params["name"]
+            print self.name
             print "Prob : %s : %s " % (str(self.param_values),str(nn))
             print self.bandval
             print self.success
@@ -317,7 +318,7 @@ class SSbandit(object):
                 nb_0 += 1
         if nb_0 == len(nn):
             print "band : %s " % str(nn)
-        """    
+        """
         return dissample(nn)
 
 

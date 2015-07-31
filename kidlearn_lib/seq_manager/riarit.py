@@ -308,7 +308,7 @@ class RiaritSsb(SSbandit):
         # params : 
 
         SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
-
+        self.name = "rssb"
         self.requer = requer
         self.stop = stop
         self.promote([0.0]*ntask,True)

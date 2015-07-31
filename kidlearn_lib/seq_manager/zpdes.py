@@ -88,6 +88,7 @@ class ZpdesSsb(RiaritSsb):
         # params : 
 
         SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
+        self.name = "zssb"
         self.stepUpdate = params['stepUpdate']
         self.size_window = min(len(self.bandval),params['size_window'])
         self.promote(True)
