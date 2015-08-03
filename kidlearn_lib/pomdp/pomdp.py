@@ -188,6 +188,7 @@ class POMDP(object):
         tmp = np.cumsum(T[S,:])
         Snew = np.where(tmp >= np.random.rand())[0][0]
         #print "Snew %s, tmp %s" % (Snew,tmp)
+        
         # Simulate new observation
 
         tmp = np.cumsum(O[Snew,:])
@@ -220,7 +221,7 @@ class POMDP(object):
     def traj(self,V,b0,s0,nsteps):
         b = b0
         S = s0
-        D = []
+        D = [["S","R","Z","a","b"]]
         for ii in range(nsteps):
             a = self.getAction(V, b)
             if isinstance(a,int):
@@ -228,7 +229,7 @@ class POMDP(object):
             a = a[np.random.randint(len(a))]
             np.random.rand()
             [S, R, Z, b] = self.step(S, a, b) # we should not know the true state, check if code allows that
-            D.append([S,R,Z,a])
+            D.append([S,R,Z,a,b])
             #print D
             if(self._AS[S]==1):
                 break
