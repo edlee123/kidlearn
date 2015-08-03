@@ -14,7 +14,6 @@
 from operator import mul
 from student import *
 import function as func
-import knowledge as knl
 
 
 ################################################################################
@@ -25,7 +24,7 @@ class KTStudent(Student):
     def __init__(self,kc_params,id = "x"):
         Student.__init__(self,id)
         for i in range(len(kc_params)):
-            self._knowledges.append(knl.KTKnowledge(**kc_params[i]))
+            self._knowledges.append(KTFeatures(**kc_params[i]))
 
     def __repr__(self):
         str = ""

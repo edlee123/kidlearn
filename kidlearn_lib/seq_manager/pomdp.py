@@ -29,7 +29,7 @@ class POMDP(object):
 #                       s'         s           a     P(s'|s,a)
 #  nB*    (Number of belief points to be sampled)
     
-    def __init__(self):
+    def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
         self._Ps = 0.05
         self._Pg = 0.05
 
@@ -227,7 +227,6 @@ class POMDP(object):
             if isinstance(a,int):
                 a = [a]
             a = a[np.random.randint(len(a))]
-            np.random.rand()
             [S, R, Z, b] = self.step(S, a, b) # we should not know the true state, check if code allows that
             D.append([S,R,Z,a,b])
             #print D
