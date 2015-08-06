@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 

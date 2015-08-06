@@ -36,7 +36,7 @@ class POMDP(object):
         self._Pt = np.array([[.5, 0, 0, 0, 0],
                              [ 0,.8, 0, 0, 0],
                              [ 0, 0,.7, 0, 0],
-                             [.4, 0, 0,.6, 0],
+                             [ 0, 0, 0,.6, 0],
                              [ 0, 0, 0, 0,.9]])
         self._nA = 5
         self._nS = pow(2,self._nA)
@@ -228,7 +228,7 @@ class POMDP(object):
                 a = [a]
             a = a[np.random.randint(len(a))]
             [S, R, Z, b] = self.step(S, a, b) # we should not know the true state, check if code allows that
-            D.append([S,R,Z,a,b])
+            D.append([S,R,Z,a])
             #print D
             if(self._AS[S]==1):
                 break
@@ -293,7 +293,7 @@ def greedy(mode,U):
 
 def perseus_init():
         echo = 1
-        max_iterr = 1000
+        max_iterr = 10000
         eps = 1e-9
         return echo,max_iterr,eps
 

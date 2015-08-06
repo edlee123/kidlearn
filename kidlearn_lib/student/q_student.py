@@ -13,6 +13,7 @@
 
 from student import *
 import functions as func
+import knowledge as knl
 
 class Qstudent(Student):
 
@@ -21,7 +22,7 @@ class Qstudent(Student):
 
         Student.__init__(self, params = params)
 
-        self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(self.params["knowledge_names"],self.params["knowledge_levels"])]
+        self._knowledges = [knl.Knowledge(kn,kl) for (kn,kl) in zip(self.params["knowledge_names"],self.params["knowledge_levels"])]
         
         if "logistic_values" in self.params.keys():
             self.log_vals = self.params["logistic_values"]

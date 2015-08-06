@@ -7,7 +7,7 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 
@@ -22,40 +22,32 @@ import knowledge as knl
 ################################################################################
 
 class KTStudent(Student):
-    def __init__(self,kc_params,id = "x"):
+    def __init__(self,params = None, params_file = "qstud_test_1", directory = "params_files", *args, **kwargs):
+        self.params = params or func.load_json(params_file,directory)
+
         Student.__init__(self,id)
         for i in range(len(kc_params)):
-            self._knowledges.append(knl.KTKnowledge(**kc_params[i]))
+            self._knowledges.append(knl.KTKnowledge(self.params["knowledge_names"][i],self.params["knowledge_levels"][i]))
 
     def __repr__(self):
         str = ""
         for kc in self._knowledges:
             str += kc.__repr__() + ", "
         return str
-    
-    def __str__(self):
-        return self.__repr__()
 
-    def get_knowledge(self,id_dic = {"_id" : 0}, *arg, **kwargs):
-        for knowledge in self._knowledges:
-            if knowledge.__getattribute__(id_dic.keys()[0]) == id_dic.values()[0]:
-                return knowledge
-
-    def get_state(self, seq_values = None):
-        student_state = Student.get_state(self)
-        return student_state
+    def get_knowledge(self,name, *arg, **kwargs):
+        idx = self.params["knowledge_names"].index(name)
+        return self._knowledge[idx]
 
     def update_mastery(self,exercise):
-        for kc in self._knowledges:
-            kc.update_knowledge(exercise,self.get_kc_mastery())
-            print "%s T : %s Lvl : %s " % (kc._name, kc._p_T, kc._level)
+        for kc in exercise._knowledges:
+            self.get_knowledge(kc.name).update_state()
 
     def get_kc_mastery(self):
         return np.array([kc._level for kc in self._knowledges])
 
     def emission_prob(self,exercise):
-        emmission_factor = sum(self.get_kc_mastery()*exercise._gamma)
-        return func.logistic_function(emmission_factor)
+        return self._knowledges[exercise]
         
 
     def answer(self,exercise):

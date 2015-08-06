@@ -7,11 +7,11 @@
 #
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
-# Licence:     GNU GENERAL PUBLIC LICENSE
+# Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
 
-from numpy import *
+import numpy as np
 import copy
 import re
 import json
@@ -23,75 +23,81 @@ from knowledge import *
 ## Class KT Knowledge basic
 
 class KTKnowledge(Knowledge):
-    def __init__(self,name, KT_params = None, level = 0, num_id = None):
-        Knowledge.__init__(self,name,level,num_id)
-        KT_params = KT_params or {"L0" : 0.02,"T": 0.01, "G" : 0.1, "S" : 0.1}
-        self._p_Lt = [KT_params["L0"]]
-        self._p_T = KT_params["T"]
-        self._p_G = KT_params["G"]
-        self._p_S = KT_params["S"]
-        self._p_correct = self._p_G
-        self.update_knowledge(self._p_Lt[0])
-
-    def __repr__(self):
-        return "%s : %s" % (self._name,self._p_Lt[-1])
-    
-    def __str__(self):
-        return self.__repr__()
+    def __init__(self, params = None, name = None):# KT_params = None, level = 0, num_id = None):
+        Knowledge.__init__(self,params["name"],params["level"],params["id"])
+        self.params = params
+        self.params["KT"] = params["KT"] or {"L0" : 0.02,"T": [0.01], "G" : 0.1, "S" : 0.1}
+        self.p_L0 = self.params["KT"]["L0"]
+        self.p_T = self.params["KT"]["T"]
+        self.p_G = self.params["KT"]["G"]
+        self.p_S = self.params["KT"]["S"]
+        self.update_state(self.p_L0)
 
     # knowledge = 0 or 1 , updated at each step
     ###################################################
-    def update_knowledge(self,prob = None):
-        prob = prob or self._p_T
+    def update_state(self,prob = None, pT_idx = 0):
+        prob = prob or self.p_T[pT_idx]
         if self._level != 1:
-            learn = random.multinomial(1,[1-prob,prob])
-            self._level = nonzero(learn==1)[0][0]
+            learn = np.random.multinomial(1,[1-prob,prob])
+            learn = np.nonzero(learn==1)[0][0]
+            if learn : 
+                self._level = 1
             
     ###################################################
-    def transition_prob(self):
-        return self._p_T
+    def transition_prob(self,pT_idx = 0):
+        return self.p_T[pT_idx]
 
     def emission_prob(self):
         if self._level == 1:
-                #print self._name + "learned"
-            self._p_correct = 1 - self._p_S
+            #print self._name + "learned"
+            return 1 - self.p_S
+        else:
+            return self.p_G
 
+
+## Class KT Knowledge basic
+################################################################################
+################################################################################
+
+################################################################################
+################################################################################
+## Class KT Knowledge Predictor
+
+class KTPredictPerf(object):
+
+    def init(self,kt_knowledge):
+        self.ktComp = kt_knowledge
+        self.p_Lt = [self.ktComp.p_l0]
     # Predict performance
     def compute_performance_prediction(self):
-        p_correct = self._p_Lt[-1]*(1-self._p_S) + (1-self._p_Lt[-1])*self._p_G
+        p_correct = self.p_Lt[-1]*(1-self._p_S) + (1-self.p_Lt[-1])*self._p_G
         print "p_correct : %s" % p_correct
         return p_correct
 
     # Compute proba of master the skill
     def update_predict_mastered(self,obs):
-        p_Lt = self.compute_p_Lt_koedinger(obs)
-        self._p_Lt.append(p_Lt)
+        p_Lt = self.computep_Lt_koedinger(obs)
+        self.p_Lt.append(p_Lt)
         print "p_lt_koed : %s" % p_Lt
 
-    def compute_p_Lt_koedinger(self,obs):
-        p_Lt_obs = self.calcul_p_Lt_obs(obs,self._p_Lt[-1])
-        p_Lt_obs = p_Lt_obs + (1 - p_Lt_obs)*self._p_T
+    def computep_Lt_koedinger(self,obs,pT_idx = 0):
+        p_Lt_obs = self.calculp_Lt_obs(obs,self.p_Lt[-1])
+        p_Lt_obs = p_Lt_obs + (1 - p_Lt_obs)*self.ktComp.p_T[pT_idx]
         return p_Lt_obs
 
-    def compute_p_Lt_edm(self,obs):
-        num = (1-self._p_T)*(1-self._p_Lt_edm[-1])*(1 - obs + pow(-1,1-obs)*self._p_G)
-        denum = 1 - obs + pow(-1,1-obs)*self._p_G + pow(-1,1-obs)*(1 - self._p_S-self._p_G)*self._p_Lt_edm[-1]
+    def computep_Lt_edm(self,obs):
+        num = (1-self.ktComp.p_T[pT_idx])*(1-self.p_Lt_edm[-1])*(1 - obs + pow(-1,1-obs)*self._p_G)
+        denum = 1 - obs + pow(-1,1-obs)*self._p_G + pow(-1,1-obs)*(1 - self._p_S-self._p_G)*self.p_Lt_edm[-1]
         p_Lt_obs = 1 - num/denum
         return p_Lt_obs
 
-    def calcul_p_Lt_obs(self,obs,p_Lt):
+    def calculp_Lt_obs(self,obs,p_Lt):
         slip_factor = (obs + pow(-1,obs)*self._p_S)*p_Lt
         guess_factor = (1 - p_Lt) * (1 - obs + pow(-1,1-obs)*self._p_G)
         p_Lt_obs = slip_factor / (slip_factor + guess_factor)
         return p_Lt_obs
 
 
-    ######## ERROR PAPER ###############################################
-    def compute_p_Lt_burnskill(self,obs):
-        p_Lt = self._p_Lt[-1] + self._p_T*(1-self._p_Lt[-1])
-        p_Lt_obs = self.calcul_p_Lt_obs(obs,p_Lt)
-        return p_Lt_obs
-
-## Class KT Knowledge basic
+## Class KT Knowledge Predictor
 ################################################################################
 ################################################################################
