@@ -15,13 +15,14 @@ from operator import mul
 from student import *
 import function as func
 import knowledge as knl
+import numpy as np
 
 
 ################################################################################
 ## Class KT student
 ################################################################################
 
-class KTStudent(Student):
+class KTStudent(Student)
     def __init__(self,params = None, params_file = "qstud_test_1", directory = "params_files", *args, **kwargs):
         self.params = params or func.load_json(params_file,directory)
 
@@ -47,7 +48,11 @@ class KTStudent(Student):
         return np.array([kc._level for kc in self._knowledges])
 
     def emission_prob(self,exercise):
-        return self._knowledges[exercise]
+        prob_correct = []
+        for kc in exercise._knowledges:
+            prob_correct.append(self.get_knowledge(kc.name).emission_prob())
+
+        return np.mean(prob_correct)
         
 
     def answer(self,exercise):

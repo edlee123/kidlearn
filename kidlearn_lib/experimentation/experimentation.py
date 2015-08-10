@@ -12,7 +12,7 @@
 
 import os
 import sys
-from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence
+from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
 from exercise import Exercise
 from student import *
 import functions as func
