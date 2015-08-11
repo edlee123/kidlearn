@@ -24,7 +24,7 @@ from knowledge import *
 
 class KTKnowledge(Knowledge):
     def __init__(self, name = None,level = None, params = None):# KT_params = None, level = 0, num_id = None):
-        Knowledge.__init__(self,name,params["level"])
+        Knowledge.__init__(self,name,level)
         self.params = params
         self.p_L0 = self.params["L0"]
         self.p_T = self.params["T"]

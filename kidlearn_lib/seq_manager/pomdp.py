@@ -6,7 +6,7 @@ import numpy.matlib as npmat
 import copy
 import scipy.sparse as sparse
 
-np.random.seed(20)
+#np.random.seed(20)
 
 class POMDP(object):
 #  POMDP* (POMDP Model: struct(nS     , nA       ,nZ, {P}, {O}, r, Gamma, s0, b0))
@@ -147,9 +147,6 @@ class POMDP(object):
             if len(S) > 1:
                 TMP = np.cumsum(S)
                 S = np.where(TMP >= np.random.rand())[0][0]
-                #print TMP
-                #print S
-                #raw_input()
         else:
             S = np.ceil(self._nS * np.random.rand())-1
 
@@ -179,30 +176,27 @@ class POMDP(object):
         #Compute reward
 
         Rnew = self._R[S,A]
-        #print self._R[S]
-        #print "Rnew %s, S %s, A %s" % (Rnew,S,A)
 
         # Simalte new state
-        #print "rand %s" % np.random.rand()
 
         tmp = np.cumsum(T[S,:])
         Snew = np.where(tmp >= np.random.rand())[0][0]
-        #print "Snew %s, tmp %s" % (Snew,tmp)
         
         # Simulate new observation
 
         tmp = np.cumsum(O[Snew,:])
         Znew = np.where(tmp >= np.random.rand())[0][0]
-        #print "Znew %s, tmp %s" % (Znew,tmp)
 
         # Update belief 
 
         if B != None:
             Bnew = self.blfUpdt(B,A,Znew)
-        #print "B %s, Bnew %s" % (B,Bnew)
-        #raw_input()
 
         return Snew, Rnew, Znew, Bnew
+
+    def reward(self,state,action):
+        return self._R[state,action]
+
 
     def blfUpdt(self,B,A,Z):
         T = self._P[A]
@@ -223,7 +217,7 @@ class POMDP(object):
         S = s0
         D = [["S","R","Z","a","b"]]
         for ii in range(nsteps):
-            a = self.getAction(V, b)
+            a = self.sample(V, b)
             if isinstance(a,int):
                 a = [a]
             a = a[np.random.randint(len(a))]
@@ -234,8 +228,15 @@ class POMDP(object):
                 break
         return D
 
+    # Expe code adaptation
 
-    def getAction(self,V,b,isQMDP = False):
+    def init_to_traj(self):
+        self.current_belief = self.s0
+
+    def update(self,act, corsol = True, nbFault = 0, *args, **kwargs):
+        self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
+
+    def sample(self,V,b,isQMDP = False):
         # If Q-MDP choose action directly
         if isQMDP:
             Q = V * b.T
@@ -246,25 +247,18 @@ class POMDP(object):
             Q = np.zeros( self._nA)
             for a in range(self._nA):
                 b = np.matrix(b)
-                #print "b shape %s" % str(b.shape)
-                #print "P(a) shape %s" % str(self._P[a].shape)
+
                 # Compute updated beliefs for current action and all observations
+
                 Vaux = (b * self._P[a]).T
-                #print Vaux.shape
-                #print type(self._O[a])
+
                 Vaux = np.multiply(npmat.repmat(Vaux,1,self._nZ) , self._O[a])
                 Vaux = V * Vaux
-                #print Vaux.shape
-                #print Vaux
+
                 Vmax = np.amax(Vaux, 0)[0]
-                #print Vmax
                 
                 # Compute observation probabilities and multiply
-                #print b.shape
-                #print np.matrix(self._R[:, a]).T.shape
-                #print (self._gamma * sum(Vmax)).shape
-                #print (b * np.matrix(self._R[:, a]).T).item(0,0)
-                #print self._gamma * np.sum(Vmax)
+
                 Q[a] = (b * np.matrix(self._R[:, a]).T).item(0,0) + self._gamma * np.sum(Vmax)
             #print Q
             A = greedy('prob',Q)

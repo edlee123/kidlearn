@@ -13,7 +13,7 @@
 
 from operator import mul
 from student import *
-import function as func
+import functions as func
 import knowledge as knl
 import numpy as np
 import scipy.stats as sstats
@@ -23,13 +23,13 @@ import scipy.stats as sstats
 ## Class KT student
 ################################################################################
 
-class KTStudent(Student)
-    def __init__(self,params = None, params_file = "qstud_test_1", directory = "params_files", *args, **kwargs):
-        self.params = params or func.load_json(params_file,directory)
-
-        Student.__init__(self,id)
-        for i in range(self.params["knowledges_names"]):
-            name = self.params["knowledges_names"][i]
+class KTStudent(Student):
+    def __init__(self,params = None, params_file = "kt_stud", directory = "params_files", *args, **kwargs):
+        params = params or func.load_json(params_file,directory)
+        
+        Student.__init__(self, params = params)
+        for i in range(len(self.params["knowledge_names"])):
+            name = self.params["knowledge_names"][i]
             level = self.params["knowledge_levels"][i]
             params = {}
             for kt_keys in self.params["KT"].keys():
@@ -63,6 +63,7 @@ class KTStudent(Student)
         
 
     def answer(self,exercise):
+        self.learn(exercise.get_knowledges())
         #Emission probablity
         p_correct = self.emission_prob(exercise)
         print "p_correct : %s " % p_correct
