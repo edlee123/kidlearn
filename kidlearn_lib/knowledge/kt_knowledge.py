@@ -23,14 +23,13 @@ from knowledge import *
 ## Class KT Knowledge basic
 
 class KTKnowledge(Knowledge):
-    def __init__(self, params = None, name = None):# KT_params = None, level = 0, num_id = None):
-        Knowledge.__init__(self,params["name"],params["level"],params["id"])
+    def __init__(self, name = None,level = None, params = None):# KT_params = None, level = 0, num_id = None):
+        Knowledge.__init__(self,name,params["level"])
         self.params = params
-        self.params["KT"] = params["KT"] or {"L0" : 0.02,"T": [0.01], "G" : 0.1, "S" : 0.1}
-        self.p_L0 = self.params["KT"]["L0"]
-        self.p_T = self.params["KT"]["T"]
-        self.p_G = self.params["KT"]["G"]
-        self.p_S = self.params["KT"]["S"]
+        self.p_L0 = self.params["L0"]
+        self.p_T = self.params["T"]
+        self.p_G = self.params["G"]
+        self.p_S = self.params["S"]
         self.update_state(self.p_L0)
 
     # knowledge = 0 or 1 , updated at each step

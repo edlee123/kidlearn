@@ -16,6 +16,7 @@ from student import *
 import function as func
 import knowledge as knl
 import numpy as np
+import scipy.stats as sstats
 
 
 ################################################################################
@@ -27,8 +28,14 @@ class KTStudent(Student)
         self.params = params or func.load_json(params_file,directory)
 
         Student.__init__(self,id)
-        for i in range(len(kc_params)):
-            self._knowledges.append(knl.KTKnowledge(self.params["knowledge_names"][i],self.params["knowledge_levels"][i]))
+        for i in range(self.params["knowledges_names"]):
+            name = self.params["knowledges_names"][i]
+            level = self.params["knowledge_levels"][i]
+            params = {}
+            for kt_keys in self.params["KT"].keys():
+                params[kt_keys] = self.params["KT"][kt_keys][i]
+            
+            self._knowledges.append(knl.KTKnowledge(name,level, params))
 
     def __repr__(self):
         str = ""
