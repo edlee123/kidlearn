@@ -1,0 +1,8 @@
+{
+    "name" : "POMDP",
+    "p_slip" : 0.05,
+    "p_guess" : 0.05,
+    "n_Action" : 5,
+    "n_State" : None, 
+
+}
