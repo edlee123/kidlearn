@@ -1,6 +1,6 @@
 {
     "model": "KTstudent",
-    "knowledge_names":["S0","S1","S2","S3","S4"],
+    "knowledge_names":["S1","S2","S3","S4","S5"],
     "knowledge_levels":[0,0,0,0,0],
     "KT" : {
         "L0": [0.05,0.05,0.05,0.05,0.05],

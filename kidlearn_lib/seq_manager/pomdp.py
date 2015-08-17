@@ -5,6 +5,7 @@ import numpy as np
 import numpy.matlib as npmat
 import copy
 import scipy.sparse as sparse
+import functions as func
 
 #np.random.seed(20)
 
@@ -29,19 +30,33 @@ class POMDP(object):
 #                       s'         s           a     P(s'|s,a)
 #  nB*    (Number of belief points to be sampled)
     
-    def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
-        self._Ps = 0.05
-        self._Pg = 0.05
+    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files"):
+        #self._Ps = 0.05
+        #self._Pg = 0.05
+        #
+        #self._Pt = np.array([[ 0.3, 0, 0, 0, 0],
+        #                     [ 0, 0.1, 0, 0, 0],
+        #                     [ 0, 0, 0.2, 0, 0],
+        #                     [ 0, 0, 0, 0.3, 0],
+        #                     [ 0, 0, 0, 0, 0.25]])
+        #self._nA = 5
+        #self._nS = pow(2,self._nA)
+        #self._nZ = 2
+        #self._gamma = 0.99
 
-        self._Pt = np.array([[.3, 0, 0, 0, 0],
-                             [ 0,.1, 0, 0, 0],
-                             [ 0, 0,.2, 0, 0],
-                             [ 0, 0, 0,.3, 0],
-                             [ 0, 0, 0, 0,.25]])
-        self._nA = 5
-        self._nS = pow(2,self._nA)
-        self._nZ = 2
-        self._gamma = 0.99
+        params = params or func.load_json(params_file,directory)
+
+        self._Ps = params["p_slip"]
+        self._Pg = params["p_guess"]
+        
+        self._Pt = np.array(params["p_transitions"])
+        self._nA = params["n_Action"]
+        self._n_StatePerAct = params["n_StatePerAct"]
+        self._nS = pow(self._n_StatePerAct,self._nA)
+        self._nZ = params["n_Observation"]
+        self._gamma = params["gamma"]
+
+
         #self._b0 = ones(1,self._nS)/self._nS;
         self._s0 = np.zeros(self._nS)
         self._s0[0] = 1
@@ -53,7 +68,7 @@ class POMDP(object):
         self.construct_pomdp()
 
         self._nB = 1350
-
+        self.belief_sample = None
         #D = self.sampleBeliefs()
 
     def construct_pomdp(self):
@@ -89,6 +104,8 @@ class POMDP(object):
         #
         # . None
         #    # Initialize state
+        print "Sample Beliefs"
+
         nB = nB or self._nB
         
         S = self.initS()
@@ -138,6 +155,8 @@ class POMDP(object):
                 b = np.ones((self._nS))/self._nS
 
         D = D[0:i,:]
+
+        self.belief_sample = D
 
         return D
 
@@ -212,12 +231,12 @@ class POMDP(object):
 
         return Bnew
 
-    def traj(self,V,b0,s0,nsteps):
-        b = b0
+    def traj(self, b0 = None, s0 = 0, nsteps = 10):
+        b = b0 #or self._s0
         S = s0
         D = [["S","R","Z","a","b"]]
         for ii in range(nsteps):
-            a = self.sample(V, b)
+            a = self.sample(b)
             if isinstance(a,int):
                 a = [a]
             a = a[np.random.randint(len(a))]
@@ -230,17 +249,19 @@ class POMDP(object):
 
     # Expe code adaptation
 
-    def init_to_traj(self):
-        self.current_belief = self.s0
+    def init_traj(self):
+        self.current_belief = self._s0
 
-    def update(self,act, corsol = True, nbFault = 0, *args, **kwargs):
+    def update(self,act, corsol, nbFault = 0, *args, **kwargs):
+        corsol = 1 - corsol
         self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
 
-    def sample(self,V,b,isQMDP = False):
+    def sample(self,b,isQMDP = False):
+        V = self.alpha_v
         # If Q-MDP choose action directly
         if isQMDP:
             Q = V * b.T
-            A = greedy('samp',Q)
+            act = greedy('samp',Q)
 
         # else: Build Q-matrix
         else:
@@ -261,13 +282,20 @@ class POMDP(object):
 
                 Q[a] = (b * np.matrix(self._R[:, a]).T).item(0,0) + self._gamma * np.sum(Vmax)
             #print Q
-            A = greedy('prob',Q)
+            act = greedy('prob',Q)
 
-        return A
+        return act
 
+    def perseus_alpha_vect(self):
+        alpha_v = perseus(self)
+        self.alpha_v = alpha_v
+        self.init_traj()
 
 
 #########################################################################################
+###### PERSEUS ##########################################################################
+#########################################################################################
+
 
 def greedy(mode,U):
     Idx = np.argmax(U,axis = 0)
@@ -287,11 +315,11 @@ def greedy(mode,U):
 
 def perseus_init():
         echo = 1
-        max_iterr = 10000
+        max_iterr = 5000
         eps = 1e-9
         return echo,max_iterr,eps
 
-def perseus(pomdp = None, D = None):
+def perseus(pomdp = None):
     # Input (inputs marked with * are mandatory): 
     # . POMDP* (POMDP Model: struct(nS, nA, nZ, {P}, {O}, r, Gamma, s0, b0))
     # . D      (Set of sampled beliefs)
@@ -302,8 +330,11 @@ def perseus(pomdp = None, D = None):
     echo,max_iterr,eps = perseus_init()
     
     # Parse arguments
+    nopomdp = (pomdp == None)
+
+
     pomdp = pomdp or POMDP()
-    D = D or pomdp.sampleBeliefs()
+    D = pomdp.belief_sample or pomdp.sampleBeliefs()
     
     #print D[[1,2],:]
     
@@ -337,7 +368,8 @@ def perseus(pomdp = None, D = None):
 
         #if echo:
         #    print "Error at iterration %s : %s" % (iterr, Err)
-
+        if iterr == max_iterr/1.5:
+            print iterr
         
         if Err < eps or iterr == max_iterr:
             print "iterr %s" % iterr 
@@ -347,7 +379,10 @@ def perseus(pomdp = None, D = None):
             iterr = iterr + 1
 
         V = Vnew
-    return pomdp,V,D
+    if nopomdp:
+        return pomdp,V #,D
+    else: 
+        return V #,D
 
 def perseusBackup(pomdp, V, D):
     # function [Vnew] = perseusBackup(POMDP, V, D)

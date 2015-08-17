@@ -45,9 +45,9 @@ class KTStudent(Student):
 
     def get_knowledge(self,name, *arg, **kwargs):
         idx = self.params["knowledge_names"].index(name)
-        return self._knowledge[idx]
+        return self._knowledges[idx]
 
-    def update_mastery(self,exercise):
+    def learn(self,exercise):
         for kc in exercise._knowledges:
             self.get_knowledge(kc.name).update_state()
 
@@ -57,13 +57,16 @@ class KTStudent(Student):
     def emission_prob(self,exercise):
         prob_correct = []
         for kc in exercise._knowledges:
-            prob_correct.append(self.get_knowledge(kc.name).emission_prob())
+            if kc.level > 0 :
+                prob_correct.append(self.get_knowledge(kc.name).emission_prob())
 
         return np.mean(prob_correct)
-        
 
-    def answer(self,exercise):
-        self.learn(exercise.get_knowledges())
+    def answer(self,exercise, nb_try = 1):
+        
+        # Transition computation
+        self.learn(exercise)
+        
         #Emission probablity
         p_correct = self.emission_prob(exercise)
         print "p_correct : %s " % p_correct
@@ -71,9 +74,6 @@ class KTStudent(Student):
         s = np.random.multinomial(1,[1-p_correct,p_correct])
         ans = np.nonzero(s==1)[0][0]
                 
-        # Transition computation
-        self.update_mastery(exercise)
-        
         exercise._answer = ans
         exercise.add_attr(_nb_try = 1)
         return exercise

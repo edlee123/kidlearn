@@ -147,7 +147,10 @@ class WorkingSession(object):
         return self._current_ex
 
     def student_answer(self, ex, answer=None, nb_try=0):
-        self._student.answer(ex, answer, nb_try=nb_try)
+        if answer:
+            self._student.answer(ex, answer, nb_try=nb_try)
+        else:
+            self._student.answer(ex, nb_try=nb_try)
     
     def update_manager(self, ex):
         self._seq_manager.update(ex.act, ex._answer)

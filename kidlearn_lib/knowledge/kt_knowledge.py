@@ -28,6 +28,8 @@ class KTKnowledge(Knowledge):
         self.params = params
         self.p_L0 = self.params["L0"]
         self.p_T = self.params["T"]
+        if not isinstance(self.p_T,list):
+            self.p_T = [self.p_T]
         self.p_G = self.params["G"]
         self.p_S = self.params["S"]
         self.update_state(self.p_L0)
