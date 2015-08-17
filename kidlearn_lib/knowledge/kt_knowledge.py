@@ -37,7 +37,9 @@ class KTKnowledge(Knowledge):
     # knowledge = 0 or 1 , updated at each step
     ###################################################
     def update_state(self,prob = None, pT_idx = 0):
-        prob = prob or self.p_T[pT_idx]
+        prob = prob
+        if prob == None:
+            prob = self.p_T[pT_idx]
         if self._level != 1:
             learn = np.random.multinomial(1,[1-prob,prob])
             learn = np.nonzero(learn==1)[0][0]

@@ -7,14 +7,14 @@
 
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
-        "levelupdate": 0.8,
+        "levelupdate": 0.95,
 
         "ZpdesSsb": {
             "name" : "ZpdesSsb",
             "filter1": 0.2, 
             "filter2": 0.8, 
             "uniformval": 0.05,
-            "stepUpdate" : 8,
+            "stepUpdate" : 6,
             "size_window": 3
         }
     }

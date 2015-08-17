@@ -49,7 +49,8 @@ class KTStudent(Student):
 
     def learn(self,exercise):
         for kc in exercise._knowledges:
-            self.get_knowledge(kc.name).update_state()
+            if kc.level > 0 :
+                self.get_knowledge(kc.name).update_state()
 
     def get_kc_mastery(self):
         return np.array([kc._level for kc in self._knowledges])

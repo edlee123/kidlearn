@@ -46,6 +46,8 @@ class POMDP(object):
 
         params = params or func.load_json(params_file,directory)
 
+        self._KC = params["competencies"]
+
         self._Ps = params["p_slip"]
         self._Pg = params["p_guess"]
         
@@ -69,7 +71,19 @@ class POMDP(object):
 
         self._nB = 1350
         self.belief_sample = None
-        #D = self.sampleBeliefs()
+        self.init_traj()
+
+        self.sampleBeliefs()
+        self.perseus_alpha_vect()
+
+    def get_KC(self):
+        return self._KC
+
+    def get_state(self):
+        state = {}
+        state["belief"] = "self.current_belief"
+
+        return state
 
     def construct_pomdp(self):
         for ii in range(0,self._nS):
@@ -252,11 +266,21 @@ class POMDP(object):
     def init_traj(self):
         self.current_belief = self._s0
 
+    def compute_act_lvl(self, act, RT = None, **kwargs):
+        lvl = [0]*self._nA
+        lvl[act["act"]] = 1
+        return lvl
+
     def update(self,act, corsol, nbFault = 0, *args, **kwargs):
+        act = act["act"]
         corsol = 1 - corsol
+
         self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
 
-    def sample(self,b,isQMDP = False):
+    def sample(self,b = None, isQMDP = False):
+        if b == None : 
+            b = self.current_belief
+
         V = self.alpha_v
         # If Q-MDP choose action directly
         if isQMDP:
@@ -284,13 +308,13 @@ class POMDP(object):
             #print Q
             act = greedy('prob',Q)
 
-        return act
+        f_act = {"act": act}
+
+        return f_act
 
     def perseus_alpha_vect(self):
         alpha_v = perseus(self)
         self.alpha_v = alpha_v
-        self.init_traj()
-
 
 #########################################################################################
 ###### PERSEUS ##########################################################################
@@ -334,7 +358,9 @@ def perseus(pomdp = None):
 
 
     pomdp = pomdp or POMDP()
-    D = pomdp.belief_sample or pomdp.sampleBeliefs()
+    D = pomdp.belief_sample
+    if D == None:
+        D = pomdp.sampleBeliefs()
     
     #print D[[1,2],:]
     
