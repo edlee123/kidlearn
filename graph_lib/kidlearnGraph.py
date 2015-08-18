@@ -1021,14 +1021,15 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
     plt.legend(bbox_to_anchor=(0,0,1.1,0),ncol=1, fancybox=True, shadow=True, prop={'size':20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
-    if showPlot:
-        plt.show()
 
     if path != "" :
         plt.draw()
         path_f = path + "Curve_%s_%s_%s" % (typeData,type_data_spe,ref)
         #print path_f
         plt.savefig(path_f)
+
+    if showPlot:
+        plt.show()
 
     return
 

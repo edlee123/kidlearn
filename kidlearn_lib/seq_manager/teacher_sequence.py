@@ -68,7 +68,7 @@ class Sequence(RiaritHssbg):
             #self.seqLevels = [0]*len(self.acts)
         self.resetLevel();
 
-    def update(self,act = None, corsol = True, nbFault = 0, *args, **kwargs):
+    def update(self,act, corsol = True, nbFault = 0, *args, **kwargs):
         RiaritHssbg.update(self,act,corsol)
         #print " Answer %s" % self.answers
         #print "corsol %s" % corsol

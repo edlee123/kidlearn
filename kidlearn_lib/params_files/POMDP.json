@@ -1,5 +1,6 @@
 {
     "name" : "POMDP",
+    "ref" : "KT_expe_1",
     "competencies":["S1","S2","S3","S4","S5"],
     "n_Action" : 5,
     "n_StatePerAct": 2,
@@ -7,6 +8,7 @@
     "gamma" : 0.99,
     "p_slip" : 0.05,
     "p_guess" : 0.05,
+    
     "p_transitions" : [[ 0.3, 0, 0, 0, 0],
                        [ 0, 0.1, 0, 0, 0],
                        [ 0, 0, 0.2, 0, 0],

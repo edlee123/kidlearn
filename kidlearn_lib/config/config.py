@@ -55,6 +55,85 @@ def population(pop_params = None, params_file = None, directory = None):
     pop_params = pop_params or func.load_json(params_file,directory)
     return pop_dict_define[pop_params["model"]](pop_params)
 
+
+# Q population
+##############################################################
+
+def q_population(pop_params):
+    nb_students = pop_params["nb_students"]
+    mean = pop_params["mean"] 
+    var = pop_params["var"]
+
+    population_q_profiles = generate_q_profiles(nb_students,mean,var)
+    population = []
+
+    for stud_skills in population_q_profiles:
+        params = pop_params["student"]
+        params["knowledge_levels"] = stud_skills
+
+        population.append(params)
+
+    return population
+
+def generate_q_profiles(nb_students,mean,var):
+    
+    population_q_profiles = generate_normal_population(nb_students,mean,var)
+    for stud in population_q_profiles:
+        stud = correct_skill_vector(stud)
+    return population_q_profiles
+
+# KT population
+##############################################################
+
+def kt_population(pop_params):
+    nb_students = pop_params["nb_students"]
+    mean = pop_params["mean"] 
+    var = pop_params["var"]
+
+
+def generate_p_profiles(nb_students,p_student_profiles):
+    # To verify
+
+    nb_class = len(p_student_profiles)
+    nbStudClass = nb_students/nb_class
+    population_p_profiles = []
+    for p in p_student_profiles:
+        for i in range(0,nbStudClass):
+            population_p_profiles.append(p)
+    
+    return population_p_profiles
+
+# Population Generation Tools
+##############################################################
+
+def generate_normal_population(size_population, mean,var):
+    cov = np.diag(var)
+    population_normal = np.random.multivariate_normal(mean,cov,(size_population))
+    #for i in range(0,len(lvl)) :
+    #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
+    return population_normal
+
+
+def correct_skill_vector(skill_vector):
+    for i in [2,5]:
+        if skill_vector[i] > skill_vector[i-1]:
+            skill_vector[i] = skill_vector[i-1]
+    for i in range(len(skill_vector)):
+        if skill_vector[i] < 1 or skill_vector[i] > 1:
+            skill_vector[i] = min(max(skill_vector[i],0),1)
+        if i > 3: 
+            if skill_vector[i] > skill_vector[i-3]:
+                skill_vector[i] = skill_vector[i-1]
+        skill_vector[i] = round(skill_vector[i],2)
+    return skill_vector
+
+
+
+# OLD
+##############################################################
+def generate_kt_parametrisation():
+    return
+
 def population_profiles(model_student, stud_params):
     if model_student == 0:
         population = generate_q_profiles(stud_params)
@@ -95,72 +174,6 @@ def generate_ktfeatures_population(kt_profil = 0):
 
     return population
 
-# Generate population parameters
-##############################################################
-def generate_kt_parametrisation():
-    return
-
-def q_population(pop_params):
-    nb_students = pop_params["nb_students"]
-    mean = pop_params["mean"] 
-    var = pop_params["var"]
-
-    population_q_profiles = generate_q_profiles(nb_students,mean,var)
-    population = []
-
-    for stud_skills in population_q_profiles:
-        params = pop_params["student"]
-        params["knowledge_levels"] = stud_skills
-
-        population.append(params)
-
-    return population
-
-
-def generate_q_profiles(nb_students,mean,var):
-    
-    population_q_profiles = generate_normal_population(nb_students,mean,var)
-    for stud in population_q_profiles:
-        stud = correct_skill_vector(stud)
-    return population_q_profiles
-
-def generate_normal_population(size_population, mean,var):
-    cov = np.diag(var)
-    population_normal = np.random.multivariate_normal(mean,cov,(size_population))
-    #for i in range(0,len(lvl)) :
-    #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
-    return population_normal
-
-def generate_p_profiles(nb_students,p_student_profiles):
-    # To verify
-
-    nb_class = len(p_student_profiles)
-    nbStudClass = nb_students/nb_class
-    population_p_profiles = []
-    for p in p_student_profiles:
-        for i in range(0,nbStudClass):
-            population_p_profiles.append(p)
-    
-    return population_p_profiles
-
-def correct_skill_vector(skill_vector):
-    for i in [2,5]:
-        if skill_vector[i] > skill_vector[i-1]:
-            skill_vector[i] = skill_vector[i-1]
-    for i in range(len(skill_vector)):
-        if skill_vector[i] < 1 or skill_vector[i] > 1:
-            skill_vector[i] = min(max(skill_vector[i],0),1)
-        if i > 3: 
-            if skill_vector[i] > skill_vector[i-3]:
-                skill_vector[i] = skill_vector[i-1]
-        skill_vector[i] = round(skill_vector[i],2)
-    return skill_vector
-
-
-
-##################################################
-# Old things
-##################################################
 
 class Config(object):
     def __init__(self):

@@ -6,6 +6,7 @@ import numpy.matlib as npmat
 import copy
 import scipy.sparse as sparse
 import functions as func
+import config.datafile as datafile
 
 #np.random.seed(20)
 
@@ -45,7 +46,7 @@ class POMDP(object):
         #self._gamma = 0.99
 
         params = params or func.load_json(params_file,directory)
-
+        self._ref = params["ref"] 
         self._KC = params["competencies"]
 
         self._Ps = params["p_slip"]
@@ -75,6 +76,13 @@ class POMDP(object):
 
         self.sampleBeliefs()
         self.perseus_alpha_vect()
+
+    def save(self, path = "data/pomdp"):
+        datafile.create_directories([path])
+        datafile.save_file(self,self._ref,path)
+
+    def load(self):
+        return
 
     def get_KC(self):
         return self._KC
