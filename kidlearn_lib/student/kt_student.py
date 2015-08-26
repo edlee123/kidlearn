@@ -28,14 +28,17 @@ class KTStudent(Student):
         params = params or func.load_json(params_file,directory)
         
         Student.__init__(self, params = params)
+        
         for i in range(len(self.params["knowledge_names"])):
             name = self.params["knowledge_names"][i]
             level = self.params["knowledge_levels"][i]
-            params = {}
+            kc_params = {}
             for kt_keys in self.params["KT"].keys():
-                params[kt_keys] = self.params["KT"][kt_keys][i]
+                kc_params[kt_keys] = self.params["KT"][kt_keys][i]
             
-            self._knowledges.append(knl.KTKnowledge(name,level, params))
+            self._knowledges.append(knl.KTKnowledge(name,level,kc_params))
+
+        self.kc_trans_dep = np.array(self.params["kc_trans_dep"])
 
     def __repr__(self):
         str = ""
@@ -43,16 +46,22 @@ class KTStudent(Student):
             str += kc.__repr__() + ", "
         return str
 
+    def get_knowledge_idx(self,name, *arg, **kwargs):
+        return self.params["knowledge_names"].index(name)
+
     def get_knowledge(self,name, *arg, **kwargs):
-        idx = self.params["knowledge_names"].index(name)
+        idx = self.get_knowledge_idx(name)
         return self._knowledges[idx]
 
     def learn(self,exercise):
         for kc in exercise._knowledges:
             if kc.level > 0 :
-                self.get_knowledge(kc.name).update_state()
+                kc_levels = np.array(self.get_kc_lvl())
+                depend_val = self.kc_trans_dep[self.get_knowledge_idx(kc.name),:]
+                depend_prob = np.dot(kc_levels,depend_val) 
+                self.get_knowledge(kc.name).update_state(adding_prob = depend_prob)
 
-    def get_kc_mastery(self):
+    def get_kc_lvl(self):
         return np.array([kc._level for kc in self._knowledges])
 
     def emission_prob(self,exercise):
@@ -70,7 +79,7 @@ class KTStudent(Student):
         
         #Emission probablity
         p_correct = self.emission_prob(exercise)
-        
+
         # Answer / Observation
         s = np.random.multinomial(1,[1-p_correct,p_correct])
         ans = np.nonzero(s==1)[0][0]

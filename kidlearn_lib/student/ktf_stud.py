@@ -61,13 +61,14 @@ class KTStudent(Student):
         #Emission probablity
         p_correct = self.emission_prob(exercise)
         print "p_correct : %s " % p_correct
+
         # Answer / Observation
         s = np.random.multinomial(1,[1-p_correct,p_correct])
         ans = np.nonzero(s==1)[0][0]
-                
+
         # Transition computation
         self.update_mastery(exercise)
-        
+
         exercise._answer = ans
         exercise.add_attr(_nb_try = 1)
         return exercise

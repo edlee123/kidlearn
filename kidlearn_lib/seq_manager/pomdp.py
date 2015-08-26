@@ -53,12 +53,13 @@ class POMDP(object):
         self._Pg = params["p_guess"]
         
         self._Pt = np.array(params["p_transitions"])
+        self._trans_dep = np.array(params["trans_dep"])
+
         self._nA = params["n_Action"]
         self._n_StatePerAct = params["n_StatePerAct"]
         self._nS = pow(self._n_StatePerAct,self._nA)
         self._nZ = params["n_Observation"]
         self._gamma = params["gamma"]
-
 
         #self._b0 = ones(1,self._nS)/self._nS;
         self._s0 = np.zeros(self._nS)
@@ -68,7 +69,8 @@ class POMDP(object):
         self._R = np.array([np.zeros(5) for x in range(self._nS)],dtype = 'float128')
         self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)],dtype = 'float128')
         self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)],dtype = 'float128')
-        self.construct_pomdp()
+
+        self.construct_transDepend_pomdpKT()
 
         self._nB = 1350
         self.belief_sample = None
@@ -93,13 +95,13 @@ class POMDP(object):
 
         return state
 
-    def construct_pomdp(self):
+    def construct_transDepend_pomdpKT(self):
         for ii in range(0,self._nS):
-            str_ss = np.binary_repr(ii,5)
+            str_ss = np.binary_repr(ii,self._nA)
             ss = np.array([int(x) for x in str_ss])
             for aa in range(self._nA):
                 nss = copy.copy(ss)
-                self._R[ii] = [sum(ss)]*5
+                self._R[ii] = [sum(ss)]*self._nA
                 if ss[aa] == 1:
                     iss = int(str_ss,2)
                     #no forgetting
@@ -108,7 +110,28 @@ class POMDP(object):
                 else:
                     nss[aa] = 1
                     iss = int(''.join([str(x) for x in nss]),2)
-                    aux = np.dot(ss, self._Pt[aa,:][np.newaxis].T) + self._Pt[aa,aa]
+                    aux = np.dot(ss, self._trans_dep[aa,:]) + self._Pt[aa]
+                    self._P[aa][ii][iss] = aux
+                    self._P[aa][ii][ii] = 1-aux
+                    self._O[aa][ii] = [self._Pg, 1-self._Pg]
+
+    def construct_basic_pomdpKT(self):
+
+        for ii in range(0,self._nS):
+            str_ss = np.binary_repr(ii,self._nA)
+            ss = np.array([int(x) for x in str_ss])
+            for aa in range(self._nA):
+                nss = copy.copy(ss)
+                self._R[ii] = [sum(ss)]*self._nA
+                if ss[aa] == 1:
+                    iss = int(str_ss,2)
+                    #no forgetting
+                    self._P[aa][ii][iss] = 1
+                    self._O[aa][ii] = [1-self._Ps, self._Ps]
+                else:
+                    nss[aa] = 1
+                    iss = int(''.join([str(x) for x in nss]),2)
+                    aux = np.dot(ss, self._trans_dep[aa,:][np.newaxis].T) + self._Pt[aa,aa]
                     self._P[aa][ii][iss] = aux
                     self._P[aa][ii][ii] = 1-aux
                     self._O[aa][ii] = [self._Pg, 1-self._Pg]

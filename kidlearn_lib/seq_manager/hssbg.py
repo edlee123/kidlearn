@@ -122,12 +122,11 @@ class HierarchicalSSBG(object):
         return 0
 
     def sample(self):
-        act = {} #FIXME FIXME FIXME PLEASE GOD OH GOD
-        act = self.speSample(self.SSBGs[self.main_act],act)
+        act = self.speSample(self.SSBGs[self.main_act])
         #self.lastAct = act
         return act
 
-    def speSample(self,ssbgToS,act): 
+    def speSample(self,ssbgToS,act = {}): 
         act[ssbgToS.ID] = ssbgToS.sample()
         for actRT in range(len(act[ssbgToS.ID])):
             hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]

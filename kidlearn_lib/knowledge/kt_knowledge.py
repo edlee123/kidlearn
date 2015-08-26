@@ -28,18 +28,27 @@ class KTKnowledge(Knowledge):
         self.params = params
         self.p_L0 = self.params["L0"]
         self.p_T = self.params["T"]
+
         if not isinstance(self.p_T,list):
             self.p_T = [self.p_T]
+        
+        #self.kc_trans_dep = self.params["kc_trans_dep"]
+
         self.p_G = self.params["G"]
         self.p_S = self.params["S"]
         self.update_state(self.p_L0)
+        if self._level == 1 :
+            print self.p_L0
+            raw_input()
 
     # knowledge = 0 or 1 , updated at each step
     ###################################################
-    def update_state(self,prob = None, pT_idx = 0):
-        prob = prob
-        if prob == None:
-            prob = self.p_T[pT_idx]
+    def update_state(self,prob = None, adding_prob = 0, pT_idx = 0):
+        if prob != None:
+            prob = prob
+        else:
+            prob = adding_prob + self.p_T[pT_idx]
+
         if self._level != 1:
             learn = np.random.multinomial(1,[1-prob,prob])
             learn = np.nonzero(learn==1)[0][0]

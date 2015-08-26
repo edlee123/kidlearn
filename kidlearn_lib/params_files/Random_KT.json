@@ -1,5 +1,8 @@
 {
-    "name" : "RiaritHssbg",
+    "name" : "RandomSequence",
+    "random_type" : 2,
+    "seq_path": 0,
+
     "RT": { 
         "name":"KT1",
         "path" : "RT/"
