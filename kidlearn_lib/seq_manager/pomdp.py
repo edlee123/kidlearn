@@ -31,7 +31,7 @@ class POMDP(object):
 #                       s'         s           a     P(s'|s,a)
 #  nB*    (Number of belief points to be sampled)
     
-    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files"):
+    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files", save_pomdp = 0):
         #self._Ps = 0.05
         #self._Pg = 0.05
         #
@@ -48,6 +48,7 @@ class POMDP(object):
         params = params or func.load_json(params_file,directory)
         self._ref = params["ref"] 
         self._KC = params["competencies"]
+        self._act = params["actions"]
 
         self._Ps = params["p_slip"]
         self._Pg = params["p_guess"]
@@ -57,7 +58,7 @@ class POMDP(object):
 
         self._nA = params["n_Action"]
         self._n_StatePerAct = params["n_StatePerAct"]
-        self._nS = pow(self._n_StatePerAct,self._nA)
+        self._nS = pow(self._n_StatePerAct,self._nA)    
         self._nZ = params["n_Observation"]
         self._gamma = params["gamma"]
 
@@ -79,9 +80,13 @@ class POMDP(object):
         self.sampleBeliefs()
         self.perseus_alpha_vect()
 
+        if save_pomdp:
+            self.save()
+
     def save(self, path = "data/pomdp"):
         datafile.create_directories([path])
         datafile.save_file(self,self._ref,path)
+        print "POMDP %s saved" % self._ref
 
     def load(self):
         return
@@ -299,11 +304,11 @@ class POMDP(object):
 
     def compute_act_lvl(self, act, RT = None, **kwargs):
         lvl = [0]*self._nA
-        lvl[act["act"]] = 1
+        lvl[act[self._act][0]] = 1
         return lvl
 
     def update(self,act, corsol, nbFault = 0, *args, **kwargs):
-        act = act["act"]
+        act = act[self._act][0]
         corsol = 1 - corsol
 
         self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
@@ -339,7 +344,7 @@ class POMDP(object):
             #print Q
             act = greedy('prob',Q)
 
-        f_act = {"act": act}
+        f_act = {self._act: [act]}
 
         return f_act
 
@@ -370,7 +375,7 @@ def greedy(mode,U):
 
 def perseus_init():
         echo = 1
-        max_iterr = 5000
+        max_iterr = 3000
         eps = 1e-9
         return echo,max_iterr,eps
 

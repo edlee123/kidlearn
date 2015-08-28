@@ -11,11 +11,15 @@
 
         "ZpdesSsb": {
             "name" : "ZpdesSsb",
-            "filter1": 0.1, 
+            "filter1": 0.10, 
             "filter2": 0.90, 
             "uniformval": 0.05,
             "stepUpdate" : 6,
-            "size_window": 3
+            "size_window": 3,
+            "thresZBegin" : 0.4,
+            "valToUpZPD" : [0.5,0.5],
+            "valToDesactZPD" : 0.7,
+            "thresHierarProm" : 0.5
         }
     }
 }

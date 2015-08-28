@@ -250,18 +250,30 @@ class WorkingGroup(object):
             else: 
                 data.append(ws.step[time])
         return data
+    
+    def get_act_repartition_time(self,first_ex = 1, nb_ex=101, act = "MAIN",nb_act = 5):
+        repart = [[0 for x in range(nb_act)]]
+        for num_ex in range(first_ex,nb_ex):
+            exs = self.get_data_time(num_ex,"exercise","_act")
+            for j in range(len(exs)):
+                repart[exs[j][act][0]][num_ex-first_ex][0] += 1
+
+        return repart
 
     def get_ex_repartition_time(self,first_ex = 1, nb_ex=101, type_ex=["M","R","MM","RM"], 
-                                nb_ex_type=[6,4,4,4]):
+                                nb_ex_type=[6,4,4,4], main_rt = "MAIN"):
         
-        repart = [[],[],[],[]]
+        repart = [[] for x in range(len(type_ex))]
         for num_ex in range(first_ex,nb_ex):
             exs = self.get_data_time(num_ex,"exercise","_act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
                 #print repart
             for j in range(len(exs)):
-                repart[exs[j]["MAIN"][0]][num_ex-first_ex][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
+                if nb_ex_type[exs[j][main_rt][0]] == 1:
+                    repart[exs[j][main_rt][0]][num_ex-first_ex][0] += 1
+                else:
+                    repart[exs[j][main_rt][0]][num_ex-first_ex][exs[j][type_ex[exs[j][main_rt][0]]][0]] += 1
 
         return repart
 
