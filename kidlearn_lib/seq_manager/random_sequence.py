@@ -41,7 +41,7 @@ class RandomSequence(RiaritHssbg):
             return self.choose_lvl_random_ex()
 
         else:
-            act = self.speSample(self.SSBGs[self.main_act],nb_stay = nb_stay)
+            act = self.speSample(self.SSBGs[self.main_act],act = {}, nb_stay = nb_stay)
             #self.lastAct = act
             return act
 

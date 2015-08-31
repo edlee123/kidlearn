@@ -122,11 +122,11 @@ class HierarchicalSSBG(object):
         return 0
 
     def sample(self):
-        act = self.speSample(self.SSBGs[self.main_act])
+        act = self.speSample(ssbgToS = self.SSBGs[self.main_act],act = {})
         #self.lastAct = act
         return act
 
-    def speSample(self,ssbgToS,act = {}): 
+    def speSample(self,ssbgToS,act = {}):
         act[ssbgToS.ID] = ssbgToS.sample()
         for actRT in range(len(act[ssbgToS.ID])):
             hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]
@@ -209,7 +209,6 @@ class SSBanditGroup(object):
         return 0
 
     def random_sample(self,nb_stay = None):
-
         for i in range(self.nactions):
             nb_stay = nb_stay or self.nb_stay[i]
             if self.nbturn[i] % nb_stay == 0:
@@ -218,7 +217,6 @@ class SSBanditGroup(object):
         return self.act
 
     def sample(self):
-
         for i in range(self.nactions):
             if self.nbturn[i] % self.nb_stay[i] == 0:
                 self.act[i] = int(self.SSB[i].sample())

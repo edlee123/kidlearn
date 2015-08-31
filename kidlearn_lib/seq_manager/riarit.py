@@ -293,7 +293,6 @@ class RiaritSsbg(SSBanditGroup):
             self.SSB[ii].update(act[ii], r_KC)
             self.SSB[ii].promote(self.estim_level)
 
-RiaritHssbg.ssbgClasse = RiaritSsbg
 
 ## class RiaritSsbg
 #########################################################
