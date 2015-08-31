@@ -34,7 +34,11 @@
                 "filter2": 0.8, 
                 "uniformval": 0.05,
                 "stepUpdate" : 8,
-                "size_window": 3
+                "size_window": 3,
+                "thresZBegin" : 0.5,
+                "valToUpZPD" : [0.5,0.5],
+                "valToDesactZPD" : 0.8,
+                "thresHierarProm" : 0.33
             }
         }
     },
