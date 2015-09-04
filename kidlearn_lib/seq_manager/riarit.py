@@ -13,8 +13,6 @@
 from hssbg import *
 import os
 import functions as func
-# class RiaritSsbg(object): pass
-# class RiaritSsb(object): pass
 
 #########################################################
 #########################################################

@@ -52,8 +52,6 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     riarit = k_lib.seq_manager.RiaritHssbg(params_file = "RIARIT_KT")
     random = k_lib.seq_manager.RandomSequence(params_file = "Random_KT")
 
-    multi_zpdes_params = func.load_json("multi_zpdes","params_files")
-
     for i in range(nb_stud):
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
         ws_tab_pomdp.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(pomdP)))
@@ -83,21 +81,20 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     xp.run(nb_step)
 
     for seq_name,group in xp._groups.items():
-        data = group[0].get_ex_repartition_time(first_ex= 1,nb_ex=nb_step+1,main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
+        data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s/%s" % (xp._directory, ref_xp), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
 
     skill_labels = ["S1","S2","S3","S4","S5","All"]
+    all_mean_data = {seq_name:{} for seq_name in xp._groups.keys()}
     for k in range(len(skill_labels)):
         mean_data = []
         std_data = []
         for seq_name,group in xp._groups.items():
-
-                data = [group[0].get_students_level(time = x, kc = k) for x in range(nb_step)]
-                mean_data.append([np.mean(data[x]) for x in range(len(data))])
-                std_data.append([np.std(data[x]) for x in range(len(data))])
-
+            data = [group[0].get_students_level(time = x, kc = k) for x in range(nb_step)]
+            mean_data.append([np.mean(data[x]) for x in range(len(data))])
+            std_data.append([np.std(data[x]) for x in range(len(data))])
+            all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
+        
         graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = skill_labels[k], markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s/%s" % (xp._directory, ref_xp),showPlot = False)
 
-
-    return xp
-
+    return all_mean_data

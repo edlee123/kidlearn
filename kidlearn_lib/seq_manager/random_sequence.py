@@ -41,11 +41,12 @@ class RandomSequence(RiaritHssbg):
             return self.choose_lvl_random_ex()
 
         else:
-            act = self.speSample(self.SSBGs[self.main_act],act = {}, nb_stay = nb_stay)
+            act = self.speSample(self.SSBGs[self.main_act], nb_stay = nb_stay)
             #self.lastAct = act
             return act
 
-    def speSample(self,ssbgToS,act = {},nb_stay = 0):
+    def speSample(self,ssbgToS,act = None,nb_stay = 0):
+        if act is None : act = {}
         act[ssbgToS.ID] = ssbgToS.random_sample(nb_stay)
         for actRT in range(len(act[ssbgToS.ID])):
             hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]

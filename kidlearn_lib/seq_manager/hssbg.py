@@ -122,11 +122,12 @@ class HierarchicalSSBG(object):
         return 0
 
     def sample(self):
-        act = self.speSample(ssbgToS = self.SSBGs[self.main_act],act = {})
+        act = self.speSample(ssbgToS = self.SSBGs[self.main_act])
         #self.lastAct = act
         return act
 
-    def speSample(self,ssbgToS,act = {}):
+    def speSample(self,ssbgToS,act = None):
+        if act is None: act = {}
         act[ssbgToS.ID] = ssbgToS.sample()
         for actRT in range(len(act[ssbgToS.ID])):
             hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]
@@ -236,7 +237,9 @@ class SSBanditGroup(object):
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, ntask, is_hierarchical = 0, param_values = [], params = {}):
+    def __init__(self,id, nval, ntask, is_hierarchical = 0, param_values = None, params = None):
+        if param_values is None : param_values = []
+        if params is None : params = {}
         # params : filter1, filter2, uniformval,
 
         self.params = params
