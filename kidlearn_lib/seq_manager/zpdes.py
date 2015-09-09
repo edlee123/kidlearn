@@ -12,9 +12,7 @@
 
 from riarit import *
 from hssbg import *
-
-# class ZpdesSsbg(object): pass
-# class ZpdesSsb(object): pass
+import numpy as np
 
 #########################################################
 #########################################################
@@ -74,8 +72,6 @@ class ZpdesSsbg(RiaritSsbg):
             self.SSB[ii].update(act[ii], max(0,r_ES[ii]))
             self.SSB[ii].promote()
 
-ZpdesHssbg.ssbgClasse = ZpdesSsbg
-
 ## class ZpdesSsbg
 #########################################################
 
@@ -90,7 +86,14 @@ class ZpdesSsb(RiaritSsb):
         SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
         self.name = "zssb"
         self.stepUpdate = params['stepUpdate']
+        self.stepMax = self.stepUpdate/2
         self.size_window = min(len(self.bandval),params['size_window'])
+        self.thresZBegin = params["thresZBegin"]
+        self.valToUpZPD = params["valToUpZPD"]
+        self.valToDesactZPD = params["valToDesactZPD"]
+        self.thresHierarProm = params["thresHierarProm"]
+        self.promote_coeff = params["promote_coeff"]
+        self.hier_promote_coeff = params["h_promote_coeff"]
         self.promote(True)
 
     def hierarchical_promote(self):
@@ -110,8 +113,7 @@ class ZpdesSsb(RiaritSsb):
                                 sucToTreat = [0]
                             else:
                                 sucToTreat = suc
-                            stepMax = self.stepUpdate/2
-                            stepSuccess = min(len(sucToTreat),stepMax) 
+                            stepSuccess = min(len(sucToTreat),self.stepMax) 
                             successUsed.append(sucToTreat[-stepSuccess:])
                             
                             if len(sucToTreat[-stepSuccess:]) > 0: 
@@ -120,62 +122,66 @@ class ZpdesSsb(RiaritSsb):
                                 sumSucess += 0
 
                 meanSucess = sumSucess*1.0/max(len(successUsed),1)
-                thresZProm = 1.0/3 #len(ssbg.SSB)/4
 
-                if meanSucess > thresZProm:
-                    self.bandval[i] = self.bandval[i-1]/4 #TODO test with 4 for exemple
+                if meanSucess > self.thresHierarProm:
+                    self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
 
     def promote(self,init = False):
-        stepMax = self.stepUpdate/2
-        stepSuccess = min(len(self.success),stepMax)
-        #if "mod" in self.param_values :#and self.algo == "ZPDES":
-        #    print "YOLO"
-        #print self.param_values
-        #print self.sonSSBG
-        #raw_input()
+
+        # Promote if initialisation
         if init == True :
             for ii in range((1-self.is_hierarchical)*(len(self.bandval)-1)+1):
                 self.bandval[ii] = self.uniformval#/pow((ii+1),7)
-        elif len(self.sonSSBG) > 0:
-            self.hierarchical_promote()
-        elif len(self.bandval) - self.bandval.count(0) < self.size_window and self.bandval[0] != 0:
-            for i in range(1,len(self.bandval)- self.bandval.count(0)+1):
-                if len(self.success[i-1][-stepSuccess:]) > 0:
-                    if mean(self.success[i-1][-stepSuccess:]) > 0.5  and len(self.success[i-1]) > 1 and     self.bandval[i:] == [0]*len(self.bandval[i:]):
-                        self.bandval[i] = self.bandval[i-1]
-        else :
-            first = -1
-            for ii in range(self.nval):
-                if self.bandval[ii] != 0:
-                    first = ii
-                    break
-            for ii in range(self.nval):
-                if self.bandval[ii] != 0:
-                    last = ii
 
-            valToUp = 1.0/2
-            #last = first + 2
-            #if first == len(self.bandval) - 3:
-            #    valToUp = (1.0*stepSuccess/2 + 1)/stepSuccess
-            #elif first == len(self.bandval) - 2:
-            #  #  last = first+1
-            #    valToUp = (1.0*stepSuccess/2 + 1)/stepSuccess
-            #valToUp = 0.6
-            if first >= len(self.bandval) - 3:
-                valToUp = 0.5
-            elif len(self.bandval) <= 3:
-                valToUp = 0.5
-            else:
-                last = first
+        elif self.is_hierarchical:
+            
+            #Promote wicth son action
+            if len(self.sonSSBG) > 0:
+                self.hierarchical_promote()
 
-            if len(self.success[first][-stepSuccess:]) > 0:
-                if mean(self.success[first][-stepSuccess:]) > valToUp and len(self.success[last]) >= stepMax and first < len(self.bandval) - 3: 
-                    self.bandval[first] = 0
+            #Promote for beginning of the sequence with less than windows size bandit activated 
+            elif self.nval - self.len_success().count(0) < self.size_window :
+                i = self.len_success().index(0)
+                if self.success_rate(-self.stepMax)[i-1] > self.thresZBegin and len(self.success[i-1]) > 1 :
+                    self.bandval[i] = self.bandval[i-1]
+            
+            # Promote normal, when the windows moove
+            else :
+                max_usable_val = [self.success_rate(-self.stepMax)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
+                min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
 
-                    if first+3 < len(self.bandval):
-                        self.bandval[first+3] = min(self.bandval[first+2],self.bandval[first+1])/2
+                if len(max_usable_val) > 0:
+                    imax = self.active_bandits()[np.argmax(max_usable_val)]
+                    max_succrate_active = self.success_rate(-self.stepMax)[imax]
 
+
+                    if 0 in self.len_success() and max_succrate_active > self.valToUpZPD:
+                        self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
+
+                    if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
+                        imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits()])]
+                        min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
+                        if min_succrate_not_active < 1 :
+                            self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
+                            self.bandval[imax] = 0
+                    elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) > 1 :
+                            self.bandval[imax] = 0
+            
+
+                    
         return
+
+    def active_bandits(self):
+        return [x for x in range(self.nval) if self.bandval[x] != 0]
+
+    def not_active_bandits(self):
+        return [x for x in range(self.nval) if self.bandval[x] == 0]
+
+    def len_success(self,first_val = 0, last_val = None):
+        return [len(x) for x in self.success][first_val:last_val]
+
+    def success_rate(self,first_step = 0,last_step = None, first_val = 0, last_val = None):
+        return [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
 
     def calcul_reward_ssb(self,val,coeff_ans):
         self.success[val].append(coeff_ans)

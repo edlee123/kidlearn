@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 # Name:        experimentation
@@ -12,7 +13,7 @@
 
 import os
 import sys
-from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence
+from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
 from exercise import Exercise
 from student import *
 import functions as func
@@ -147,7 +148,10 @@ class WorkingSession(object):
         return self._current_ex
 
     def student_answer(self, ex, answer=None, nb_try=0):
-        self._student.answer(ex, answer, nb_try=nb_try)
+        if answer:
+            self._student.answer(ex, answer, nb_try=nb_try)
+        else:
+            self._student.answer(ex, nb_try=nb_try)
     
     def update_manager(self, ex):
         self._seq_manager.update(ex.act, ex._answer)
@@ -163,9 +167,19 @@ class WorkingSession(object):
     ###########################################################################
     ##### Data Analysis tools 
     
+    def calcul_cost(self,begin = 1,time=None, gamma = 0.99):
+        if time is None:
+            time = self.time_max_level()
+        return sum([pow(gamma,t) * sum(self.student_level_time(time = t,kc=range(len(self._KC)))) for t in range(begin,time)])
+
+    def time_max_level(self):
+        level_all_time = [sum(self.student_level_time(time = t,kc=range(len(self._KC)))) for t in range(len(self._step))]
+        return np.argmax(level_all_time)
+        
+
     def student_level_time(self,time = 0, kc = 0):
         if isinstance(kc,list):
-            return np.mean([self._step[time].student["knowledges"][k].level for k in kc])
+            return [self._step[time].student["knowledges"][k].level for k in kc]
 
         elif kc >= len(self._step[time].student["knowledges"]):
             return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
@@ -192,14 +206,15 @@ class WorkingGroup(object):
 
         params = params or func.load_json(params_file,directory)
         self.params = params
-        self.population = population or config.population(params = params["population"])
         self.logs = {}
 
         if WorkingSessions:
             self._working_sessions = WorkingSessions
+
         else:
+            population = population or config.population(params = params["population"])
             self._working_sessions = []
-            for student_params in self.population:
+            for student_params in population:
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
                 self._working_sessions.append(WorkingSession(params = params))
 
@@ -231,6 +246,12 @@ class WorkingGroup(object):
 
     ###########################################################################
     ##### Data Analysis tools 
+
+    def calcul_cost(self):
+        cost= []
+        for ws in self._working_sessions:
+            cost.append(ws.calcul_cost())
+        return cost
     
     def get_students_level(self, time = 0, kc = 0):
         skill_level = []
@@ -246,18 +267,30 @@ class WorkingGroup(object):
             else: 
                 data.append(ws.step[time])
         return data
+    
+    def get_act_repartition_time(self,first_ex = 1, nb_ex=101, act = "MAIN",nb_act = 5):
+        repart = [[0 for x in range(nb_act)]]
+        for num_ex in range(first_ex,nb_ex):
+            exs = self.get_data_time(num_ex,"exercise","_act")
+            for j in range(len(exs)):
+                repart[exs[j][act][0]][num_ex-first_ex][0] += 1
+
+        return repart
 
     def get_ex_repartition_time(self,first_ex = 1, nb_ex=101, type_ex=["M","R","MM","RM"], 
-                                nb_ex_type=[6,4,4,4]):
+                                nb_ex_type=[6,4,4,4], main_rt = "MAIN"):
         
-        repart = [[],[],[],[]]
+        repart = [[] for x in range(len(type_ex))]
         for num_ex in range(first_ex,nb_ex):
             exs = self.get_data_time(num_ex,"exercise","_act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
                 #print repart
             for j in range(len(exs)):
-                repart[exs[j]["MAIN"][0]][num_ex-first_ex][exs[j][type_ex[exs[j]["MAIN"][0]]][0]] += 1
+                if nb_ex_type[exs[j][main_rt][0]] == 1:
+                    repart[exs[j][main_rt][0]][num_ex-first_ex][0] += 1
+                else:
+                    repart[exs[j][main_rt][0]][num_ex-first_ex][exs[j][type_ex[exs[j][main_rt][0]]][0]] += 1
 
         return repart
 
@@ -283,13 +316,16 @@ class Experiment(object):
         self.logs = {}
 
         self._seq_manager_list_name = self.params["seq_manager_list"]
-        self._nb_students = self.params["population"]["nb_students"]
         self._nb_step = self.params["nb_step"]
+
+        self._nb_students = self.params["population"]["nb_students"]
         self._model_student = self.params["population"]["model"]
         
-        self.do_simu_path(self.params["ref_expe"])
+        if "path_to_save" not in self.params.keys():
+            self.params["path_to_save"] = "experimentation/data/"
 
-        
+        self.do_simu_path(self.params["ref_expe"], path = self.params["path_to_save"])
+
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
         
@@ -298,8 +334,8 @@ class Experiment(object):
 
         else:
             self._groups = {key: [] for key in self._seq_manager_list_name}
-            
             self._population = config.population(self.params["population"])
+
             for seq_manager_name in self._seq_manager_list_name:
                 params = self.params["WorkingGroup"]
                 params["seq_manager"] = self.params["seq_managers"][seq_manager_name]
@@ -327,13 +363,14 @@ class Experiment(object):
         self._groups[params["seq_manager"]["name"]].append(WorkingGroup(params = params, population = self._population))
         #self._groups[seq_manager_name].append(WorkingGroup(population,self.define_seq_manager(seq_manager_name)))
 
-    def do_simu_path(self,ref = ""):
-        directory = ""
+    def do_simu_path(self,ref = "", directory = "", path = ""):
         for seqName in self._seq_manager_list_name:
             directory += "%s_" % seqName[0:min(len(seqName),2)]
         directory = "%sms%s" % (directory,self._model_student)
-        self._directory = directory 
+        self._directory = "%s/%s" % (path,directory) 
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_step,ref)
+        self.save_directory = "%s/%s/" % (self._directory,self._ref_simu)
+        self.create_xp_directory()
 
     #def student_simulation(self, student, seq_manager_name):
     #    WorkingSession = WorkingSession(student,self.define_seq_manager(seq_manager_name))
@@ -348,10 +385,10 @@ class Experiment(object):
     #        for student in population:
     #            self.student_simulation(student,seq_manager_name)
     
+    def create_xp_directory(self):
+        datafile.create_directories([self._directory,self.save_directory])
+
     def save(self):
-        datafile.create_directories([self._directory])
-        final_dir = "%s/%s/" % (self._directory,self._ref_simu)
-        datafile.create_directories([final_dir])
         datafile.save_file(self,self._ref_simu,final_dir)
 
     def load(self,filename = "sim"):
@@ -362,209 +399,23 @@ class Experiment(object):
         nb_ex = nb_ex or self._nb_step
         for name,group in self._groups.items():
             print name
-            self.lauch_group_simulation(group, nb_ex)
+            self.launch_group_simulation(group, nb_ex)
 
-    def lauch_group_simulation(self, group, nb_ex = None):
+    def launch_group_simulation(self, group, nb_ex = None):
         nb_ex = nb_ex or self._nb_step
         for sub_group in group:
             sub_group.run(nb_ex)
 
-    # Define sequence manager
-    ##############################################################
+    
+    ###########################################################################
+    ##### Data Analysis tools 
 
-    # def define_seq_manager(self,seq_manager_name, data_file_name = 'data.json'):
-    #     dirf = os.path.dirname(os.path.realpath(__file__)) + "/"
-    #     data_file = dirf + data_file_name
-        
-    #     with open(data_file, 'rb') as fp:
-    #         ssb_data = json.load(fp)
-        
-    #     ssb_data["path"] = dirf
-
-    #     #seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
-        
-    #     if seq_manager_name == "RiARiT":
-    #         #seq_manager = RiaritHssbg(self.RT_main, params = ssb_data)
-    #         seq_manager = RiaritHssbg(params = ssb_data[seq_manager_name])
-    #     elif seq_manager_name == "ZPDES":
-    #         #seq_manager = ZpdesHssbg(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = ZpdesHssbg(params = ssb_data[seq_manager_name])
-    #     elif seq_manager_name == "Sequence":
-    #         #seq_manager = Sequence(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = Sequence(params = ssb_data[seq_manager_name])
-    #     else :
-    #         #seq_manager = RandomSequence(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = RandomSequence(params = ssb_data["Random"])
-        
-    #     return seq_manager
-
-    ##############################################################
-    ## Population generation functions
-    ##############################################################
-
-    """ TO DO and rework next methods """
-
-    # Generate population
-    ##############################################################
-
-    def define_population(self, config = None):
-        self.population_generation_parameters()
-        if self._model_student == "Qstudent":
-            population = self.generate_qstudent_population()
-
-        elif self._model_student == 1:
-            population = self.generate_pstudent_population()
-
-        elif self._model_student == 2:
-            population = self.generate_ktstudent_population()
-
-        elif self._model_student == 3:
-            population = self.generate_ktfeatures_population()
-
-        else:
-            print "NOT GOOD STUD MODEL TYPE"
-
-        return population
-
-    def generate_qstudent_population(self):
-        population_q_profiles = self.generate_q_profiles()
-        population = []
-
-        for stud_skills in population_q_profiles:
-            params = self.params["population"]
-            params["knowledge_levels"] = stud_skills
-            params["knowledge_names"] = self._knowledge_names
-
-            population.append(params)
-
-        return population
-
-    def generate_pstudent_population(self):
-        population_p_profiles = self.generate_p_profiles()
-        population_q_profiles = self.generate_q_profiles()
-        population = []
-        for i in range(self._nb_students):
-            population.append(Pstudent(params = population_p_profiles[i],knowledge_levels = population_q_profiles[i], knowledge_names = self._knowledge_names))
-        return population
-
-    def generate_ktstudent_population(self,kt_profil = 0):
-        population = []
-        for i in range(self._nb_students):
-            population.append(KTStudent(knowledge_names = self._knowledge_names, knowledge_params = self._KTStudent_profils[kt_profil]))
-        return population
-
-    def generate_ktfeatures_population(self,kt_profil = 0):
-        population = []
-        for i in range(self._nb_students):
-            population.append(KTStudent(self.config.knowledges_conf))
-        return population
-
-        return population
-
-    # Generate population parameters
-    ##############################################################
-    def generate_kt_parametrisation(self):
-
-        return
-
-    def generate_q_profiles(self):
-        population_q_profiles = self.generate_normal_population(self._nb_students,self.population_skill_lvl_mean,self.population_skill_lvl_var)
-        for stud in population_q_profiles:
-            stud = self.correct_skill_vector(stud)
-        return population_q_profiles
-
-    def generate_normal_population(self,size_population, mean,var):
-        cov = np.diag(var)
-        population_normal = np.random.multivariate_normal(mean,cov,(size_population))
-        #for i in range(0,len(lvl)) :
-        #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
-        return population_normal
-
-    def generate_p_profiles(self):
-        self._nb_class = len(self._p_student_profiles)
-        nbStudClass = self._nb_students/self._nb_class
-        population_p_profiles = []
-        for p in self._p_student_profiles:
-            for i in range(0,nbStudClass):
-                population_p_profiles.append(p)
-        
-        return population_p_profiles
-
-    def correct_skill_vector(self,skill_vector):
-        for i in [2,5]:
-            if skill_vector[i] > skill_vector[i-1]:
-                skill_vector[i] = skill_vector[i-1]
-        for i in range(len(skill_vector)):
-            if skill_vector[i] < 1 or skill_vector[i] > 1:
-                skill_vector[i] = min(max(skill_vector[i],0),1)
-            if i > 3: 
-                if skill_vector[i] > skill_vector[i-3]:
-                    skill_vector[i] = skill_vector[i-1]
-            skill_vector[i] = round(skill_vector[i],2)
-        return skill_vector
-
-    def population_generation_parameters(self,skill_lvl_mean = 0, skill_lvl_var = 0):
-        self._knowledge_names = ["KnowMoney","IntSum","IntSub","IntDec","DecSum","DecSub","DecDec"]
-        #self.RT_main = "MAIN"
-        #self._knowledge_names = ["S1","S2","S3"]
-        #self.RT_main = "MAIN" #"KTTEST"
-
-
-        #####################################################################################
-        ##Definition of population parameters, first the skill level average
-        #####################################################################################
-
-        population_skill_lvl_mean_tab = [] #[0.7,0.8,0.5,0.1,0.1,0.1,0.1]
-        population_skill_lvl_mean_tab.append([0.2,0.2,0.1,0.1,0.1,0.1,0.1])
-        #population_skill_lvl_mean_tab.append([1,1,1,1,1,1,1])
-        #population_skill_lvl_mean_tab.append([0.2,0.2,0.2,0.2,0,0,0])
-        #population_skill_lvl_mean_tab.append([0.5,0.5,0.5,0.5,0.5,0.5,0.5])
-        #population_skill_lvl_mean_tab.append([0.3,0.3,0.3,0.3,0.3,0.3,0.3])
-        #population_skill_lvl_mean_tab.append([0.5,0.5,0.5,0.5,0.5,0.5,0.5])
-        #population_skill_lvl_mean_tab.append([0.7,0.7,0.7,0.7,0.5,0.5,0.5])
-        #population_skill_lvl_mean_tab.append([0.05,0.01,0.001,0.001,0.001,0.01,0.01])
-        #population_skill_lvl_mean_tab.append([0.4,0.3,0.2,0.1,0.1,0.3,0.3])
-        #population_skill_lvl_mean_tab.append([0.6,0.5,0.1,0.1,0.1,0.5,0.3])
-        #population_skill_lvl_mean_tab.append([0.8,0.7,0.1,0.1,0.1,0.6])
-        population_skill_lvl_mean_tab.append([1,1,0,0,0,0,0])
-        
-        self.population_skill_lvl_mean = population_skill_lvl_mean_tab[skill_lvl_mean]
-        
-        ##Second, the skill level variance
-        
-        population_skill_lvl_var_tab = []#[0.03,0.01,0.001,0.01,0.01,0.01,0.01]
-        population_skill_lvl_var_tab.append([0,0,0,0,0,0,0])
-        #population_skill_lvl_var_tab.append([0.03,0.03,0.03,0.03,0.03,0.03,0.03])
-        #population_skill_lvl_var_tab.append([0.3,0.3,0.3,0.3,0.3,0.3,0.3])
-        population_skill_lvl_var_tab.append([0.005,0.005,0.01,0.01,0.01,0.005,0.01])
-
-        self.population_skill_lvl_var = population_skill_lvl_var_tab[skill_lvl_var]
-        
-        ################################################################################
-        ## Here, we define p_student understanding profiles
-        ################################################################################
-        
-        self._p_student_profiles = []
-        self._p_student_profiles.append({"MAIN": [1],"M": [1], "R": [1],"MM": [1], "RM": [1],"mod": [1],"Car": [0],"M4": [1], "UR": [1], "DR": [1]})
-        self._p_student_profiles.append({"MAIN": [2],"M": [2], "R": [2],"MM": [2], "RM": [2],"mod": [2],"Car": [1],"M4": [2], "UR": [2], "DR": [2]})
-        self._p_student_profiles.append({"MAIN": [3],"M": [3], "R": [3],"MM": [3], "RM": [3],"mod": [3],"Car": [1],"M4": [3], "UR": [3], "DR": [3]})
-        self._p_student_profiles.append({"MAIN": [4],"M": [4], "R": [4],"MM": [4], "RM": [4],"mod": [4],"Car": [1],"M4": [4], "UR": [4], "DR": [4]})
-        #self._p_student_profiles.append({"MAIN": [0],"M": [0], "R": [0],"MM": [0], "RM": [0],"mod": [0],"Mmod": [0],"M4mod": [0]})
-        #self._p_student_profiles.append({"MAIN": [3],"M": [3], "R": [3],"MM": [3], "RM": [3],"mod": [3],"Mmod": [3],"M4mod": [3]})
-        #self._p_student_profiles.append({"M":[12],"mod":[2,2,0], "R": [6]}) # comprend l'écrit (e+o)
-
-        ################################################################################
-        ## Definition of KT student profils
-        ################################################################################
-        
-        self._KTStudent_profils = []
-        self._KTStudent_profils.append([{"L0" : 0.01,"T": 0.02, "G" : 0.1, "S" : 0.1}])
-        #self._KTStudent_profils.append({"KnowMoney":0,"IntSum":0, "IntSub":0, "IntDec":0, "DecSum":0, "DecSub":0, "DecDec":0})
-
-        ################################################################################
-        ## Definition of KT student profils
-        ################################################################################
-        
-        self._KTStudent_profils = []
-        self._KTStudent_profils.append([{"beta_0": 0.1,"beta":[0,0,0]}])
-
+    def calcul_cost(self):
+        cost = {}
+        for name,group in self._groups.items():
+            cost[name] = []
+            for sub_group in group:
+                cost[name].append(sub_group.calcul_cost())
+        return cost
+    ##### Data Analysis tools 
+    ###########################################################################

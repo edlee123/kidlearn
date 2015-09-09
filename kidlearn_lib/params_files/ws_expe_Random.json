@@ -7,20 +7,17 @@
 
     "seq_manager": {
 
-        "name" : "Sequence",
+        "name" : "RandomSequence",
+        "random_type" : 2,
         "seq_path": {
-                "params_file" : "expe_seq",
-                "directory" : "sequence_def"
+            "params_file" : "expe_seq",
+            "directory" : "sequence_def"
         },
-    
+
          "RT": { 
             "name": "MAIN",
             "path" : "RT/expe"
         },
-
-        "toLvlYp": 12,
-        "sizeSerie": 4,
-        "minAns": 4,
 
         "RiaritSsbg": {
             "levelupdate": 0.6,

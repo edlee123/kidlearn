@@ -8,11 +8,6 @@
     "seq_manager": {
 
         "name" : "Sequence",
-        "seq_path": {
-                "params_file" : "expe_seq",
-                "directory" : "sequence_def"
-        },
-    
          "RT": { 
             "name": "MAIN",
             "path" : "RT/expe"

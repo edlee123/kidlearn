@@ -25,8 +25,8 @@ import math
 # Math functions 
 ###############################################################################
 
-def logistic_function(x,eta = 10,alpha = 0.6):
-    y = 1.0/(1+math.exp(-eta*(x-alpha)))
+def logistic_function(x,beta = 10,alpha = 0.6):
+    y = 1.0/(1+math.exp(-beta*(x-alpha)))
     return y
 
 ###############################################################################

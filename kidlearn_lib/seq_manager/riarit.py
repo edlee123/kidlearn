@@ -13,8 +13,6 @@
 from hssbg import *
 import os
 import functions as func
-# class RiaritSsbg(object): pass
-# class RiaritSsb(object): pass
 
 #########################################################
 #########################################################
@@ -248,7 +246,7 @@ class RiaritSsbg(SSBanditGroup):
             self.values_children[int(tmp[0])-1].append(int(tmp[1]))
             self.RT[int(tmp[0])-1].append(aux[0:self.ncompetences])
             self.requer[int(tmp[0])-1].append(aux[self.ncompetences:2*self.ncompetences])
-            self.stop[int(tmp[0])-1].append(aux[2*self.ncompetences:])
+            self.stop[int(tmp[0])-1].append(func.fill_data(aux[2*self.ncompetences:],self.ncompetences))
         self.nvalue.append(nval)
         reader.close()
         self.CreateSSBs()
@@ -293,7 +291,6 @@ class RiaritSsbg(SSBanditGroup):
             self.SSB[ii].update(act[ii], r_KC)
             self.SSB[ii].promote(self.estim_level)
 
-RiaritHssbg.ssbgClasse = RiaritSsbg
 
 ## class RiaritSsbg
 #########################################################

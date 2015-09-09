@@ -7,22 +7,14 @@
 
     "seq_manager": {
 
-        "name" : "Sequence",
-        "seq_path": {
-                "params_file" : "expe_seq",
-                "directory" : "sequence_def"
-        },
-    
-         "RT": { 
+        "name" : "RiaritHssbg",
+        "RT": { 
             "name": "MAIN",
             "path" : "RT/expe"
         },
 
-        "toLvlYp": 12,
-        "sizeSerie": 4,
-        "minAns": 4,
-
         "RiaritSsbg": {
+            "name" : "RiaritSsbg",
             "levelupdate": 0.6,
 
             "RiaritSsb": {

@@ -22,10 +22,13 @@ class RandomSequence(RiaritHssbg):
 
     def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
 
+        params = params or func.load_json(params_file,directory)
         RiaritHssbg.__init__(self, params = params)
-        self.generate_acts(**params["seq_path"])
-        self.calcul_all_Ex_lvl()
         self.random_type = params["random_type"]
+        
+        if params["seq_path"] != 0:
+            self.generate_acts(**params["seq_path"])
+            self.calcul_all_Ex_lvl()
 
         return
 
@@ -38,16 +41,17 @@ class RandomSequence(RiaritHssbg):
             return self.choose_lvl_random_ex()
 
         else:
-            act = {}
-            act = self.speSample(self.SSBGs[self.main_act],act,nb_stay)
+            act = self.speSample(self.SSBGs[self.main_act], nb_stay = nb_stay)
             #self.lastAct = act
             return act
 
-    def speSample(self,ssbgToS,act,nb_stay = 0):
+    def speSample(self,ssbgToS,act = None,nb_stay = 0):
+        if act is None : act = {}
         act[ssbgToS.ID] = ssbgToS.random_sample(nb_stay)
         for actRT in range(len(act[ssbgToS.ID])):
-            nameRT = ssbgToS.param_values[actRT][act[ssbgToS.ID][actRT]]
-            if nameRT[0:2] != 'NO':
+            hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]
+            if hierar:
+                nameRT = ssbgToS.param_values[actRT][act[ssbgToS.ID][actRT]]
                 self.speSample(self.SSBGs[nameRT],act)
         return act
     

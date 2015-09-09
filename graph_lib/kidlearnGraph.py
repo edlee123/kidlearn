@@ -994,6 +994,13 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
 
                 y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(nb_ex)]
                 y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i] for i in range(nb_ex)]
+                #for i in range(len(y3)):
+                #    if y3[i] > 1:
+                #        y4[i] += 1-y3[i]
+                #        y3[i] = 1
+                #    elif y4[i] < 0:
+                #        y3[i] += abs(y4[i])
+                #        y4[i] = 0
 
                 plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.2)
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
@@ -1021,14 +1028,15 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
     plt.legend(bbox_to_anchor=(0,0,1.1,0),ncol=1, fancybox=True, shadow=True, prop={'size':20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
-    if showPlot:
-        plt.show()
 
     if path != "" :
         plt.draw()
         path_f = path + "Curve_%s_%s_%s" % (typeData,type_data_spe,ref)
         #print path_f
         plt.savefig(path_f)
+
+    if showPlot:
+        plt.show()
 
     return
 

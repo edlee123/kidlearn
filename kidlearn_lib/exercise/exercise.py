@@ -18,15 +18,17 @@ from knowledge import *
 
 class Exercise(object):
 
-    def __init__(self,act,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [],  nbMax_try = 1, params = None, *args,**kwargs):
+    def __init__(self,act,knowledge_levels = None, knowledge_names = None, answer = None,  nbMax_try = 1, params = None, *args,**kwargs):
         # act : 
 
-        self._gamma = np.array(gamma)
         self._act = act
         self._answer = answer
         self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
-        self.add_attr(args,kwargs)
+        
         self._nbMax_try = nbMax_try
+        params = np.array(params)
+        
+        self.add_attr(args,kwargs)
 
     @property
     def nbMax_try(self):
@@ -36,10 +38,6 @@ class Exercise(object):
     @property
     def act(self):
         return self._act
-
-    @property
-    def gamma(self):
-        return self._gamma
     
     @property
     def answer(self):

@@ -122,12 +122,12 @@ class HierarchicalSSBG(object):
         return 0
 
     def sample(self):
-        act = {} #FIXME FIXME FIXME PLEASE GOD OH GOD
-        act = self.speSample(self.SSBGs[self.main_act],act)
+        act = self.speSample(ssbgToS = self.SSBGs[self.main_act])
         #self.lastAct = act
         return act
 
-    def speSample(self,ssbgToS,act): 
+    def speSample(self,ssbgToS,act = None):
+        if act is None: act = {}
         act[ssbgToS.ID] = ssbgToS.sample()
         for actRT in range(len(act[ssbgToS.ID])):
             hierar = ssbgToS.values_children[actRT][act[ssbgToS.ID][actRT]]
@@ -210,7 +210,6 @@ class SSBanditGroup(object):
         return 0
 
     def random_sample(self,nb_stay = None):
-
         for i in range(self.nactions):
             nb_stay = nb_stay or self.nb_stay[i]
             if self.nbturn[i] % nb_stay == 0:
@@ -219,7 +218,6 @@ class SSBanditGroup(object):
         return self.act
 
     def sample(self):
-
         for i in range(self.nactions):
             if self.nbturn[i] % self.nb_stay[i] == 0:
                 self.act[i] = int(self.SSB[i].sample())
@@ -239,7 +237,9 @@ class SSBanditGroup(object):
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, ntask, is_hierarchical = 0, param_values = [], params = {}):
+    def __init__(self,id, nval, ntask, is_hierarchical = 0, param_values = None, params = None):
+        if param_values is None : param_values = []
+        if params is None : params = {}
         # params : filter1, filter2, uniformval,
 
         self.params = params
@@ -300,14 +300,14 @@ class SSbandit(object):
     
         nb_0 = 0
         for i in range(0,len(nn)) :
-            if nn[i] < pow(10,-30) :
+            if nn[i] == 0:# < pow(10,-30) :
                 nb_0 += 1
         
         if nb_0 == len(nn):
             print self.name
             print "Prob : %s : %s " % (str(self.param_values),str(nn))
             print self.bandval
-            print self.success
+            #print self.success
         #nn = exp(nn)-1
         nn = nn/sum(nn)
         
