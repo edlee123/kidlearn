@@ -29,7 +29,6 @@ import time
 #########################################################
 ## class SessionStep
 
-#test
 class SessionStep(object):
     """\
         SessionStep Definition
