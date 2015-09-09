@@ -147,8 +147,8 @@ class ZpdesSsb(RiaritSsb):
             
             # Promote normal, when the windows moove
             else :
-                max_usable_val = [self.success_rate(-self.stepMax)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-                min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
+                max_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
+                min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepMax]
 
                 if len(max_usable_val) > 0:
                     imax = self.active_bandits()[np.argmax(max_usable_val)]
@@ -159,13 +159,22 @@ class ZpdesSsb(RiaritSsb):
                         self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
 
                     if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
-                        imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits()])]
+                        imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepMax)[x] for x in self.not_active_bandits()])]
                         min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
-                        if min_succrate_not_active < 1 :
-                            self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
+                        
+                        ilen_min = self.not_active_bandits()[np.argmin([self.len_success()[x] for x in self.not_active_bandits()])]
+                        len_min = self.len_success()[ilen_min]
+
+                        if len_min < self.stepUpdate and imax != ilen_min:
+                            self.bandval[ilen_min] = min([self.bandval[x] for x in self.active_bandits()])
                             self.bandval[imax] = 0
-                    elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) > 1 :
+
+                        elif min_succrate_not_active < 1 :
+                            self.bandval[imin] = min([self.bandval[x] for x in self.active_bandits()])
                             self.bandval[imax] = 0
+                    elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) >= self.size_window :
+                            self.bandval[imax] = 0
+            
 
                     
         return
