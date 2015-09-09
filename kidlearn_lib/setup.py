@@ -83,7 +83,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
 
     for seq_name,group in xp._groups.items():
         data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
-        graph.kGraph.plot_cluster_lvl_sub([data],nb_stud,nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s/%s" % (xp._directory, ref_xp), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
+        graph.kGraph.plot_cluster_lvl_sub([data],nb_stud,nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
 
     skill_labels = ["S1","S2","S3","S4","S5","All"]
     all_mean_data = {seq_name:{} for seq_name in xp._groups.keys()}
@@ -96,6 +96,68 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
         
-        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = skill_labels[k], markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s/%s" % (xp._directory, ref_xp),showPlot = False)
+        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = skill_labels[k], markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
+
+    cost = xp.calcul_cost()
+    mean_cost = {key: np.mean(cost[key]) for key in cost.keys()}
+    std_cost = {key: np.std(cost[key]) for key in cost.keys()}
+    
+    data_cost = {"mean": mean_cost, "std": std_cost}
+
+    path_to_save = "%s/%s" % (xp.save_directory, "cost.txt")
+
+    with open(path_to_save, 'w') as outfile:
+        json.dump(data_cost,outfile)
 
     return xp,all_mean_data
+
+
+
+def promote(self,init = False):
+
+        # Promote if initialisation
+        if init == True :
+            for ii in range((1-self.is_hierarchical)*(len(self.bandval)-1)+1):
+                self.bandval[ii] = self.uniformval#/pow((ii+1),7)
+
+        elif self.is_hierarchical:
+            
+            #Promote wicth son action
+            if len(self.sonSSBG) > 0:
+                self.hierarchical_promote()
+
+            #Promote for beginning of the sequence with less than windows size bandit activated 
+            elif self.nval - self.len_success().count(0) < self.size_window :
+                i = self.len_success().index(0)
+                if self.success_rate(-self.stepMax)[i-1] > self.thresZBegin and len(self.success[i-1]) > 1 :
+                    self.bandval[i] = self.bandval[i-1]
+            
+            # Promote normal, when the windows moove
+            else :
+                max_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
+                min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepMax]
+
+                if len(max_usable_val) > 0:
+                    imax = self.active_bandits()[np.argmax(max_usable_val)]
+                    max_succrate_active = self.success_rate(-self.stepMax)[imax]
+
+
+                    if 0 in self.len_success() and max_succrate_active > self.valToUpZPD:
+                        self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
+
+                    if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
+                        imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepMax)[x] for x in self.not_active_bandits()])]
+                        min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
+                        
+                        ilen_min = self.not_active_bandits()[np.argmin([self.len_success()[x] for x in self.not_active_bandits()])]
+                        len_min = self.len_success()[ilen_min]
+
+                        if len_min < self.stepUpdate and imax != ilen_min:
+                            self.bandval[ilen_min] = min([self.bandval[x] for x in self.active_bandits()])
+                            self.bandval[imax] = 0
+
+                        elif min_succrate_not_active < 1 :
+                            self.bandval[imin] = min([self.bandval[x] for x in self.active_bandits()])
+                            self.bandval[imax] = 0
+                    elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) >= self.size_window :
+                            self.bandval[imax] = 0

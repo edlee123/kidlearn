@@ -369,6 +369,7 @@ class Experiment(object):
         directory = "%sms%s" % (directory,self._model_student)
         self._directory = "%s/%s" % (path,directory) 
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_step,ref)
+        self.save_directory = "%s/%s/" % (self._directory,self._ref_simu)
         self.create_xp_directory()
 
     #def student_simulation(self, student, seq_manager_name):
@@ -385,9 +386,7 @@ class Experiment(object):
     #            self.student_simulation(student,seq_manager_name)
     
     def create_xp_directory(self):
-        datafile.create_directories([self._directory])
-        final_dir = "%s/%s/" % (self._directory,self._ref_simu)
-        datafile.create_directories([final_dir])
+        datafile.create_directories([self._directory,self.save_directory])
 
     def save(self):
         datafile.save_file(self,self._ref_simu,final_dir)

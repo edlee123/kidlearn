@@ -148,7 +148,7 @@ class ZpdesSsb(RiaritSsb):
             # Promote normal, when the windows moove
             else :
                 max_usable_val = [self.success_rate(-self.stepMax)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-                min_usable_val = [self.success_rate(-self.stepMax)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
+                min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
 
                 if len(max_usable_val) > 0:
                     imax = self.active_bandits()[np.argmax(max_usable_val)]
