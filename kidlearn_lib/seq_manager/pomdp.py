@@ -106,7 +106,7 @@ class POMDP(object):
             ss = np.array([int(x) for x in str_ss])
             for aa in range(self._nA):
                 nss = copy.copy(ss)
-                self._R[ii] = [sum(ss)]*self._nA
+                self._R[ii] = [sum(ss)]#*self._nA
                 if ss[aa] == 1:
                     iss = int(str_ss,2)
                     #no forgetting

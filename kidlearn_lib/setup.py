@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 # Name:        setup
@@ -71,7 +72,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
         "seq_manager_list":["POMDP","ZPDES","Random"], #"RIARIT"
         "nb_step" : nb_step,
         "population" : {
-            "nb_students" : 100,
+            "nb_students" : nb_stud,
             "model" : "KT_student",
         }
     }
@@ -82,7 +83,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
 
     for seq_name,group in xp._groups.items():
         data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
-        graph.kGraph.plot_cluster_lvl_sub([data],100,100, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s/%s" % (xp._directory, ref_xp), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
+        graph.kGraph.plot_cluster_lvl_sub([data],nb_stud,nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s/%s" % (xp._directory, ref_xp), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
 
     skill_labels = ["S1","S2","S3","S4","S5","All"]
     all_mean_data = {seq_name:{} for seq_name in xp._groups.keys()}
@@ -97,4 +98,4 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
         
         graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = skill_labels[k], markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s/%s" % (xp._directory, ref_xp),showPlot = False)
 
-    return all_mean_data
+    return xp,all_mean_data

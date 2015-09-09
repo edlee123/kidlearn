@@ -307,7 +307,7 @@ class SSbandit(object):
             print self.name
             print "Prob : %s : %s " % (str(self.param_values),str(nn))
             print self.bandval
-            print self.success
+            #print self.success
         #nn = exp(nn)-1
         nn = nn/sum(nn)
         

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 # Name:        experimentation
@@ -166,9 +167,19 @@ class WorkingSession(object):
     ###########################################################################
     ##### Data Analysis tools 
     
+    def calcul_cost(self,begin = 1,time=None, gamma = 0.99):
+        if time is None:
+            time = self.time_max_level()
+        return sum([pow(gamma,t) * sum(self.student_level_time(time = t,kc=range(len(self._KC)))) for t in range(begin,time)])
+
+    def time_max_level(self):
+        level_all_time = [sum(self.student_level_time(time = t,kc=range(len(self._KC)))) for t in range(len(self._step))]
+        return np.argmax(level_all_time)
+        
+
     def student_level_time(self,time = 0, kc = 0):
         if isinstance(kc,list):
-            return np.mean([self._step[time].student["knowledges"][k].level for k in kc])
+            return [self._step[time].student["knowledges"][k].level for k in kc]
 
         elif kc >= len(self._step[time].student["knowledges"]):
             return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
@@ -235,6 +246,12 @@ class WorkingGroup(object):
 
     ###########################################################################
     ##### Data Analysis tools 
+
+    def calcul_cost(self):
+        cost= []
+        for ws in self._working_sessions:
+            cost.append(ws.calcul_cost())
+        return cost
     
     def get_students_level(self, time = 0, kc = 0):
         skill_level = []
@@ -383,44 +400,23 @@ class Experiment(object):
         nb_ex = nb_ex or self._nb_step
         for name,group in self._groups.items():
             print name
-            self.lauch_group_simulation(group, nb_ex)
+            self.launch_group_simulation(group, nb_ex)
 
-    def lauch_group_simulation(self, group, nb_ex = None):
+    def launch_group_simulation(self, group, nb_ex = None):
         nb_ex = nb_ex or self._nb_step
         for sub_group in group:
             sub_group.run(nb_ex)
 
-    # Define sequence manager
-    ##############################################################
+    
+    ###########################################################################
+    ##### Data Analysis tools 
 
-    # def define_seq_manager(self,seq_manager_name, data_file_name = 'data.json'):
-    #     dirf = os.path.dirname(os.path.realpath(__file__)) + "/"
-    #     data_file = dirf + data_file_name
-        
-    #     with open(data_file, 'rb') as fp:
-    #         ssb_data = json.load(fp)
-        
-    #     ssb_data["path"] = dirf
-
-    #     #seq_manager_params_creation = [self.RT_main, ssb_data['levelupdate'], ssb_data['filter1'], ssb_data['filter2'], ssb_data['uniformval']]
-        
-    #     if seq_manager_name == "RiARiT":
-    #         #seq_manager = RiaritHssbg(self.RT_main, params = ssb_data)
-    #         seq_manager = RiaritHssbg(params = ssb_data[seq_manager_name])
-    #     elif seq_manager_name == "ZPDES":
-    #         #seq_manager = ZpdesHssbg(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = ZpdesHssbg(params = ssb_data[seq_manager_name])
-    #     elif seq_manager_name == "Sequence":
-    #         #seq_manager = Sequence(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = Sequence(params = ssb_data[seq_manager_name])
-    #     else :
-    #         #seq_manager = RandomSequence(self.RT_main, params = ssb_data[seq_manager_name])
-    #         seq_manager = RandomSequence(params = ssb_data["Random"])
-        
-    #     return seq_manager
-
-    ##############################################################
-    ## Population generation functions
-    ##############################################################
-
-   
+    def calcul_cost(self):
+        cost = {}
+        for name,group in self._groups.items():
+            cost[name] = []
+            for sub_group in group:
+                cost[name].append(sub_group.calcul_cost())
+        return cost
+    ##### Data Analysis tools 
+    ###########################################################################
