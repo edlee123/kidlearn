@@ -10,6 +10,7 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 #from ..functions, knowledge 
+#from ..knowledge import knowledge as knl
 import knowledge as knl
 import functions as func
 import numpy as np

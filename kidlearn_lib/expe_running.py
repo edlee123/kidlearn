@@ -11,13 +11,15 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
+import sys
+import time
+sys.path.append("../..")
+sys.path.append("../../kidlearn_lib/")
 
 import numpy as np
 import copy 
 import json
-import config
 import os
-import functions as func
 import kidlearn_lib as k_lib
 import graph_lib as graph
 
@@ -64,7 +66,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     wG_riarit = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_riarit)
     wG_random = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_random)
 
-    wgroups = {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
+    wgroups = {"ZPDES": [wG_zpdes]} # {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
 
     params = {
         "ref_expe" : ref_xp,
