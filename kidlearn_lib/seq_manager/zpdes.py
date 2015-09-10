@@ -201,11 +201,68 @@ class ZpdesSsb(RiaritSsb):
                                 self.bandval[imax] = 0
                         elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) >= self.size_window :
                                 self.bandval[imax] = 0
+
+                def spe_promo_window_not_sync():
+                    first = -1
+                    for ii in range(self.nval):
+                        if self.bandval[ii] != 0:
+                            first = ii
+                            break
+
+                    last = self.nval-1
+                    for ii in range(self.nval-1,-1,-1):
+                        if self.bandval[ii] != 0:
+                            last = ii
+                            break
+
+                    valToUp = self.valToDesactZPD
+                    #if first >= len(self.bandval) - 3:
+                    #    valToUp = self.valToDesactZPD
+
+                    if len(self.success[first][-self.stepMax:]) > 0:
+                        if mean(self.success[first][-stepSuccess:]) > self.valToUpZPD and len(self.success[last]) >= self.stepMax: # and first < len(self.bandval) - 3:
+
+                            if last+1 < len(self.bandval):
+                                self.bandval[last+1] = min(self.bandval[last],self.bandval[last-1])/2
+                            
+                            for i in range(len(self.success)):
+                                if mean(self.success[i][-self.stepMax:]) > self.valToDesactZPD and len(self.success[i]) > self.stepMax and i != last:
+                                    self.bandval[i] = 0 
+
+
+                def spe_promo_window_sync():
+                    first = -1
+                    for ii in range(self.nval):
+                        if self.bandval[ii] != 0:
+                            first = ii
+                            break
+
+                    last = self.nval-1
+                    for ii in range(self.nval-1,-1,-1):
+                        if self.bandval[ii] != 0:
+                            last = ii
+                            break
+
+                    valToUp = self.valToDesactZPDst
+                    #if first >= len(self.bandval) - 3:
+                    #    valToUp = self.valToDesactZPDst
+
+                    if len(self.success[first][-self.stepMax:]) > 0:
+                        if mean(self.success[first][-self.stepMax:]) > valToUp and len(self.success[last]) >= self.stepMax and first < len(self.bandval) - self.size_window: 
+                            self.bandval[first] = 0
+
+                            if first+self.size_window < len(self.bandval):
+                                self.bandval[first+self.size_window] = min(self.bandval[first+2],self.bandval[first+1])/2
+
                 
                 if self.spe_promo == 0:
                     spe_promo_min_val()
-                else: 
+                elif self.spe_promo == 1:
                     spe_promo_min_len()
+                elif self.spe_promo == 2:
+                    spe_promo_window_not_sync()
+                else:
+                    spe_promo_window_sync()
                     
         return
 
@@ -240,10 +297,8 @@ class ZpdesSsb(RiaritSsb):
 
             r = max(0,sum_range - sum_old)
 
-        elif len(self.success[val]) == 1:
-            r = 0.5
         else:
-            r = 1
+            r = 0.5
 
         return r
 

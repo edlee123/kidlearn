@@ -31,7 +31,7 @@ class POMDP(object):
 #                       s'         s           a     P(s'|s,a)
 #  nB*    (Number of belief points to be sampled)
     
-    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files", save_pomdp = 0):
+    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files", save_pomdp = 0, load_p = None):
         #self._Ps = 0.05
         #self._Pg = 0.05
         #
@@ -45,51 +45,59 @@ class POMDP(object):
         #self._nZ = 2
         #self._gamma = 0.99
 
-        params = params or func.load_json(params_file,directory)
-        self._ref = params["ref"] 
-        self._KC = params["competencies"]
-        self._act = params["actions"]
+        if load_p != None: 
+            self.load(load_p)
+        else: 
+            params = params or func.load_json(params_file,directory)
+            self._ref = params["ref"] 
+            self._KC = params["competencies"]
+            self._act = params["actions"]
 
-        self._Ps = params["p_slip"]
-        self._Pg = params["p_guess"]
-        
-        self._Pt = np.array(params["p_transitions"])
-        self._trans_dep = np.array(params["trans_dep"])
+            self._Ps = params["p_slip"]
+            self._Pg = params["p_guess"]
+            
+            self._Pt = np.array(params["p_transitions"])
+            self._trans_dep = np.array(params["trans_dep"])
 
-        self._nA = params["n_Action"]
-        self._n_StatePerAct = params["n_StatePerAct"]
-        self._nS = pow(self._n_StatePerAct,self._nA)    
-        self._nZ = params["n_Observation"]
-        self._gamma = params["gamma"]
+            self._nA = params["n_Action"]
+            self._n_StatePerAct = params["n_StatePerAct"]
+            self._nS = pow(self._n_StatePerAct,self._nA)    
+            self._nZ = params["n_Observation"]
+            self._gamma = params["gamma"]
 
-        #self._b0 = ones(1,self._nS)/self._nS;
-        self._s0 = np.zeros(self._nS)
-        self._s0[0] = 1
-        self._AS = np.zeros(self._nS)
-        self._AS[-1] = 1
-        self._R = np.array([np.zeros(5) for x in range(self._nS)],dtype = 'float128')
-        self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)],dtype = 'float128')
-        self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)],dtype = 'float128')
+            #self._b0 = ones(1,self._nS)/self._nS;
+            self._s0 = np.zeros(self._nS)
+            self._s0[0] = 1
+            self._AS = np.zeros(self._nS)
+            self._AS[-1] = 1
+            self._R = np.array([np.zeros(5) for x in range(self._nS)],dtype = 'float128')
+            self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)],dtype = 'float128')
+            self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)],dtype = 'float128')
 
-        self.construct_transDepend_pomdpKT()
+            self.construct_transDepend_pomdpKT()
 
-        self._nB = 1350
-        self.belief_sample = None
-        self.init_traj()
+            self._nB = 1350
+            self.belief_sample = None
+            self.alpha_v = None
 
-        self.sampleBeliefs()
-        self.perseus_alpha_vect()
+            self.init_traj()
 
-        if save_pomdp:
-            self.save()
+            self.sampleBeliefs()
+            self.perseus_alpha_vect()
+
+            if save_pomdp:
+                self.save()
 
     def save(self, path = "data/pomdp"):
         datafile.create_directories([path])
         datafile.save_file(self,self._ref,path)
         print "POMDP %s saved" % self._ref
 
-    def load(self):
-        return
+    def load(self,load_p):
+        pomdp = datafile.load_file(load_p["file"],load_p["dir"])
+        for key,val in pomdp.__dict__.items():
+            object.__setattr__(self, key, val)
+
 
     def get_KC(self):
         return self._KC

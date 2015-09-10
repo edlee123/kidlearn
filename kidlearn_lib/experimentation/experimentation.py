@@ -316,10 +316,10 @@ class Experiment(object):
         self.logs = {}
 
         self._seq_manager_list_name = self.params["seq_manager_list"]
-        self._nb_step = self.params["nb_step"]
+        self.nb_step = self.params["nb_step"]
 
-        self._nb_students = self.params["population"]["nb_students"]
-        self._model_student = self.params["population"]["model"]
+        self.nb_students = self.params["population"]["nb_students"]
+        self.model_student = self.params["population"]["model"]
         
         if "path_to_save" not in self.params.keys():
             self.params["path_to_save"] = "experimentation/data/"
@@ -366,15 +366,15 @@ class Experiment(object):
     def do_simu_path(self,ref = "", directory = "", path = ""):
         for seqName in self._seq_manager_list_name:
             directory += "%s_" % seqName[0:min(len(seqName),2)]
-        directory = "%sms%s" % (directory,self._model_student)
+        directory = "%sms%s" % (directory,self.model_student)
         self._directory = "%s/%s" % (path,directory) 
-        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_step,ref)
+        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self.nb_students,self.nb_step,ref)
         self.save_directory = "%s/%s/" % (self._directory,self._ref_simu)
         self.create_xp_directory()
 
     #def student_simulation(self, student, seq_manager_name):
     #    WorkingSession = WorkingSession(student,self.define_seq_manager(seq_manager_name))
-    #    WorkingSession.run(self._nb_step)
+    #    WorkingSession.run(self.nb_step)
     #    #print WorkingSession.get_WorkingSession_logs()
     #    self._groups[seq_manager_name].append(WorkingSession)
 
@@ -396,13 +396,13 @@ class Experiment(object):
         return
 
     def run(self, nb_ex = None):
-        nb_ex = nb_ex or self._nb_step
+        nb_ex = nb_ex or self.nb_step
         for name,group in self._groups.items():
             print name
             self.launch_group_simulation(group, nb_ex)
 
     def launch_group_simulation(self, group, nb_ex = None):
-        nb_ex = nb_ex or self._nb_step
+        nb_ex = nb_ex or self.nb_step
         for sub_group in group:
             sub_group.run(nb_ex)
 

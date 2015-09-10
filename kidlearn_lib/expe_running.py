@@ -49,7 +49,8 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     ws_tab_riarit = []
     ws_tab_random = []
     ws_tab_pomdp = []
-    pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
+    pomdP = k_lib.seq_manager.POMDP(load_p = {"file":"KT_expe_2", "dir":"data/pomdp"})
+    #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
     stud = k_lib.student.KTStudent(params_file = "kt2_stud")
     zpdes = k_lib.seq_manager.ZpdesHssbg(params_file = "ZPDES_KT")
     riarit = k_lib.seq_manager.RiaritHssbg(params_file = "RIARIT_KT")
@@ -66,7 +67,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     wG_riarit = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_riarit)
     wG_random = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_random)
 
-    wgroups = {"ZPDES": [wG_zpdes]} # {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
+    wgroups =  {"ZPDES": [wG_zpdes]} # {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
 
     params = {
         "ref_expe" : ref_xp,
@@ -83,9 +84,15 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
 
     xp.run(nb_step)
 
+    all_mean_data = draw_xp_curve(xp,ref_xp)
+
+    return xp,all_mean_data
+
+def draw_xp_curve(xp,ref_xp):
+
     for seq_name,group in xp._groups.items():
-        data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
-        graph.kGraph.plot_cluster_lvl_sub([data],nb_stud,nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
+        data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=xp.nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
+        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
 
     skill_labels = ["S1","S2","S3","S4","S5","All"]
     all_mean_data = {seq_name:{} for seq_name in xp._groups.keys()}
@@ -93,12 +100,12 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
         mean_data = []
         std_data = []
         for seq_name,group in xp._groups.items():
-            data = [group[0].get_students_level(time = x, kc = k) for x in range(nb_step)]
+            data = [group[0].get_students_level(time = x, kc = k) for x in range(xp.nb_step)]
             mean_data.append([np.mean(data[x]) for x in range(len(data))])
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
         
-        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = skill_labels[k], markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
+        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s,%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
 
     cost = xp.calcul_cost()
     mean_cost = {key: np.mean(cost[key]) for key in cost.keys()}
@@ -111,5 +118,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     with open(path_to_save, 'w') as outfile:
         json.dump(data_cost,outfile)
 
-    return xp,all_mean_data
+    return all_mean_data
 
+def expe_zpdes_promot():
+    return
