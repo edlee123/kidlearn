@@ -365,7 +365,7 @@ class Experiment(object):
 
     def do_simu_path(self,ref = "", directory = "", path = ""):
         for seqName in self._seq_manager_list_name:
-            directory += "%s_" % seqName[0:min(len(seqName),2)]
+            directory += "%s" % seqName[0]
         directory = "%sms%s" % (directory,self.model_student)
         self._directory = "%s/%s" % (path,directory) 
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self.nb_students,self.nb_step,ref)

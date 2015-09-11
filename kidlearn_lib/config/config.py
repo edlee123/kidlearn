@@ -10,12 +10,12 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-from seq_manager import * 
-from exercise import *
-from student import *
-from knowledge import *
-from experimentation import *
-import functions as func
+#from seq_manager import * 
+#from exercise import *
+#from student import *
+#from knowledge import *
+#from experimentation import *
+import kidlearn_lib.functions as func
 import numpy as np
 import copy as copy
 import json
@@ -175,27 +175,5 @@ def generate_ktfeatures_population(kt_profil = 0):
     return population
 
 
-class Config(object):
-    def __init__(self):
-        knowledges_conf = []
-        knowledges_conf.append({"name" : "S1", "num_id":0, "beta_0": 0.1, "beta":[0.2,0,0]})
-        knowledges_conf.append({"name" : "S2", "num_id":1, "beta_0": 0, "beta":[0,0.2,0]})
-        knowledges_conf.append({"name" : "S3", "num_id":2, "beta_0": 0, "beta":[0.3,0,0.1]})
-        self.knowledges_conf = knowledges_conf
-
-        exercises = []
-        exercises.append(Exercise(0,gamma = [1,0,0]))
-        exercises.append(Exercise(0,gamma = [0.7,0,0]))
-        exercises.append(Exercise(0,gamma = [0,0.7,0]))
-        exercises.append(Exercise(0,gamma = [0.1,0,0.8]))
-        exercises.append(Exercise(0,gamma = [0.3,0,0.6]))
-        exercises.append(Exercise(0,gamma = [0.3,0.3,0.3]))
-        self._exercises = exercises
-
-    """
-    TO DO : 
-    Load config file
-    Load json file
-    Load with direct parameter
-    Load config from an other simulation (config copy)
-    """
+#TO DO : 
+#class Config(object):

@@ -11,11 +11,6 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
-import sys
-import time
-sys.path.append("../..")
-sys.path.append("../../kidlearn_lib/")
-
 import numpy as np
 import copy 
 import json
@@ -88,12 +83,21 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
 
     return xp,all_mean_data
 
+
+def expe_zpdes_promot():
+
+
+    return
+
+
 def draw_xp_curve(xp,ref_xp):
 
+    # draw histo graph to visualise exercise in time
     for seq_name,group in xp._groups.items():
         data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=xp.nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
-        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "clust_xseq_global_%s" % (seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
+        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "exTime_%s_%s" % (ref_xp,seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
 
+    # draw learning curve
     skill_labels = ["S1","S2","S3","S4","S5","All"]
     all_mean_data = {seq_name:{} for seq_name in xp._groups.keys()}
     for k in range(len(skill_labels)):
@@ -107,6 +111,7 @@ def draw_xp_curve(xp,ref_xp):
         
         graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s,%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
 
+    #calcul cost for each student
     cost = xp.calcul_cost()
     mean_cost = {key: np.mean(cost[key]) for key in cost.keys()}
     std_cost = {key: np.std(cost[key]) for key in cost.keys()}
@@ -119,6 +124,3 @@ def draw_xp_curve(xp,ref_xp):
         json.dump(data_cost,outfile)
 
     return all_mean_data
-
-def expe_zpdes_promot():
-    return
