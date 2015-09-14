@@ -23,16 +23,13 @@ import os
 import re
 
 ##############################################################
-## Multi Parameters For Algorithms
+## ID config generations management
 ##############################################################
 
-def generate_config_id(config,str = 1,tab = 0):
-    id_tab = id_tab_from_json(config)
+def code_id(strid,strval,nbCar = 1):
+    return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
 
-
-    return
-
-def id_tab_from_json(json,id_values = None,form = 0, ignore = ["name","path"]):
+def data_from_json(json,id_values = None,form = 0, ignore = ["name","path"]):
     if id_values is None:
         if form == 0:
             id_values= {}
@@ -41,7 +38,7 @@ def id_tab_from_json(json,id_values = None,form = 0, ignore = ["name","path"]):
     for key,val in json.items():
         if key not in ignore:
             if isinstance(val,dict):
-                id_tab_from_json(val,id_values,form,ignore)
+                data_from_json(val,id_values,form,ignore)
             else:
                 if form == 0:
                     id_values[key] = val
@@ -57,26 +54,28 @@ def id_str_ftab(id_tab):
         idstr += strValId
     return idstr
 
-def code_id(strid,strval,nbCar = 1):
-    return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
-
 def generate_diff_config_id(config_list):
     all_id = []
     for conf in config_list:
-        all_id.append(id_tab_from_json(conf,form =0))
+        all_id.append(data_from_json(conf,form =0))
     final_all_id = []
     for numConf in range(len(all_id)):
         nconf_id = []
-        for numVal in range(len(all_id[numConf])):
-            numValOK = 0
+        for key,val in all_id[numConf].items():
+            valOK = 0
             for numConfb in range(len(all_id)):
-                if numConfb != numConf and all_id[numConf][numVal] != all_id[numConfb][numVal]:
-                    numValOK += 1
-            if numValOK > 0:
-                nconf_id.append(all_id[numConf][numVal])
-        final_all_id.append(nconf_id)
+                if numConf != numConfb and val != all_id[numConfb][key]:
+                    valOK += 1
+            if valOK > 0 :
+                nconf_id.append(code_id(key,str(val)))
+        nconf_id.sort()
+        final_all_id.append(id_str_ftab(nconf_id))
     
     return final_all_id
+
+##############################################################
+## Multi Parameters For Algorithms
+##############################################################
 
 # Generate many parameters conf from base + file
 def exhaustive_params(multi_param_file, base_param_file, directory):

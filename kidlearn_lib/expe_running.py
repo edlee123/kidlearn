@@ -87,11 +87,11 @@ def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/
     
     stud = k_lib.student.KTStudent(params_file = "kt2_stud")
 
-    for conf in zpdes_confs:
+    
 
 
 
-        return
+    return
 
 
 def draw_xp_curve(xp,ref_xp):
