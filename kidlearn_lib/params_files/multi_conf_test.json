@@ -1,10 +1,7 @@
 {
     "ZpdesSsbg": {
-        "levelupdate": [0.7],
-
         "ZpdesSsb": {
-            "valToDesactZPD" : [0.85],
-            "spe_promo" : [0]
+            "spe_promo" : [1,2,3]
         }
     }
 }

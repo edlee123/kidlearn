@@ -89,8 +89,8 @@ class ZpdesSsb(RiaritSsb):
         self.stepMax = self.stepUpdate/2
         self.size_window = min(len(self.bandval),params['size_window'])
         self.thresZBegin = params["thresZBegin"]
-        self.valToUpZPD = params["valToUpZPD"]
-        self.valToDesactZPD = params["valToDesactZPD"]
+        self.upZPDval = params["upZPDval"]
+        self.deactZPDval = params["deactZPDval"]
         self.thresHierarProm = params["thresHierarProm"]
         self.promote_coeff = params["promote_coeff"]
         self.hier_promote_coeff = params["h_promote_coeff"]
@@ -130,56 +130,47 @@ class ZpdesSsb(RiaritSsb):
                 if meanSucess > self.thresHierarProm:
                     self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
 
-    def spe_promo_min_val(self):
-        max_usable_val = [self.success_rate(-self.stepMax)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-        min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
+    def spe_promo_no_wind(self):
+        stepToUse = self.stepMax
+        sizeWind = 2 # self.size_window
+
+        max_usable_val = [self.success_rate(-stepToUse)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
+        min_usable_val = [self.success_rate(-stepToUse)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
 
         if len(max_usable_val) > 0:
             imax = self.active_bandits()[np.argmax(max_usable_val)]
             max_succrate_active = self.success_rate(-self.stepMax)[imax]
 
-
-            if 0 in self.len_success() and max_succrate_active > self.valToUpZPD:
+            if 0 in self.len_success() and max_succrate_active > self.upZPDval:
                 self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
 
             if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
-                imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits()])]
+                imin = self.not_active_bandits()[np.argmin([self.success_rate(-stepToUse)[x] for x in self.not_active_bandits()])]
                 min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
-                if min_succrate_not_active < 1 :
-                    self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
-                    self.bandval[imax] = 0
-            elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) > 1 :
-                    self.bandval[imax] = 0
 
-    # Special Promote Tested, when the windows moove
-    def spe_promo_min_len(self):
-        max_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-        min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepMax]
-
-        if len(max_usable_val) > 0:
-            imax = self.active_bandits()[np.argmax(max_usable_val)]
-            max_succrate_active = self.success_rate(-self.stepMax)[imax]
-
-
-            if 0 in self.len_success() and max_succrate_active > self.valToUpZPD:
-                self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
-
-            if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
-                imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepMax)[x] for x in self.not_active_bandits()])]
-                min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
-                
-                ilen_min = self.not_active_bandits()[np.argmin([self.len_success()[x] for x in self.not_active_bandits()])]
-                len_min = self.len_success()[ilen_min]
-
-                if len_min < self.stepUpdate and imax != ilen_min:
-                    self.bandval[ilen_min] = min([self.bandval[x] for x in self.active_bandits()])
-                    self.bandval[imax] = 0
+                # differ => spero promo len
+                if self.spe_promo == 1:
+                    self.spe_promo_min_len(imax,imin,stepToUse)
 
                 elif min_succrate_not_active < 1 :
-                    self.bandval[imin] = min([self.bandval[x] for x in self.active_bandits()])
+                    self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
                     self.bandval[imax] = 0
-            elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) >= self.size_window :
+            elif max_succrate_active > self.deactZPDval and len(self.active_bandits()) >= sizeWind :
                     self.bandval[imax] = 0
+
+    # Special Promote where we test the lengh of success
+    def spe_promo_min_len(self,imax,imin,stepToUse):
+        ilen_min = self.not_active_bandits()[np.argmin([self.len_success()[x] for x in self.not_active_bandits()])]
+        len_min = self.len_success()[ilen_min]
+
+        if len_min < self.stepUpdate and imax != ilen_min:
+            self.bandval[ilen_min] = min([self.bandval[x] for x in self.active_bandits()])
+            self.bandval[imax] = 0
+
+        elif min_succrate_not_active < 1 :
+            self.bandval[imin] = min([self.bandval[x] for x in self.active_bandits()])
+            self.bandval[imax] = 0
+
 
     # Special Promote with a windows activ and desactivation are not sync
     def spe_promo_window_not_sync(self):
@@ -195,18 +186,18 @@ class ZpdesSsb(RiaritSsb):
                 last = ii
                 break
 
-        valToUp = self.valToDesactZPD
+        valToUp = self.deactZPDval
         #if first >= len(self.bandval) - 3:
-        #    valToUp = self.valToDesactZPD
+        #    valToUp = self.deactZPDval
 
         if len(self.success[first][-self.stepMax:]) > 0:
-            if mean(self.success[first][-stepSuccess:]) > self.valToUpZPD and len(self.success[last]) >= self.stepMax: # and first < len(self.bandval) - 3:
+            if mean(self.success[first][-stepSuccess:]) > self.upZPDval and len(self.success[last]) >= self.stepMax: # and first < len(self.bandval) - 3:
 
                 if last+1 < len(self.bandval):
                     self.bandval[last+1] = min(self.bandval[last],self.bandval[last-1])/2
                 
                 for i in range(len(self.success)):
-                    if mean(self.success[i][-self.stepMax:]) > self.valToDesactZPD and len(self.success[i]) > self.stepMax and i != last:
+                    if mean(self.success[i][-self.stepMax:]) > self.deactZPDval and len(self.success[i]) > self.stepMax and i != last:
                         self.bandval[i] = 0 
 
     # Special Promote with a windows activ and desactivation are sync
@@ -223,9 +214,9 @@ class ZpdesSsb(RiaritSsb):
                 last = ii
                 break
 
-        valToUp = self.valToDesactZPDst
+        valToUp = self.deactZPDval
         #if first >= len(self.bandval) - 3:
-        #    valToUp = self.valToDesactZPDst
+        #    valToUp = self.deactZPDval
 
         if len(self.success[first][-self.stepMax:]) > 0:
             if mean(self.success[first][-self.stepMax:]) > valToUp and len(self.success[last]) >= self.stepMax and first < len(self.bandval) - self.size_window: 
@@ -233,7 +224,6 @@ class ZpdesSsb(RiaritSsb):
 
                 if first+self.size_window < len(self.bandval):
                     self.bandval[first+self.size_window] = min(self.bandval[first+2],self.bandval[first+1])/2
-
 
     def promote(self,init = False):
 
@@ -256,10 +246,8 @@ class ZpdesSsb(RiaritSsb):
             
             # Promote normal, when the windows moove
             else:
-                if self.spe_promo == 0:
-                    self.spe_promo_min_val()
-                elif self.spe_promo == 1:
-                    self.spe_promo_min_len()
+                if self.spe_promo < 2:
+                    self.spe_promo_no_wind()
                 elif self.spe_promo == 2:
                     self.spe_promo_window_not_sync()
                 else:

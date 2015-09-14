@@ -38,8 +38,6 @@ def do_q_simu():
 
 def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 51, nb_stud = 100):
 
-    stud_tab = []
-    zpdes_tab = []
     ws_tab_zpdes = []
     ws_tab_riarit = []
     ws_tab_random = []
@@ -84,10 +82,16 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     return xp,all_mean_data
 
 
-def expe_zpdes_promot():
+def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/", nb_step = 51, nb_stud = 100):
+    zpdes_confs = k_lib.config.exhaustive_params("multi_conf_test","ZPDES_KT","params_files")
+    
+    stud = k_lib.student.KTStudent(params_file = "kt2_stud")
+
+    for conf in zpdes_confs:
 
 
-    return
+
+        return
 
 
 def draw_xp_curve(xp,ref_xp):

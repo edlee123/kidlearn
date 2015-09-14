@@ -20,12 +20,65 @@ import numpy as np
 import copy as copy
 import json
 import os
-
+import re
 
 ##############################################################
 ## Multi Parameters For Algorithms
 ##############################################################
 
+def generate_config_id(config,str = 1,tab = 0):
+    id_tab = id_tab_from_json(config)
+
+
+    return
+
+def id_tab_from_json(json,id_values = None,form = 0, ignore = ["name","path"]):
+    if id_values is None:
+        if form == 0:
+            id_values= {}
+        else:
+            id_values = []
+    for key,val in json.items():
+        if key not in ignore:
+            if isinstance(val,dict):
+                id_tab_from_json(val,id_values,form,ignore)
+            else:
+                if form == 0:
+                    id_values[key] = val
+                elif form == 1:
+                    id_values.append(code_id(str(key),str(val)))
+                elif form == 2:
+                    id_values.append([str(key),str(val)])
+    return id_values
+
+def id_str_ftab(id_tab):
+    idstr = ""
+    for strValId in id_tab:
+        idstr += strValId
+    return idstr
+
+def code_id(strid,strval,nbCar = 1):
+    return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
+
+def generate_diff_config_id(config_list):
+    all_id = []
+    for conf in config_list:
+        all_id.append(id_tab_from_json(conf,form =0))
+    final_all_id = []
+    for numConf in range(len(all_id)):
+        nconf_id = []
+        for numVal in range(len(all_id[numConf])):
+            numValOK = 0
+            for numConfb in range(len(all_id)):
+                if numConfb != numConf and all_id[numConf][numVal] != all_id[numConfb][numVal]:
+                    numValOK += 1
+            if numValOK > 0:
+                nconf_id.append(all_id[numConf][numVal])
+        final_all_id.append(nconf_id)
+    
+    return final_all_id
+
+# Generate many parameters conf from base + file
 def exhaustive_params(multi_param_file, base_param_file, directory):
     base_params = func.load_json(base_param_file,directory)
     multi_params = func.load_json(multi_param_file,directory)
