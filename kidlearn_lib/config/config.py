@@ -10,16 +10,64 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-#from seq_manager import * 
+from seq_manager import seq_dict_gen
 #from exercise import *
-#from student import *
-#from knowledge import *
-#from experimentation import *
-import kidlearn_lib.functions as func
+from student import stud_dict_gen
+from knowledge import *
+from experimentation import *
+import functions as func
 import numpy as np
 import copy as copy
 import json
 import os
+
+
+##############################################################
+## Multi Parameters For Algorithms
+##############################################################
+
+def exhaustive_params(multi_param_file, base_param_file, directory):
+    base_params = func.load_json(base_param_file,directory)
+    multi_params = func.load_json(multi_param_file,directory)
+    
+    params_configs = [base_params]
+    for paramKey,paramVal in multi_params.items():
+        access_keys = []
+        params_configs = gen_multi_conf(params_configs,paramKey,paramVal,access_keys)
+
+    return params_configs
+
+def gen_multi_conf(params_configs,paramKey,paramValue,access_keys):
+    naccess_keys = copy.deepcopy(access_keys)
+    naccess_keys.append(paramKey)
+    if isinstance(paramValue,list):
+        conf = copy.deepcopy(params_configs)
+        for pconf in conf:
+            nc = copy.deepcopy(pconf)
+            for newParamVal in paramValue:
+                nnc = copy.deepcopy(nc)
+                access_dict_value(nnc,naccess_keys,newParamVal)
+                params_configs.append(nnc)
+
+    elif isinstance(paramValue,dict):
+        for pkey,pval in paramValue.items():
+            params_configs = gen_multi_conf(params_configs,pkey,pval,naccess_keys)
+
+    return params_configs
+
+# acces to json value or repalce
+def access_dict_value(params,dict_keys, replace = None):
+    if len(dict_keys) > 1 :
+        return access_dict_value(params[dict_keys[0]],dict_keys[1:],replace)
+    else:
+        if replace != None:
+            params[dict_keys[0]] = replace
+        else:
+            return params[dict_keys[0]]
+
+##############################################################
+## Define Objects from Modules
+##############################################################
 
 # Define sequence manager
 ##############################################################

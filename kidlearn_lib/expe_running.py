@@ -67,7 +67,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     params = {
         "ref_expe" : ref_xp,
         "path_to_save" : path_to_save,
-        "seq_manager_list":["POMDP","ZPDES","Random"], #"RIARIT"
+        "seq_manager_list": wgroups.keys(), #"RIARIT"
         "nb_step" : nb_step,
         "population" : {
             "nb_students" : nb_stud,
