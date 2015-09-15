@@ -36,6 +36,7 @@ def do_q_simu():
         data = group[0].get_ex_repartition_time(100)
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title = "%s \nStudent distribution per erxercices type over time" % ("test"),path = "simulation/graphics/", ref = "clust_xseq_global_%s" % (seq_name),legend = ["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"],dataToUse = range(len([data])))
 
+# Xp with KT stud model, POMDP, ZPDES, Random %riarit%
 def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 51, nb_stud = 100):
 
     ws_tab_zpdes = []
@@ -55,17 +56,17 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
         ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
         ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(random)))
 
-    wG_zpdes = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_zpdes)
-    wG_pomdp = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_pomdp)
-    wG_riarit = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_riarit)
-    wG_random = k_lib.experimentation.WorkingGroup(params = {"0":0}, WorkingSessions = ws_tab_random)
+    wG_zpdes = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_zpdes)
+    wG_pomdp = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_pomdp)
+    wG_riarit = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_riarit)
+    wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_random)
 
-    wgroups =  {"ZPDES": [wG_zpdes]} # {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
+    wkgs =  {"ZPDES": [wG_zpdes]} # {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
 
     params = {
         "ref_expe" : ref_xp,
         "path_to_save" : path_to_save,
-        "seq_manager_list": wgroups.keys(), #"RIARIT"
+        "seq_manager_list": wkgs.keys(), #"RIARIT"
         "nb_step" : nb_step,
         "population" : {
             "nb_students" : nb_stud,
@@ -73,28 +74,45 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
         }
     }
 
-    xp = k_lib.experimentation.Experiment(WorkingGroups = wgroups, params = params)
+    xp = k_lib.experimentation.Experiment(WorkingGroups = wkgs, params = params)
 
     xp.run(nb_step)
 
-    all_mean_data = draw_xp_curve(xp,ref_xp)
+    all_mean_data = draw_xp_graph(xp,ref_xp)
+    cost = calcul_xp_cost(xp)
 
     return xp,all_mean_data
 
-
-def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/", nb_step = 51, nb_stud = 100):
+# Expe to tune ZPDES
+def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/", nb_step = 100, nb_stud = 100):
     zpdes_confs = k_lib.config.exhaustive_params("multi_conf_test","ZPDES_KT","params_files")
     
     stud = k_lib.student.KTStudent(params_file = "kt2_stud")
 
+    zpdes_confs = {k_lib.config.generate_diff_config_id(zpdes_confs)[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
+
+    wkgs = {}
+    for ref,conf in zpdes_confs.items():
+        zpdes = k_lib.seq_manager.ZpdesHssbg(params = conf)
+        wss = []
+        for i in range(nb_stud):
+            wss.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
+        wkgs["zpdes_{}".format(ref)] = [k_lib.experimentation.WorkingGroup(WorkingSessions = wss)]
+
+    xp = k_lib.experimentation.Experiment(WorkingGroups = wkgs, ref_expe = ref_xp,
+                                        path_to_save = path_to_save,
+                                        seq_manager_list= wkgs.keys(), #RIARIT
+                                        nb_step = nb_step,
+                                        population = {"nb_students" : nb_stud, 
+                                                        "model" : "KT_student"})
+    xp.run()
     
+    all_mean_data = draw_xp_graph(xp,ref_xp)
 
+    return xp
 
-
-    return
-
-
-def draw_xp_curve(xp,ref_xp):
+# Script to draw xp graphs
+def draw_xp_graph(xp,ref_xp):
 
     # draw histo graph to visualise exercise in time
     for seq_name,group in xp._groups.items():
@@ -113,8 +131,12 @@ def draw_xp_curve(xp,ref_xp):
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
         
-        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s,%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 2, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
+        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s,%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 5, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
 
+    return all_mean_data
+
+# calcul xp costs 
+def calcul_xp_cost(xp):
     #calcul cost for each student
     cost = xp.calcul_cost()
     mean_cost = {key: np.mean(cost[key]) for key in cost.keys()}
@@ -122,9 +144,10 @@ def draw_xp_curve(xp,ref_xp):
     
     data_cost = {"mean": mean_cost, "std": std_cost}
 
-    path_to_save = "%s/%s" % (xp.save_directory, "cost.txt")
+    path_to_save = "{}/{}".format(xp.save_directory, "cost.txt")
 
     with open(path_to_save, 'w') as outfile:
         json.dump(data_cost,outfile)
 
-    return all_mean_data
+    return data_cost
+

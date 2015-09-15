@@ -131,11 +131,11 @@ class ZpdesSsb(RiaritSsb):
                     self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
 
     def spe_promo_no_wind(self):
-        stepToUse = self.stepMax
+        stepSuccess = self.stepMax
         sizeWind = 2 # self.size_window
 
-        max_usable_val = [self.success_rate(-stepToUse)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-        min_usable_val = [self.success_rate(-stepToUse)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        max_usable_val = [self.success_rate(-stepSuccess)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
+        min_usable_val = [self.success_rate(-stepSuccess)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
 
         if len(max_usable_val) > 0:
             imax = self.active_bandits()[np.argmax(max_usable_val)]
@@ -145,12 +145,12 @@ class ZpdesSsb(RiaritSsb):
                 self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
 
             if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
-                imin = self.not_active_bandits()[np.argmin([self.success_rate(-stepToUse)[x] for x in self.not_active_bandits()])]
+                imin = self.not_active_bandits()[np.argmin([self.success_rate(-stepSuccess)[x] for x in self.not_active_bandits()])]
                 min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
 
                 # differ => spero promo len
                 if self.spe_promo == 1:
-                    self.spe_promo_min_len(imax,imin,stepToUse)
+                    self.spe_promo_min_len(imax,imin,stepSuccess,min_succrate_not_active)
 
                 elif min_succrate_not_active < 1 :
                     self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
@@ -159,7 +159,7 @@ class ZpdesSsb(RiaritSsb):
                     self.bandval[imax] = 0
 
     # Special Promote where we test the lengh of success
-    def spe_promo_min_len(self,imax,imin,stepToUse):
+    def spe_promo_min_len(self,imax,imin,stepSuccess,min_succrate_not_active):
         ilen_min = self.not_active_bandits()[np.argmin([self.len_success()[x] for x in self.not_active_bandits()])]
         len_min = self.len_success()[ilen_min]
 
@@ -174,6 +174,8 @@ class ZpdesSsb(RiaritSsb):
 
     # Special Promote with a windows activ and desactivation are not sync
     def spe_promo_window_not_sync(self):
+        stepSuccess = self.stepMax
+        
         first = -1
         for ii in range(self.nval):
             if self.bandval[ii] != 0:
@@ -202,6 +204,8 @@ class ZpdesSsb(RiaritSsb):
 
     # Special Promote with a windows activ and desactivation are sync
     def spe_promo_window_sync(self):
+        stepSuccess = self.stepMax
+
         first = -1
         for ii in range(self.nval):
             if self.bandval[ii] != 0:

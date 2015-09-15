@@ -203,8 +203,10 @@ class WorkingSession(object):
 class WorkingGroup(object):
     def __init__(self, params = None, params_file = None, directory = "params_files",population = None, WorkingSessions = None, *args, **kwargs):
         #params : 
-
-        params = params or func.load_json(params_file,directory)
+        if params != None or params_file != None: 
+            params = params or func.load_json(params_file,directory)
+        else:
+            params = {}
         self.params = params
         self.logs = {}
 
@@ -311,7 +313,13 @@ class Experiment(object):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()
-        params = params or func.load_json(params_file,directory)
+        if params != None or params_file != None: 
+            params = params or func.load_json(params_file,directory)
+        else :
+            params = {}
+            for key, val in kwargs.iteritems():
+                params[key] = val
+        
         self.params = params
         self.logs = {}
 
@@ -320,15 +328,12 @@ class Experiment(object):
 
         self.nb_students = self.params["population"]["nb_students"]
         self.model_student = self.params["population"]["model"]
-        
+    
         if "path_to_save" not in self.params.keys():
             self.params["path_to_save"] = "experimentation/data/"
-
+        self.ref_expe = self.params["ref_expe"]
         self.do_simu_path(self.params["ref_expe"], path = self.params["path_to_save"])
 
-        for key, val in kwargs.iteritems():
-            object.__setattr__(self, key, val)
-        
         if WorkingGroups:
             self._groups = WorkingGroups
 
