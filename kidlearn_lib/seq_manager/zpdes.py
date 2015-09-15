@@ -134,19 +134,19 @@ class ZpdesSsb(RiaritSsb):
         stepSuccess = self.stepMax
         sizeWind = 2 # self.size_window
 
-        max_usable_val = [self.success_rate(-stepSuccess)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-        min_usable_val = [self.success_rate(-stepSuccess)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        max_usable_val = [self.success_rate(-stepSuccess,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
+        min_usable_val = [self.success_rate(-stepSuccess,val = [x]) for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
 
         if len(max_usable_val) > 0:
             imax = self.active_bandits()[np.argmax(max_usable_val)]
-            max_succrate_active = self.success_rate(-self.stepMax)[imax]
+            max_succrate_active = self.success_rate(-self.stepMax, val = [imax])
 
             if 0 in self.len_success() and max_succrate_active > self.upZPDval:
                 self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
 
             if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
-                imin = self.not_active_bandits()[np.argmin([self.success_rate(-stepSuccess)[x] for x in self.not_active_bandits()])]
-                min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
+                imin = self.not_active_bandits()[np.argmin([self.success_rate(-stepSuccess, val = self.not_active_bandits())])]
+                min_succrate_not_active = self.success_rate(-self.stepUpdate,val = [imin])
 
                 # differ => spero promo len
                 if self.spe_promo == 1:
@@ -175,7 +175,7 @@ class ZpdesSsb(RiaritSsb):
     # Special Promote with a windows activ and desactivation are not sync
     def spe_promo_window_not_sync(self):
         stepSuccess = self.stepMax
-        
+
         first = -1
         for ii in range(self.nval):
             if self.bandval[ii] != 0:
@@ -245,7 +245,7 @@ class ZpdesSsb(RiaritSsb):
             #Promote for beginning of the sequence with less than windows size bandit activated 
             elif self.nval - self.len_success().count(0) < self.size_window :
                 i = self.len_success().index(0)
-                if self.success_rate(-self.stepMax)[i-1] > self.thresZBegin and len(self.success[i-1]) > 1 :
+                if self.success_rate(-self.stepMax,val =[i-1]) > self.thresZBegin and len(self.success[i-1]) > 1 :
                     self.bandval[i] = self.bandval[i-1]
             
             # Promote normal, when the windows moove
@@ -267,8 +267,15 @@ class ZpdesSsb(RiaritSsb):
     def len_success(self,first_val = 0, last_val = None):
         return [len(x) for x in self.success][first_val:last_val]
 
-    def success_rate(self,first_step = 0,last_step = None, first_val = 0, last_val = None):
-        return [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
+    def success_rate(self,first_step = 0,last_step = None, val = None):
+        if val == None:
+            val = range(self.nval)
+        succrate = [np.mean(self.success[x][first_step:last_step]) for x in val]
+        #succrate = [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
+        if len(succrate) > 1:
+            return succrate
+        else:
+            return succrate[0]
 
     def calcul_reward_ssb(self,val,coeff_ans):
         self.success[val].append(coeff_ans)

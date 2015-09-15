@@ -37,18 +37,21 @@ class SessionStep(object):
     def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
         self.student = student_state
         self.seq_manager = seq_manager_state
-        self.exercise = exercise
+        if exercise != None:
+            self.exercise = exercise.state
+        else:
+            self.exercise = exercise
 
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
     
     @property
     def act(self):
-        return self.exercise.act
+        return self.exercise["act"]
 
     @property
     def ex_answer(self):
-        return self.exercise.answer
+        return self.exercise["answer"]
     
     def __repr__(self):
         return  "act : {}, student skill: {}".format(self.exercise, self.student["knowledges"])
@@ -179,12 +182,14 @@ class WorkingSession(object):
 
     def student_level_time(self,time = 0, kc = 0):
         if isinstance(kc,list):
-            return [self._step[time].student["knowledges"][k].level for k in kc]
+            #return [self._step[time].student["knowledges"][k].level for k in kc]
+            return self._step[time].student["knowledges"]
 
         elif kc >= len(self._step[time].student["knowledges"]):
-            return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
+            return np.mean(self._step[time].student["knowledges"])
+            #return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
         else:
-            return self._step[time].student["knowledges"][kc].level
+            return self._step[time].student["knowledges"][kc]#.level
 
     def base(self):
         return
@@ -273,7 +278,7 @@ class WorkingGroup(object):
     def get_act_repartition_time(self,first_ex = 1, nb_ex=101, act = "MAIN",nb_act = 5):
         repart = [[0 for x in range(nb_act)]]
         for num_ex in range(first_ex,nb_ex):
-            exs = self.get_data_time(num_ex,"exercise","_act")
+            exs = self.get_data_time(num_ex,"exercise","act")
             for j in range(len(exs)):
                 repart[exs[j][act][0]][num_ex-first_ex][0] += 1
 
@@ -284,7 +289,7 @@ class WorkingGroup(object):
         
         repart = [[] for x in range(len(type_ex))]
         for num_ex in range(first_ex,nb_ex):
-            exs = self.get_data_time(num_ex,"exercise","_act")
+            exs = self.get_data_time(num_ex,"exercise","act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
                 #print repart

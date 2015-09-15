@@ -107,7 +107,7 @@ def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/
                                                         "model" : "KT_student"})
     xp.run()
     
-    all_mean_data = draw_xp_graph(xp,ref_xp)
+    draw_xp_graph(xp,ref_xp)
 
     return xp
 
@@ -133,7 +133,7 @@ def draw_xp_graph(xp,ref_xp):
         
         graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s,%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 5, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
 
-    return all_mean_data
+    return #all_mean_data
 
 # calcul xp costs 
 def calcul_xp_cost(xp):
