@@ -1002,7 +1002,7 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
                 #        y3[i] += abs(y4[i])
                 #        y4[i] = 0
 
-                plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.2)
+                plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.1)
                 plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
                 #plt.errorbar(x, data[nbPdata][group],std_data[nbPdata][group], errorevery = 5)#, label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             
@@ -1019,13 +1019,14 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
         """
     plt.title(title, fontsize=20)
     
-    #if legend_position == 1 :
-    #    plt.legend(bbox_to_anchor=(0,0,0.2,1),ncol=1, fancybox=True, shadow=True, prop={'size':14})
-    #elif legend_position == 2 :
-    #    plt.legend(bbox_to_anchor=(0,0,0.3,1),ncol=1, fancybox=True, shadow=True, prop={'size':14})
-    #else:
-    
-    plt.legend(bbox_to_anchor=(0,0,1.1,0),ncol=1, fancybox=True, shadow=True, prop={'size':20})
+    if legend_position == 0 :
+        plt.legend(bbox_to_anchor=(0,0,0.2,1),ncol=1, fancybox=True, shadow=True, prop={'size':14})
+    elif legend_position == 1 :
+        plt.legend(bbox_to_anchor=(0,0,0.3,1),ncol=1, fancybox=True, shadow=True, prop={'size':14})
+    elif legend_position == 2 :
+        plt.legend(bbox_to_anchor=(0,0,1.1,0),ncol=1, fancybox=True, shadow=True, prop={'size':20})
+    else:
+        plt.legend(bbox_to_anchor=(0,0,1,0.3),ncol=1, fancybox=True, shadow=True, prop={'size':14})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
 
@@ -1239,7 +1240,7 @@ def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of stud
     #         red,        orange    yellow,    gree,    cyan,     blue,   purple
     #["#00DDFF","#00AAFF","#0066AA","#0044BB","#0033DD","#0000FF"]
     if len(data_lvl[0]) > 1:
-        colors = [["#BBFFFF","#6699FF","#4466FF","#0066FF","#004499","#0000FF"],["#33CC33","#00AA00","#006600","#003300"],["#9900CC","#6633FF","#500099","#330066","#110044"],["#FF4444","#EE0000","#990000","#662222","#ffffff"],["#0055ff","#bb00ff","#ff99ff","#555599","#888888","#ffffff"]]
+        colors = [["#BBFFFF","#6699FF","#4466FF","#0066FF","#004499","#0000FF"],["#33CC33","#00AA00","#006600","#003300"],["#9900CC","#6633FF","#500099","#330066","#110044"],["#FF4444","#EE0000","#990000","#662222","#ffffff"],["#0055ff","#bb00ff","#ff99ff","#555599","#888888","#ffffff"],["#ff0000","#ffbb00","#ffff00","#99FF00","#66ccFF","#0055ff"]]
     else:
         colors = [["#ff0000","#ffbb00","#ffff00","#99FF00","#66ccFF","#0055ff","#bb00ff","#ff99ff","#555599","#888888","#ffffff"]]
     hatch_tab = [None,"/", "\"", "x", "o", "-", "O", "+", ".", "*", "|"]
@@ -1272,7 +1273,7 @@ def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of stud
                 plt.ylabel("Group %s" % str(i+1), fontsize=30)
             
             for j in range(0,len(data_lvl[i][k])):
-                plt.bar(ind, data_lvl[i][k][j], width, color = colors[k][j],bottom=bota[j])#,hatch = hatch_tab[k])#,edgecolor = colors[j], hatch = hatch_tab[i], alpha=0.5))
+                plt.bar(ind, data_lvl[i][k][j], width,bottom=bota[j], color = colors[k][j])#,hatch = hatch_tab[k])#,edgecolor = colors[j], hatch = hatch_tab[i], alpha=0.5))
             botBase=bota[-1]
         
         plt.xticks(np.arange(0,max(81,nb_ex+1),(10)),  fontsize=25)

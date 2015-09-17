@@ -1,7 +1,7 @@
 {
     "name" : "POMDP",
     "ref" : "KT_expe_1",
-    "competencies":["S1","S2","S3","S4","S5"],
+    "knowledge_names":["S1","S2","S3","S4","S5"],
     "n_Action" : 5,
     "n_StatePerAct": 2,
     "n_Observation" : 2,

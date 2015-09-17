@@ -37,18 +37,31 @@ def do_q_simu():
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title = "%s \nStudent distribution per erxercices type over time" % ("test"),path = "simulation/graphics/", ref = "clust_xseq_global_%s" % (seq_name),legend = ["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"],dataToUse = range(len([data])))
 
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
-def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 51, nb_stud = 100):
+def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 51, nb_stud = 100, files_to_load = None):
+    if files_to_load == None:
+        files_to_load = {}
+    
+    def_files_to_load = {}
+    def_files_to_load["pomdp"] = {"file":"POMDP_{}".format(ref_xp), "dir":"data/pomdp"}
+    def_files_to_load["stud"] = "stud_{}".format(ref_xp)
+    def_files_to_load["zpdes"] = "ZPDES_{}".format(ref_xp)
+    def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
+    def_files_to_load["random"] = "RANDOM_{}".format(ref_xp)
+
+    for key,val in def_files_to_load.items():
+        if key not in files_to_load.keys():
+            files_to_load[key] = val
 
     ws_tab_zpdes = []
     ws_tab_riarit = []
     ws_tab_random = []
     ws_tab_pomdp = []
-    pomdP = k_lib.seq_manager.POMDP(load_p = {"file":"KT_expe_2", "dir":"data/pomdp"})
+    pomdP = k_lib.seq_manager.POMDP(load_p = files_to_load["pomdp"])
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
-    stud = k_lib.student.KTStudent(params_file = "kt2_stud")
-    zpdes = k_lib.seq_manager.ZpdesHssbg(params_file = "ZPDES_KT")
-    riarit = k_lib.seq_manager.RiaritHssbg(params_file = "RIARIT_KT")
-    random = k_lib.seq_manager.RandomSequence(params_file = "Random_KT")
+    stud = k_lib.student.KTStudent(params_file = files_to_load["stud"])
+    zpdes = k_lib.seq_manager.ZpdesHssbg(params_file = files_to_load["zpdes"])
+    riarit = k_lib.seq_manager.RiaritHssbg(params_file = files_to_load["riarit"])
+    random = k_lib.seq_manager.RandomSequence(params_file = files_to_load["random"])
 
     for i in range(nb_stud):
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
@@ -61,7 +74,7 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
     wG_riarit = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_riarit)
     wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_random)
 
-    wkgs =  {"ZPDES": [wG_zpdes]} # {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit]
+    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]} # "RIARIT": [wG_riarit] {"ZPDES": [wG_zpdes]} # 
 
     params = {
         "ref_expe" : ref_xp,
@@ -78,10 +91,10 @@ def kt_expe(ref_xp = "KT_PZR",path_to_save = "experimentation/data/", nb_step = 
 
     xp.run(nb_step)
 
-    all_mean_data = draw_xp_graph(xp,ref_xp)
-    cost = calcul_xp_cost(xp)
+    #all_mean_data = draw_xp_graph(xp,ref_xp)
+    #cost = calcul_xp_cost(xp)
 
-    return xp,all_mean_data
+    return xp
 
 # Expe to tune ZPDES
 def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/", nb_step = 100, nb_stud = 100):
@@ -112,15 +125,16 @@ def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/
     return xp
 
 # Script to draw xp graphs
-def draw_xp_graph(xp,ref_xp):
+def draw_xp_graph(xp,ref_xp,type_ex = ["V1","V2","V3","V4","V5"], nb_ex_type = [1,1,1,1,1]):
 
     # draw histo graph to visualise exercise in time
     for seq_name,group in xp._groups.items():
-        data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=xp.nb_step+1, main_rt = "KT1",type_ex = ["V1","V2","V3","V4","V5"],nb_ex_type=[1,1,1,1,1])
-        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "exTime_%s_%s" % (ref_xp,seq_name),legend = ["V1","V2","V3","V4","V5"],dataToUse = range(len([data])), show=0)
+        data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=xp.nb_step+1, main_rt = xp.main_act,type_ex = type_ex, nb_ex_type=nb_ex_type)
+        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "exTime_%s_%s" % (ref_xp,seq_name),legend = type_ex,dataToUse = range(len([data])), show=0)
 
     # draw learning curve
-    skill_labels = ["S1","S2","S3","S4","S5","All"]
+    skill_labels = xp.KC
+    skill_labels.append("All")
     all_mean_data = {seq_name:{} for seq_name in xp._groups.keys()}
     for k in range(len(skill_labels)):
         mean_data = []
@@ -131,7 +145,7 @@ def draw_xp_graph(xp,ref_xp):
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
         
-        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s,%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 5, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
+        graph.kGraph.draw_curve([mean_data], labels = [xp._groups.keys()], nb_ex = len(data), typeData = "skill_level", type_data_spe = "" ,ref = "%s_%s" %(ref_xp,skill_labels[k]), markers = None, colors = [["#00BBBB","green","black",'#FF0000']], line_type = ['dashed','dashdot','solid',"dotted"], legend_position = 5, std_data = [std_data], path = "%s" % (xp.save_directory),showPlot = False)
 
     return #all_mean_data
 

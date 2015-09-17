@@ -6,4 +6,4 @@ import exercise
 import experimentation
 import setup
 import config
-import expe_running
+import run_xp

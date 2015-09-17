@@ -148,9 +148,11 @@ class ZpdesSsb(RiaritSsb):
                 imin = self.not_active_bandits()[np.argmin([self.success_rate(-stepSuccess, val = self.not_active_bandits())])]
                 min_succrate_not_active = self.success_rate(-self.stepUpdate,val = [imin])
 
+                ####################################################################
                 # differ => spero promo len
                 if self.spe_promo == 1:
                     self.spe_promo_min_len(imax,imin,stepSuccess,min_succrate_not_active)
+                #######################################################################
 
                 elif min_succrate_not_active < 1 :
                     self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])

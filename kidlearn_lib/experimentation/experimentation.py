@@ -128,6 +128,10 @@ class WorkingSession(object):
         return self._seq_manager
 
     @property
+    def main_act(self):
+        return self._seq_manager.main_act
+
+    @property
     def KC(self):
         return self._KC
 
@@ -225,6 +229,14 @@ class WorkingGroup(object):
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
                 self._working_sessions.append(WorkingSession(params = params))
 
+
+    @property
+    def KC(self):
+        return self._working_sessions[0].KC
+
+    @property
+    def main_act(self):
+        return self._working_sessions[0].main_act
 
     @property
     def working_sessions(self):
@@ -361,6 +373,14 @@ class Experiment(object):
         return self._groups
 
     @property
+    def KC(self):
+        return self._groups.values()[0][0].KC
+
+    @property
+    def main_act(self):
+        return self._groups.values()[0][0].main_act
+
+    @property
     def students(self):
         return {sname : groups.students for sname,groups in self._groups.items()}
 
@@ -399,7 +419,7 @@ class Experiment(object):
         datafile.create_directories([self._directory,self.save_directory])
 
     def save(self):
-        datafile.save_file(self,self._ref_simu,final_dir)
+        datafile.save_file(self,self._ref_simu,self.save_directory)
 
     def load(self,filename = "sim"):
         #TODO

@@ -36,8 +36,8 @@
                 "stepUpdate" : 8,
                 "size_window": 3,
                 "thresZBegin" : 0.5,
-                "valToUpZPD" : 0.5,
-                "valToDesactZPD" : 0.8,
+                "upZPDval" : 0.5,
+                "deactZPDval" : 0.8,
                 "thresHierarProm" : 0.33,
                 "promote_coeff" : 0.5
             }
