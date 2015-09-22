@@ -132,7 +132,7 @@ class ZpdesSsb(RiaritSsb):
 
     def spe_promo_no_wind(self):
         stepSuccess = self.stepMax
-        sizeWind = 2 # self.size_window
+        sizeWind = self.size_window
 
         max_usable_val = [self.success_rate(-stepSuccess,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
         min_usable_val = [self.success_rate(-stepSuccess,val = [x]) for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
@@ -155,7 +155,7 @@ class ZpdesSsb(RiaritSsb):
                 #######################################################################
 
                 elif min_succrate_not_active < 1 :
-                    self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
+                    self.bandval[imin] = min([self.bandval[x] for x in self.active_bandits()])
                     self.bandval[imax] = 0
             elif max_succrate_active > self.deactZPDval and len(self.active_bandits()) >= sizeWind :
                     self.bandval[imax] = 0
@@ -202,7 +202,7 @@ class ZpdesSsb(RiaritSsb):
                 
                 for i in range(len(self.success)):
                     if mean(self.success[i][-self.stepMax:]) > self.deactZPDval and len(self.success[i]) > self.stepMax and i != last:
-                        self.bandval[i] = 0 
+                        self.bandval[i] = 0
 
     # Special Promote with a windows activ and desactivation are sync
     def spe_promo_window_sync(self):

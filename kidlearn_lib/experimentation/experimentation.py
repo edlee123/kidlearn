@@ -447,5 +447,7 @@ class Experiment(object):
             for sub_group in group:
                 cost[name].append(sub_group.calcul_cost())
         return cost
+
+
     ##### Data Analysis tools 
     ###########################################################################
