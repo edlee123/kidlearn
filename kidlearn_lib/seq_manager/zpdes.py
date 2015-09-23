@@ -130,6 +130,23 @@ class ZpdesSsb(RiaritSsb):
                 if meanSucess > self.thresHierarProm:
                     self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
 
+    def spe_promo_thib(self):
+        stepSuccess = self.stepMax
+
+        succrate_active = self.success_rate(-self.stepMax, val = self.active_bandits())
+
+        if succrate_active > self.upZPDval and 0 in self.len_success():# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
+              self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
+
+        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        
+        if len(max_usable_val_to_deact) > 0:
+            imaxd = self.active_bandits()[np.argmax(max_usable_val_to_deact)]
+            max_succrate_active_todeact = self.success_rate(-self.stepUpdate, val = [imaxd])
+
+            if max_succrate_active_todeact > self.deactZPDval and imaxd != self.nval-1:
+                self.bandval[imaxd] = 0
+
     def spe_promo_no_wind(self):
         stepSuccess = self.stepMax
         sizeWind = self.size_window
@@ -157,6 +174,7 @@ class ZpdesSsb(RiaritSsb):
                 elif min_succrate_not_active < 1 :
                     self.bandval[imin] = min([self.bandval[x] for x in self.active_bandits()])
                     self.bandval[imax] = 0
+            
             elif max_succrate_active > self.deactZPDval and len(self.active_bandits()) >= sizeWind :
                     self.bandval[imax] = 0
 
@@ -178,63 +196,41 @@ class ZpdesSsb(RiaritSsb):
     def spe_promo_window_not_sync(self):
         stepSuccess = self.stepMax
 
-        first = -1
-        for ii in range(self.nval):
-            if self.bandval[ii] != 0:
-                first = ii
-                break
-
         last = self.nval-1
         for ii in range(self.nval-1,-1,-1):
             if self.bandval[ii] != 0:
                 last = ii
                 break
 
-        valToUp = self.deactZPDval
-        #if first >= len(self.bandval) - 3:
-        #    valToUp = self.deactZPDval
+        max_usable_val = [self.success_rate(-stepSuccess,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepMax and x not in self.use_to_active]
 
-        if len(self.success[first][-self.stepMax:]) > 0:
-            if mean(self.success[first][-stepSuccess:]) > self.upZPDval and len(self.success[last]) >= self.stepMax: # and first < len(self.bandval) - 3:
+        if len(max_usable_val) > 0:
+            imax = self.active_bandits()[np.argmax(max_usable_val)]
+            max_succrate_active = self.success_rate(-self.stepMax, val = [imax])
 
-                if last+1 < len(self.bandval):
-                    self.bandval[last+1] = min(self.bandval[last],self.bandval[last-1])/2
-                
-                for i in range(len(self.success)):
-                    if mean(self.success[i][-self.stepMax:]) > self.deactZPDval and len(self.success[i]) > self.stepMax and i != last:
-                        self.bandval[i] = 0
+            if max_succrate_active > self.upZPDval and last+1 < len(self.bandval):# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
+                self.bandval[last+1] = min(self.bandval[last],self.bandval[last-1])/2
+                self.use_to_active.append(imax)
+                last = last+1
 
-    # Special Promote with a windows activ and desactivation are sync
-    def spe_promo_window_sync(self):
-        stepSuccess = self.stepMax
+        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        
+        if len(max_usable_val_to_deact) > 0:
+            imaxd = self.active_bandits()[np.argmax(max_usable_val_to_deact)]
+            max_succrate_active_todeact = self.success_rate(-self.stepUpdate, val = [imaxd])
 
-        first = -1
-        for ii in range(self.nval):
-            if self.bandval[ii] != 0:
-                first = ii
-                break
-
-        last = self.nval-1
-        for ii in range(self.nval-1,-1,-1):
-            if self.bandval[ii] != 0:
-                last = ii
-                break
-
-        valToUp = self.deactZPDval
-        #if first >= len(self.bandval) - 3:
-        #    valToUp = self.deactZPDval
-
-        if len(self.success[first][-self.stepMax:]) > 0:
-            if mean(self.success[first][-self.stepMax:]) > valToUp and len(self.success[last]) >= self.stepMax and first < len(self.bandval) - self.size_window: 
-                self.bandval[first] = 0
-
-                if first+self.size_window < len(self.bandval):
-                    self.bandval[first+self.size_window] = min(self.bandval[first+2],self.bandval[first+1])/2
+            if max_succrate_active_todeact > self.deactZPDval and imaxd != last:
+                self.bandval[imaxd] = 0
 
     def promote(self,init = False):
 
         # Promote if initialisation
         if init == True :
+            self.use_to_active = []
+            self.past_prom = 0
+            self.past_active = []
+            self.past_deactive = []
+
             for ii in range((1-self.is_hierarchical)*(len(self.bandval)-1)+1):
                 self.bandval[ii] = self.uniformval#/pow((ii+1),7)
 
@@ -257,7 +253,8 @@ class ZpdesSsb(RiaritSsb):
                 elif self.spe_promo == 2:
                     self.spe_promo_window_not_sync()
                 else:
-                    self.spe_promo_window_sync()
+                    self.spe_promo_thib()
+
 
 
     def active_bandits(self):
@@ -272,10 +269,15 @@ class ZpdesSsb(RiaritSsb):
     def success_rate(self,first_step = 0,last_step = None, val = None):
         if val == None:
             val = range(self.nval)
-        succrate = [np.mean(self.success[x][first_step:last_step]) for x in val]
+        succrate = []
+        for x in val:
+            if len(self.success[x][first_step:last_step]) == 0: 
+                succrate.append(0)
+            else:
+                succrate.append(np.mean(self.success[x][first_step:last_step]))
         #succrate = [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
         if len(succrate) > 1:
-            return succrate
+            return np.mean(succrate)
         else:
             return succrate[0]
 
