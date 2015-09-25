@@ -21,8 +21,7 @@
             "deactZPDval" : 0.8,
             "thresHierarProm" : 0.33,
             "promote_coeff" : 0.5,
-            "h_promote_coeff" : 0.25,
-            "spe_promo" : 1
+            "h_promote_coeff" : 0.25
         }
     }
 }
