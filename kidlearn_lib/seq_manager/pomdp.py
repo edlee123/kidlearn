@@ -31,7 +31,7 @@ class POMDP(object):
 #                       s'         s           a     P(s'|s,a)
 #  nB*    (Number of belief points to be sampled)
     
-    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files", save_pomdp = 0):
+    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files", save_pomdp = 0, load_p = None):
         #self._Ps = 0.05
         #self._Pg = 0.05
         #
@@ -45,51 +45,79 @@ class POMDP(object):
         #self._nZ = 2
         #self._gamma = 0.99
 
-        params = params or func.load_json(params_file,directory)
-        self._ref = params["ref"] 
-        self._KC = params["competencies"]
-        self._act = params["actions"]
+        if load_p != None: 
+            self.load(load_p)
+        else: 
+            params = params or func.load_json(params_file,directory)
+            self._ref = "POMDP_{}".format(params["ref"]) 
+            self.main_act = params["actions"]
+            self._nA = params["n_Action"]
+            self._n_StatePerAct = params["n_StatePerAct"]
+            self._nZ = params["n_Observation"]
+            self._nS = pow(self._n_StatePerAct,self._nA)    
+            self._gamma = params["gamma"]
 
-        self._Ps = params["p_slip"]
-        self._Pg = params["p_guess"]
-        
-        self._Pt = np.array(params["p_transitions"])
-        self._trans_dep = np.array(params["trans_dep"])
+            try:
+                if "learn_model" in params.keys():
+                    self.load_learn_model(params["learn_model"])
+                else:
+                    self._KC = params["knowledge_names"]
+                    self._Pg = params["p_guess"]
+                    self._Ps = params["p_slip"]
+                    
+                    self._Pt = np.array(params["p_transitions"])
+                    self._trans_dep = np.array(params["trans_dep"])
+            except ValueError:
+                print "Bad POMDP params definition"
 
-        self._nA = params["n_Action"]
-        self._n_StatePerAct = params["n_StatePerAct"]
-        self._nS = pow(self._n_StatePerAct,self._nA)    
-        self._nZ = params["n_Observation"]
-        self._gamma = params["gamma"]
 
-        #self._b0 = ones(1,self._nS)/self._nS;
-        self._s0 = np.zeros(self._nS)
-        self._s0[0] = 1
-        self._AS = np.zeros(self._nS)
-        self._AS[-1] = 1
-        self._R = np.array([np.zeros(5) for x in range(self._nS)],dtype = 'float128')
-        self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)],dtype = 'float128')
-        self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)],dtype = 'float128')
 
-        self.construct_transDepend_pomdpKT()
+            #self._b0 = ones(1,self._nS)/self._nS;
+            self._s0 = np.zeros(self._nS)
+            self._s0[0] = 1
+            self._AS = np.zeros(self._nS)
+            self._AS[-1] = 1
+            self._R = np.array([np.zeros(self._nA) for x in range(self._nS)],dtype = 'float128')
+            self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)],dtype = 'float128')
+            self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)],dtype = 'float128')
 
-        self._nB = 1350
-        self.belief_sample = None
-        self.init_traj()
+            self.construct_transDepend_pomdpKT()
 
-        self.sampleBeliefs()
-        self.perseus_alpha_vect()
+            self._nB = 1350
+            self.belief_sample = None
+            self.alpha_v = None
 
-        if save_pomdp:
-            self.save()
+            self.init_traj()
+
+            self.sampleBeliefs()
+            self.perseus_alpha_vect()
+
+            if save_pomdp:
+                self.save()
+
+    def load_learn_model(self,mparams):
+        params = func.load_json(mparams["file"],mparams["dir"])
+
+        if params["model"] == "KTstudent":
+            self._KC = params["knowledge_names"]
+            self._Pg = params["KT"]["G"][0]
+            self._Ps = params["KT"]["S"][0]
+            
+            self._Pt = np.array(params["KT"]["T"])
+            self._trans_dep = np.array(params["kc_trans_dep"])
+        else:
+            return "error in params definition"
 
     def save(self, path = "data/pomdp"):
         datafile.create_directories([path])
         datafile.save_file(self,self._ref,path)
         print "POMDP %s saved" % self._ref
 
-    def load(self):
-        return
+    def load(self,load_p):
+        pomdp = datafile.load_file(load_p["file"],load_p["dir"])
+        for key,val in pomdp.__dict__.items():
+            object.__setattr__(self, key, val)
+
 
     def get_KC(self):
         return self._KC
@@ -304,11 +332,11 @@ class POMDP(object):
 
     def compute_act_lvl(self, act, RT = None, **kwargs):
         lvl = [0]*self._nA
-        lvl[act[self._act][0]] = 1
+        lvl[act[self.main_act][0]] = 1
         return lvl
 
     def update(self,act, corsol, nbFault = 0, *args, **kwargs):
-        act = act[self._act][0]
+        act = act[self.main_act][0]
         corsol = 1 - corsol
 
         self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
@@ -344,7 +372,7 @@ class POMDP(object):
             #print Q
             act = greedy('prob',Q)
 
-        f_act = {self._act: [act]}
+        f_act = {self.main_act: [act]}
 
         return f_act
 

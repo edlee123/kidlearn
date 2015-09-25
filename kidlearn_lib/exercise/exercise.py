@@ -31,9 +31,16 @@ class Exercise(object):
         self.add_attr(args,kwargs)
 
     @property
+    def state(self):
+        state = {}
+        state["act"] = self._act
+        state["answer"] = self._answer
+        state["knowledges"] = self.get_knowledges_level()
+        return state
+
+    @property
     def nbMax_try(self):
         return self._nbMax_try
-    
 
     @property
     def act(self):
@@ -66,10 +73,7 @@ class Exercise(object):
             return [self._knowledges.index(kc) for kc in self._knowledges if kc._level != 0]
 
     def get_knowledges_level(self):
-        levels = []
-        for kc in self._knowledges:
-            levels.append(kc._level)
-        return levels
+        return np.array([kc._level for kc in self._knowledges])
 
     def get_attr(self):
         return {"act": self._act, "knowledge" : self._knowledges, "answer" : self._answer}

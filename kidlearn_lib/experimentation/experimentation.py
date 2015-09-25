@@ -37,18 +37,21 @@ class SessionStep(object):
     def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
         self.student = student_state
         self.seq_manager = seq_manager_state
-        self.exercise = exercise
+        if exercise != None:
+            self.exercise = exercise.state
+        else:
+            self.exercise = exercise
 
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
     
     @property
     def act(self):
-        return self.exercise.act
+        return self.exercise["act"]
 
     @property
     def ex_answer(self):
-        return self.exercise.answer
+        return self.exercise["answer"]
     
     def __repr__(self):
         return  "act : {}, student skill: {}".format(self.exercise, self.student["knowledges"])
@@ -125,6 +128,10 @@ class WorkingSession(object):
         return self._seq_manager
 
     @property
+    def main_act(self):
+        return self._seq_manager.main_act
+
+    @property
     def KC(self):
         return self._KC
 
@@ -179,12 +186,14 @@ class WorkingSession(object):
 
     def student_level_time(self,time = 0, kc = 0):
         if isinstance(kc,list):
-            return [self._step[time].student["knowledges"][k].level for k in kc]
+            #return [self._step[time].student["knowledges"][k].level for k in kc]
+            return self._step[time].student["knowledges"]
 
         elif kc >= len(self._step[time].student["knowledges"]):
-            return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
+            return np.mean(self._step[time].student["knowledges"])
+            #return np.mean([self._step[time].student["knowledges"][k].level for k in range(len(self._step[time].student["knowledges"]))])
         else:
-            return self._step[time].student["knowledges"][kc].level
+            return self._step[time].student["knowledges"][kc]#.level
 
     def base(self):
         return
@@ -203,8 +212,10 @@ class WorkingSession(object):
 class WorkingGroup(object):
     def __init__(self, params = None, params_file = None, directory = "params_files",population = None, WorkingSessions = None, *args, **kwargs):
         #params : 
-
-        params = params or func.load_json(params_file,directory)
+        if params != None or params_file != None: 
+            params = params or func.load_json(params_file,directory)
+        else:
+            params = {}
         self.params = params
         self.logs = {}
 
@@ -218,6 +229,14 @@ class WorkingGroup(object):
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
                 self._working_sessions.append(WorkingSession(params = params))
 
+
+    @property
+    def KC(self):
+        return self._working_sessions[0].KC
+
+    @property
+    def main_act(self):
+        return self._working_sessions[0].main_act
 
     @property
     def working_sessions(self):
@@ -271,7 +290,7 @@ class WorkingGroup(object):
     def get_act_repartition_time(self,first_ex = 1, nb_ex=101, act = "MAIN",nb_act = 5):
         repart = [[0 for x in range(nb_act)]]
         for num_ex in range(first_ex,nb_ex):
-            exs = self.get_data_time(num_ex,"exercise","_act")
+            exs = self.get_data_time(num_ex,"exercise","act")
             for j in range(len(exs)):
                 repart[exs[j][act][0]][num_ex-first_ex][0] += 1
 
@@ -282,7 +301,7 @@ class WorkingGroup(object):
         
         repart = [[] for x in range(len(type_ex))]
         for num_ex in range(first_ex,nb_ex):
-            exs = self.get_data_time(num_ex,"exercise","_act")
+            exs = self.get_data_time(num_ex,"exercise","act")
             for nbType in range(len(type_ex)):
                 repart[nbType].append([0 for i in range(nb_ex_type[nbType])])
                 #print repart
@@ -311,24 +330,27 @@ class Experiment(object):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()
-        params = params or func.load_json(params_file,directory)
+        if params != None or params_file != None: 
+            params = params or func.load_json(params_file,directory)
+        else :
+            params = {}
+            for key, val in kwargs.iteritems():
+                params[key] = val
+        
         self.params = params
         self.logs = {}
 
         self._seq_manager_list_name = self.params["seq_manager_list"]
-        self._nb_step = self.params["nb_step"]
+        self.nb_step = self.params["nb_step"]
 
-        self._nb_students = self.params["population"]["nb_students"]
-        self._model_student = self.params["population"]["model"]
-        
+        self.nb_students = self.params["population"]["nb_students"]
+        self.model_student = self.params["population"]["model"]
+    
         if "path_to_save" not in self.params.keys():
             self.params["path_to_save"] = "experimentation/data/"
-
+        self.ref_expe = self.params["ref_expe"]
         self.do_simu_path(self.params["ref_expe"], path = self.params["path_to_save"])
 
-        for key, val in kwargs.iteritems():
-            object.__setattr__(self, key, val)
-        
         if WorkingGroups:
             self._groups = WorkingGroups
 
@@ -351,6 +373,14 @@ class Experiment(object):
         return self._groups
 
     @property
+    def KC(self):
+        return self._groups.values()[0][0].KC
+
+    @property
+    def main_act(self):
+        return self._groups.values()[0][0].main_act
+
+    @property
     def students(self):
         return {sname : groups.students for sname,groups in self._groups.items()}
 
@@ -365,16 +395,16 @@ class Experiment(object):
 
     def do_simu_path(self,ref = "", directory = "", path = ""):
         for seqName in self._seq_manager_list_name:
-            directory += "%s_" % seqName[0:min(len(seqName),2)]
-        directory = "%sms%s" % (directory,self._model_student)
+            directory += "%s" % seqName[0]
+        directory = "%sms%s" % (directory,self.model_student)
         self._directory = "%s/%s" % (path,directory) 
-        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self._nb_students,self._nb_step,ref)
+        self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self.nb_students,self.nb_step,ref)
         self.save_directory = "%s/%s/" % (self._directory,self._ref_simu)
         self.create_xp_directory()
 
     #def student_simulation(self, student, seq_manager_name):
     #    WorkingSession = WorkingSession(student,self.define_seq_manager(seq_manager_name))
-    #    WorkingSession.run(self._nb_step)
+    #    WorkingSession.run(self.nb_step)
     #    #print WorkingSession.get_WorkingSession_logs()
     #    self._groups[seq_manager_name].append(WorkingSession)
 
@@ -389,20 +419,20 @@ class Experiment(object):
         datafile.create_directories([self._directory,self.save_directory])
 
     def save(self):
-        datafile.save_file(self,self._ref_simu,final_dir)
+        datafile.save_file(self,self._ref_simu,self.save_directory)
 
     def load(self,filename = "sim"):
         #TODO
         return
 
     def run(self, nb_ex = None):
-        nb_ex = nb_ex or self._nb_step
+        nb_ex = nb_ex or self.nb_step
         for name,group in self._groups.items():
             print name
             self.launch_group_simulation(group, nb_ex)
 
     def launch_group_simulation(self, group, nb_ex = None):
-        nb_ex = nb_ex or self._nb_step
+        nb_ex = nb_ex or self.nb_step
         for sub_group in group:
             sub_group.run(nb_ex)
 
@@ -417,5 +447,7 @@ class Experiment(object):
             for sub_group in group:
                 cost[name].append(sub_group.calcul_cost())
         return cost
+
+
     ##### Data Analysis tools 
     ###########################################################################

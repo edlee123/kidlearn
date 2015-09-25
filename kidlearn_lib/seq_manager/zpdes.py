@@ -89,11 +89,15 @@ class ZpdesSsb(RiaritSsb):
         self.stepMax = self.stepUpdate/2
         self.size_window = min(len(self.bandval),params['size_window'])
         self.thresZBegin = params["thresZBegin"]
-        self.valToUpZPD = params["valToUpZPD"]
-        self.valToDesactZPD = params["valToDesactZPD"]
+        self.upZPDval = params["upZPDval"]
+        self.deactZPDval = params["deactZPDval"]
         self.thresHierarProm = params["thresHierarProm"]
         self.promote_coeff = params["promote_coeff"]
         self.hier_promote_coeff = params["h_promote_coeff"]
+        if "spe_promo" in params.keys():
+            self.spe_promo = params["spe_promo"]
+        else:
+            self.spe_promo = 0
         self.promote(True)
 
     def hierarchical_promote(self):
@@ -126,10 +130,33 @@ class ZpdesSsb(RiaritSsb):
                 if meanSucess > self.thresHierarProm:
                     self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
 
+    def spe_promo_thib(self):
+        stepSuccess = self.stepMax
+
+        succrate_active = self.success_rate(-self.stepMax, val = self.active_bandits())
+
+        if succrate_active > self.upZPDval and 0 in self.len_success():# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
+              self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
+
+        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        
+        if len(max_usable_val_to_deact) > 0:
+            imaxd = self.active_bandits()[np.argmax(max_usable_val_to_deact)]
+            max_succrate_active_todeact = self.success_rate(-self.stepUpdate, val = [imaxd])
+
+            if max_succrate_active_todeact > self.deactZPDval and imaxd != self.nval-1:
+                self.bandval[imaxd] = 0
+
+
     def promote(self,init = False):
 
         # Promote if initialisation
         if init == True :
+            self.use_to_active = []
+            self.past_prom = 0
+            self.past_active = []
+            self.past_deactive = []
+
             for ii in range((1-self.is_hierarchical)*(len(self.bandval)-1)+1):
                 self.bandval[ii] = self.uniformval#/pow((ii+1),7)
 
@@ -142,34 +169,19 @@ class ZpdesSsb(RiaritSsb):
             #Promote for beginning of the sequence with less than windows size bandit activated 
             elif self.nval - self.len_success().count(0) < self.size_window :
                 i = self.len_success().index(0)
-                if self.success_rate(-self.stepMax)[i-1] > self.thresZBegin and len(self.success[i-1]) > 1 :
+                if self.success_rate(-self.stepMax,val =[i-1]) > self.thresZBegin and len(self.success[i-1]) > 1 :
                     self.bandval[i] = self.bandval[i-1]
             
             # Promote normal, when the windows moove
-            else :
-                max_usable_val = [self.success_rate(-self.stepMax)[x] for x in self.active_bandits() if self.len_success()[x] >= self.stepMax]
-                min_usable_val = [self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits() if self.len_success()[x] >= self.stepUpdate]
+            else:
+                # if self.spe_promo < 2:
+                #     self.spe_promo_no_wind()
+                # elif self.spe_promo == 2:
+                #     self.spe_promo_window_not_sync()
+                # else:
+                self.spe_promo_thib()
 
-                if len(max_usable_val) > 0:
-                    imax = self.active_bandits()[np.argmax(max_usable_val)]
-                    max_succrate_active = self.success_rate(-self.stepMax)[imax]
 
-
-                    if 0 in self.len_success() and max_succrate_active > self.valToUpZPD:
-                        self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
-
-                    if len(self.not_active_bandits()) > 0 and max_succrate_active > 0.9 and 0 not in self.len_success():# and len(self.success[imax]) > self.stepMax:
-                        imin = self.not_active_bandits()[np.argmin([self.success_rate(-self.stepUpdate)[x] for x in self.not_active_bandits()])]
-                        min_succrate_not_active = self.success_rate(-self.stepUpdate)[imin]
-                        if min_succrate_not_active < 1 :
-                            self.bandval[imin] = max([self.bandval[x] for x in self.active_bandits()])
-                            self.bandval[imax] = 0
-                    elif max_succrate_active > self.valToDesactZPD and len(self.active_bandits()) > 1 :
-                            self.bandval[imax] = 0
-            
-
-                    
-        return
 
     def active_bandits(self):
         return [x for x in range(self.nval) if self.bandval[x] != 0]
@@ -180,8 +192,20 @@ class ZpdesSsb(RiaritSsb):
     def len_success(self,first_val = 0, last_val = None):
         return [len(x) for x in self.success][first_val:last_val]
 
-    def success_rate(self,first_step = 0,last_step = None, first_val = 0, last_val = None):
-        return [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
+    def success_rate(self,first_step = 0,last_step = None, val = None):
+        if val == None:
+            val = range(self.nval)
+        succrate = []
+        for x in val:
+            if len(self.success[x][first_step:last_step]) == 0: 
+                succrate.append(0)
+            else:
+                succrate.append(np.mean(self.success[x][first_step:last_step]))
+        #succrate = [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
+        if len(succrate) > 1:
+            return np.mean(succrate)
+        else:
+            return succrate[0]
 
     def calcul_reward_ssb(self,val,coeff_ans):
         self.success[val].append(coeff_ans)
@@ -202,10 +226,8 @@ class ZpdesSsb(RiaritSsb):
 
             r = max(0,sum_range - sum_old)
 
-        elif len(self.success[val]) == 1:
-            r = 0.5
         else:
-            r = 1
+            r = 0.5
 
         return r
 

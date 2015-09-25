@@ -61,9 +61,6 @@ class KTStudent(Student):
                 depend_prob = np.dot(kc_levels,depend_val) 
                 self.get_knowledge(kc.name).update_state(adding_prob = depend_prob)
 
-    def get_kc_lvl(self):
-        return np.array([kc._level for kc in self._knowledges])
-
     def emission_prob(self,exercise):
         prob_correct = []
         for kc in exercise._knowledges:
