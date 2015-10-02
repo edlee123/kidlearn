@@ -1,7 +1,11 @@
 {
-    "ZpdesSsbg": {
-        "ZpdesSsb": {
-            "stepUpdate" : "6"
+    "base_file":"ZPDES_KT6kc",
+    "directory": "params_files",
+    "new_conf":{
+        "ZpdesSsbg": {
+            "ZpdesSsb": {
+                "stepUpdate" : "6"
+            }
         }
     }
 }

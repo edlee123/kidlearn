@@ -390,6 +390,7 @@ class Experiment(object):
         return 
 
     def add_WorkingGroup(self,params):
+        self.save_working_group_params(params)
         self._groups[params["seq_manager"]["name"]].append(WorkingGroup(params = params, population = self._population))
         #self._groups[seq_manager_name].append(WorkingGroup(population,self.define_seq_manager(seq_manager_name)))
 
@@ -417,6 +418,9 @@ class Experiment(object):
     
     def create_xp_directory(self):
         datafile.create_directories([self._directory,self.save_directory])
+
+    def save_working_group_params(self,params):
+        return
 
     def save(self):
         datafile.save_file(self,self._ref_simu,self.save_directory)

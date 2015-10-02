@@ -67,6 +67,8 @@ def generate_diff_config_id(config_list):
                 if numConf != numConfb and val != all_id[numConfb][key]:
                     valOK += 1
             if valOK > 0 :
+                val = str(val)
+                val = val.replace(".","")
                 nconf_id.append(code_id(key,str(val)))
         nconf_id.sort()
         final_all_id.append(id_str_ftab(nconf_id))

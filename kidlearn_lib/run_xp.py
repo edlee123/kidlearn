@@ -114,12 +114,13 @@ def expe_zpdes_promot(ref_xp = "kt_multiZ",path_to_save = "experimentation/data/
             wss.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
         wkgs["zpdes_{}".format(ref)] = [k_lib.experimentation.WorkingGroup(WorkingSessions = wss)]
 
-    xp = k_lib.experimentation.Experiment(WorkingGroups = wkgs, ref_expe = ref_xp,
-                                        path_to_save = path_to_save,
-                                        seq_manager_list= wkgs.keys(), #RIARIT
-                                        nb_step = nb_step,
-                                        population = {"nb_students" : nb_stud, 
-                                                        "model" : "KT_student"})
+    xp = k_lib.experimentation.Experiment(WorkingGroups = wkgs,
+                            ref_expe = ref_xp,
+                            path_to_save = path_to_save,
+                            seq_manager_list= wkgs.keys(),
+                            nb_step = nb_step,
+                            population = {"nb_students" : nb_stud, 
+                                        "model" : "KT_student"})
     xp.run()
     
     draw_xp_graph(xp,ref_xp,["V1","V2","V3","V4","V5","V6"], nb_ex_type = [1,1,1,1,1,1])
