@@ -1,6 +1,8 @@
 {
+    "act_prime" : "KT6kc",
     "KT6kc":{
-        "hierarchical": 1,
-        "ssbgs" : [["V1","V2","V3","V4","V5","V6"]]
+        "h": [1],
+        "ssbg" : [["V1","V2","V3","V4","V5","V6"]]
     }
 }
+

@@ -1,10 +1,11 @@
 {
     "name" : "ZpdesHssbg",
-    "RT": { 
-        "name":"KT6kc",
-        "path" : "RT/"
+    "graph": { 
+        "name":"KT6kc_graph",
+        "path" : "params_files/",
+        "main_act" : "KT6kc"
         },
-
+    
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
         "levelupdate": 0.8,

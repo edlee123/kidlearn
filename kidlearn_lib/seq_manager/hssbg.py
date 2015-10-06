@@ -33,31 +33,21 @@ class HierarchicalSSBG(object):
 
         #main_dir = self.params["path"]
         #path = main_dir+self.params["path_RT"]
-        self.path = self.params["RT"]["path"]
-        self.main_act = self.params["RT"]["name"]
+        self.graph_path = self.params["graph"]["path"]
+        self.main_act = self.params["graph"]["main_act"]
         
         self.ssbg_used = []
-        #RT = {"name": self.main_act, "path": self.path}
-        #RT = "%s/%s.txt" % (self.path, self.main_act)
-        self.CreateHSSBG(self.params["RT"])
+        #RT = {"name": self.main_act, "path": self.graph_path}
+        #RT = "%s/%s.txt" % (self.graph_path, self.main_act)
+        self.CreateHSSBG(self.params["graph"])
 
         return
 
     def get_state(self):
         state = {}
-        #state["success_rate"] = self.getSuccess()
         state["bandval"] = self.getBanditValue()
-        #state[""]
         
         return state
-
-    #def get_bandval(self):
-    #    bandval = {}
-    #    for nameRT,ssbg in self.SSBGs.items():
-    #        bandval[nameRT] = [] 
-    #        for i in range(len(ssbg.SSB)):
-    #            bandval[nameRT].append(copy.copy(ssbg.SSB[i].bandval))
-    #    return bandval
 
     def getRTnames(self):
         return self.SSBGs.keys()
@@ -93,12 +83,12 @@ class HierarchicalSSBG(object):
             ssbg.setBanditValue(banditTab[RT])
         return
 
-    def instantiate_ssbg(self,RT):
-        return SSBanditGroup(RT,self.filter1,self.filter2,self.uniformval,params = self.params)
+    def instantiate_ssbg(self):
+        return SSBanditGroup(params = self.params["SSBanditGroup"])
         #return self.ssbgClasse(RT, params = self.params)
 
-    def CreateHSSBG(self,RT):
-        mainSSBG = self.instantiate_ssbg(RT)
+    def CreateHSSBG(self,seq_graph):
+        mainSSBG = self.instantiate_ssbg(seq_graph)
         self.ncompetences = mainSSBG.ncompetences
         self.SSBGs = {}
         self.SSBGs[self.main_act] = mainSSBG
@@ -110,13 +100,12 @@ class HierarchicalSSBG(object):
         for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
             for nameRT,hierar in zip(actRT,hierarchy) :
                 if hierar and nameRT not in self.SSBGs.keys():
-                    RT = {"name": nameRT, "path": self.path}
-                    #RT = "%s/%s.txt" % (self.path, nameRT)
+                    RT = {"name": nameRT, "path": self.graph_path}
+                    #RT = "%s/%s.txt" % (self.graph_path, nameRT)
                     nssbg = self.instantiate_ssbg(RT)
                     self.SSBGs[nameRT] = nssbg
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
                     self.addSSBG(nssbg)
-        return
 
     def update(self, act = None, corsol = True, error_ID = None, *args, **kwargs):
         return 0
@@ -199,8 +188,9 @@ class SSBanditGroup(object):
     def CreateSSBs(self):
         self.SSB = [[] for i in range(self.nactions)]
         for ii in range(0,len(self.SSB)):
-            is_hierarchical = (self.actions[ii][-1] == "H")
-            self.SSB[ii] = self.instanciate_ssb(ii,is_hierarchical)
+            #is_hierarchical = (self.actions[ii][-1] == "H")
+            #self.SSB[ii] = self.instanciate_ssb(ii,is_hierarchical)
+            self.SSB[ii] = self.instanciate_ssb(ii,self.h_actions[ii])
         return
 
     def update(self,act,r):
@@ -237,7 +227,7 @@ class SSBanditGroup(object):
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, ntask, is_hierarchical = 0, param_values = None, params = None):
+    def __init__(self,id, nval, is_hierarchical = 0, param_values = None, params = None):
         if param_values is None : param_values = []
         if params is None : params = {}
         # params : filter1, filter2, uniformval,

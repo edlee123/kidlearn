@@ -104,7 +104,7 @@ class WorkingSession(object):
         self._student = student or config.student(self.params["student"])
         self._seq_manager = seq_manager or config.seq_manager(self.params["seq_manager"])
 
-        self._KC = self._seq_manager.get_KC()
+        self._KC = self._student.KC_names
         
         self._step = []
         self._current_ex = None
@@ -150,7 +150,7 @@ class WorkingSession(object):
 
     def new_exercise(self):
         act = self._seq_manager.sample()
-        ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
+        ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main")#,dict_form =1)
         self._current_ex = Exercise(act,ex_skill_lvl,self._KC)
         return self._current_ex
 

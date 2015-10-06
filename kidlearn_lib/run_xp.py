@@ -76,7 +76,7 @@ def kt_expe(ref_xp = "KT_PZR", path_to_save = "experimentation/data/", nb_step =
     wG_riarit = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_riarit)
     wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_random)
 
-    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]}#, "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
+    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random], "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
 
     params = {
         "ref_expe" : ref_xp,

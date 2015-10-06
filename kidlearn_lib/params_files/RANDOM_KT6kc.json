@@ -5,7 +5,8 @@
 
     "RT": { 
         "name":"KT6kc",
-        "path" : "RT/"
+        "path" : "RT/",
+        "main_act" : "KT6kc"
         },
 
     "RiaritSsbg": {

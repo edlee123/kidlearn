@@ -1,6 +1,6 @@
 {
     "name" : "ZpdesHssbg",
-    "RT": { 
+    "graph": { 
         "name":"N1",
         "path" : "RT/"
         },

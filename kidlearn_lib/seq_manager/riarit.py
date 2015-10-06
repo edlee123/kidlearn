@@ -27,12 +27,12 @@ class RiaritHssbg(HierarchicalSSBG):
 
         params = params or func.load_json(params_file,directory)
         self.current_lvl_ex = {}
-        
+        params["graph"] = params["RT"]
         HierarchicalSSBG.__init__(self, params = params)
         self.load_Error()
         #self.CreateHSSBG(RT)
 
-        return
+    # Accesser
     def get_KC(self):
         return self.SSBGs[self.main_act].competences
 
@@ -54,11 +54,25 @@ class RiaritHssbg(HierarchicalSSBG):
             self.SSBGs[RT].setLevel(lvl)
         return
 
+    #Ssbg define
     def instantiate_ssbg(self,RT):
         params = self.params["RiaritSsbg"]
         params["RT"] = RT
         return RiaritSsbg(params = params)
 
+    def addSSBG(self,ssbg_father):
+        for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
+            for nameRT,hierar in zip(actRT,hierarchy) :
+                if hierar and nameRT not in self.SSBGs.keys():
+                    RT = {"name": nameRT, "path": self.graph_path}
+                    #RT = "%s/%s.txt" % (self.graph_path, nameRT)
+                    nssbg = self.instantiate_ssbg(RT)
+                    self.SSBGs[nameRT] = nssbg
+                    ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
+                    self.addSSBG(nssbg)
+        return
+
+    # RiaRit spe func
     def compute_act_lvl(self, act, RT = None, **kwargs):
         lvl = {}
         lvl[self.main_act] = [1]*self.ncompetences
@@ -91,6 +105,7 @@ class RiaritHssbg(HierarchicalSSBG):
 
         return lvl
 
+
     def update(self, act, corsol = True, error_ID = None, *args, **kwargs):
         #if act is None:
         #    act = self.lastAct
@@ -102,6 +117,7 @@ class RiaritHssbg(HierarchicalSSBG):
             self.SSBGs[nameRT].update(self.current_lvl_ex[nameRT],act[nameRT], corsol, answer_impact)
         return
 
+    # Special func to try to take into account error
     def load_Error(self, RT_ID = "MAIN", directory = 'assets/algorithm/error_RT/'):
         self.error_tab = []
         self.error_ID_tab = []
@@ -147,7 +163,7 @@ class RiaritSsbg(SSBanditGroup):
     def instanciate_ssb(self,ii,is_hierarchical):
         params = self.params["RiaritSsb"]
 
-        return RiaritSsb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii], params = params)
+        return RiaritSsb(ii,self.nvalue[ii],self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii], params = params)
 
     def get_estim_level(self,**kwargs):
         if "dict_form" in kwargs.keys():
@@ -156,7 +172,6 @@ class RiaritSsbg(SSBanditGroup):
 
     def setLevel(self,level):
         self.estim_level = level
-        return
 
     def calDiffLvl(self,lvl):
         lvlDiff = []
@@ -169,7 +184,7 @@ class RiaritSsbg(SSBanditGroup):
             self.load_jsonRT(RT)
         else:
             self.load_textRT(RT)
-        return
+        self.CreateSSBs()
 
     def load_jsonRT(self,RT):
         self.ID = RT["name"]
@@ -180,6 +195,7 @@ class RiaritSsbg(SSBanditGroup):
         self.actions = params_RT["parameters"]
         self.nactions = len(self.actions)
         self.act = [0]*self.nactions
+        self.h_actions = [0]*self.nactions
         self.nbturn = [0]*self.nactions
         self.nb_stay = func.fill_data(params_RT["nb_stay"],self.nactions)
         #self.nb_stay = params_RT["nb_stay"] + [params_RT["nb_stay"][-1]]*(self.nactions-(len(params_RT["nb_stay"])-1))
@@ -188,7 +204,7 @@ class RiaritSsbg(SSBanditGroup):
         self.stop = [[] for i in range(self.nactions)]
         self.param_values = [[] for i in range(self.nactions)]
         self.values_children = [[] for i in range(self.nactions)]
-        for num_act in range(len(self.actions)):
+        for num_act in range(self.nactions):
             for key,val in params_RT["table"][self.actions[num_act]].items():
                 self.param_values[num_act].append(key)
                 if "hierarchical" in val.keys():
@@ -199,9 +215,6 @@ class RiaritSsbg(SSBanditGroup):
                 self.RT[num_act].append(val["impact"])
                 self.requer[num_act].append(func.fill_data(val["requir"],self.ncompetences))
                 self.stop[num_act].append(func.fill_data(val["deacti"],self.ncompetences))
-        self.CreateSSBs()
-
-        return
 
     def load_textRT(self,RT):
         path_RT = os.path.join(RT["path"],RT["name"])+".txt"
@@ -219,6 +232,7 @@ class RiaritSsbg(SSBanditGroup):
         self.actions = tmp[1:len(tmp)]
         self.nactions = len(self.actions)
         self.act = [0]*self.nactions
+        self.h_actions = [ int(x[-1] == "H") for x in self.actions]
         self.nbturn = [0]*self.nactions
 
         tmp = spe_split('\W',lines[2])
@@ -249,10 +263,6 @@ class RiaritSsbg(SSBanditGroup):
             self.stop[int(tmp[0])-1].append(func.fill_data(aux[2*self.ncompetences:],self.ncompetences))
         self.nvalue.append(nval)
         reader.close()
-        self.CreateSSBs()
-        #self.load_Error()
-
-        return
 
     def RTable(self, act,lvl = None, **kwargs):
         ## from the solution and the RTable it will compute the level it will compute the progress and provide a reward to the SSB
@@ -301,14 +311,15 @@ class RiaritSsbg(SSBanditGroup):
 
 class RiaritSsb(SSbandit):
 
-    def __init__(self,id, nval, ntask, requer, stop, is_hierarchical = 0, param_values = [], params = {}):
+    def __init__(self,id, nval, nKC, requer, stop, is_hierarchical = 0, param_values = [], params = {}):
         # params : 
 
-        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
-        self.name = "rssb"
+        SSbandit.__init__(self,id, nval, is_hierarchical,param_values, params = params)
+        #self.name = "rssb"
         self.requer = requer
         self.stop = stop
-        self.promote([0.0]*ntask,True)
+        init_level = [0.0]*nKC
+        self.promote(init_level,True)
 
     def promote(self,lvl,init = False):
         for ii in range(self.nval):

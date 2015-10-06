@@ -46,6 +46,10 @@ class KTStudent(Student):
             str += kc.__repr__() + ", "
         return str
 
+    @property
+    def KC_names(self):
+        return self.params["knowledge_names"] 
+
     def get_knowledge_idx(self,name, *arg, **kwargs):
         return self.params["knowledge_names"].index(name)
 

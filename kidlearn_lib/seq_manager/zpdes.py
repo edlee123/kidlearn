@@ -18,7 +18,7 @@ import numpy as np
 #########################################################
 ## class ZpdesHssbg
 
-class ZpdesHssbg(RiaritHssbg):
+class ZpdesHssbg(HierarchicalSSBG):
 
     #ssbgClasse = ZpdesSsbg
 
@@ -26,34 +26,66 @@ class ZpdesHssbg(RiaritHssbg):
         # params : RT, path
 
         params = params or func.load_json(params_file,directory)
-        self.current_lvl_ex = {}
-        
         HierarchicalSSBG.__init__(self, params = params)
+        self.current_lvl_ex = {}
+        if "riarit" in  params.keys():
+            self.riarit = RiaritHssbg(params_file = params["riarit"]["name"],directory = params["riarit"]["path"])
+        else:
+            self.riarit = None
         #self.load_Error()
         #self.CreateHSSBG(RT)
 
         return
 
-    def loadGraph(self,graph):
-        return
+    def compute_act_lvl(self, act, RT = None, **kwargs):
+        if self.riarit != None:
+            return self.riarit.compute_act_lvl(self, act, RT)
+        else:
+            lvl = [0] * self.SSBGs[self.main_act].nvalue[0]
+            lvl[act[self.main_act][0]] = 1
+            return lvl
 
-    def instantiate_ssbg(self,RT):
+    def instantiate_ssbg(self,graph_def):
         params = self.params["ZpdesSsbg"]
-        params["RT"] = RT
+        params["graph_def"] = graph_def
         return ZpdesSsbg(params = params)
 
-    def update(self, act, corsol = True, error_ID = None, *args):
+
+    def CreateHSSBG(self,graph_infos):
+        graph_def = func.load_json(graph_infos["name"],graph_infos["path"])
+        graph_def["current_ssbg"] = graph_def["act_prime"]
+        mainSSBG = self.instantiate_ssbg(graph_def)
+        #self.ncompetences = mainSSBG.ncompetences
+        self.SSBGs = {}
+        self.SSBGs[self.main_act] = mainSSBG
+        self.addSSBG(mainSSBG,graph_def)
+        #self.lastAct = {}
+        return
+
+    def addSSBG(self,ssbg_father,graph_def):
+        for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
+            for nameRT,hierar in zip(actRT,hierarchy) :
+                if hierar and nameRT not in self.SSBGs.keys():
+                    graph_def["current_ssbg"] = nameRT
+                    #RT = "%s/%s.txt" % (self.graph_path, nameRT)
+                    nssbg = self.instantiate_ssbg(graph_def)
+                    self.SSBGs[nameRT] = nssbg
+                    ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
+                    self.addSSBG(nssbg)
+
+
+    def update(self, act, corsol = 1, error_ID = None, *args):
         #if act is None:
         #    act = self.lastAct
         #self.computelvl(act)
         answer_impact = self.return_answer_impact(corsol,error_ID)
 
         for nameRT in act.keys():
-            self.SSBGs[nameRT].update(self.current_lvl_ex[nameRT],act[nameRT], corsol, answer_impact,act)
+            self.SSBGs[nameRT].update(act[nameRT], corsol, answer_impact)
         return
 
     def return_answer_impact(self,corsol,error_ID = None):
-        return int(corsol)
+        return corsol
 
 ## class RiaritHssbg
 #########################################################
@@ -61,24 +93,50 @@ class ZpdesHssbg(RiaritHssbg):
 #########################################################
 #########################################################
 ## class ZpdesSsbg
-class ZpdesSsbg(RiaritSsbg):
+class ZpdesSsbg(SSBanditGroup):
 
     def __init__(self,params = None, params_file = "Rssb_test_1", directory = "params_files"):
         SSBanditGroup.__init__(self,params = params)
+        self.loadSsbg(self.params["graph_def"])
 
-        self.loadSsbg(self.params["graph"])
-        self.levelupdate = self.params["levelupdate"]
+    def loadSsbg(self,graph_def):
+        self.ID = graph_def["current_ssbg"]
+        ssbg_def = graph_def[self.ID]
+        #self.actions = ssbg_def[0]
+        self.nactions = len(ssbg_def["ssbg"])
+        self.act = [0]*self.nactions
+
+        if "h" in ssbg_def.keys():
+            self.h_actions = ssbg_def["h"]
+        else:
+            self.h_actions = [0]*self.nactions
+
+        if "actions" in ssbg_def.keys():
+            self.actions = ssbg_def["actions"]
+        else:
+            self.actions = ["{}_act{}".format(self.ID,x) for x in range(self.nactions)]
         
-        return
+        if "nb_stay" in ssbg_def.keys():
+            self.nb_stay = ssbg_def["nb_stay"]
+        else: 
+            self.nb_stay = [1] * self.nactions
+        self.nbturn = [0]*self.nactions
+        self.param_values = [[] for i in range(self.nactions)]
+        self.values_children = [[] for i in range(self.nactions)]
+        self.nvalue = []
 
-    def loadSsbg(self,graph):
+        for act in range(self.nactions):
+            self.nvalue.append(len(ssbg_def["ssbg"][act]))
+            for val in ssbg_def["ssbg"][act]:
+                self.values_children[act].append(int(val in graph_def.keys()))
+                self.param_values.append(val)
 
-        return
+        self.CreateSSBs()
 
     def instanciate_ssb(self,ii,is_hierarchical):
         params = self.params["ZpdesSsb"]
 
-        return ZpdesSsb(ii,len(self.RT[ii]),self.ncompetences,self.requer[ii], self.stop[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii],params = params)
+        return ZpdesSsb(ii,self.nvalue[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii],params = params)
 
     def calcul_reward(self,act,answer_impact):
         coeff_ans = answer_impact
@@ -87,7 +145,7 @@ class ZpdesSsbg(RiaritSsbg):
             r_ES.append(self.SSB[ii].calcul_reward_ssb(act[ii],coeff_ans))
         return r_ES
 
-    def update(self,lvl,act,corsol,answer_impact,*args, **kwargs):
+    def update(self,act,corsol,answer_impact,*args, **kwargs):
         r_ES = self.calcul_reward(act,answer_impact)
         
         ## For simulation
@@ -109,12 +167,12 @@ class ZpdesSsbg(RiaritSsbg):
 #########################################################
 ## class ZpdesSsb
 
-class ZpdesSsb(RiaritSsb):
-    def __init__(self,id, nval, ntask, requer, stop,is_hierarchical = 0, param_values = [], params = {}):
+class ZpdesSsb(SSbandit):
+    def __init__(self,id, nval, is_hierarchical = 0, param_values = [], params = {}):
         # params : 
 
-        SSbandit.__init__(self,id, nval, ntask, is_hierarchical,param_values, params = params)
-        self.name = "zssb"
+        SSbandit.__init__(self,id, nval, is_hierarchical,param_values, params = params)
+        #self.name = "zssb"
         self.stepUpdate = params['stepUpdate']
         self.stepMax = self.stepUpdate/2
         self.size_window = min(len(self.bandval),params['size_window'])
