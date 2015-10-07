@@ -15,9 +15,11 @@ import numpy as np
 import copy 
 import json
 import os
+import sys
 import kidlearn_lib as k_lib
-import k_lib.plot_graphics as graph
 
+sys.path.append("../..")
+import plot_graphics as graph
 
 # example of WorkingSession : one student and one seqequance manager
 
