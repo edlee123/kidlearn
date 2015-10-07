@@ -10,17 +10,15 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-from seq_manager import seq_dict_gen
-#from exercise import *
-from student import stud_dict_gen
-from knowledge import *
-from experimentation import *
-import functions as func
 import numpy as np
-import copy as copy
+import copy
 import json
 import os
 import re
+
+from ..seq_manager import seq_dict_gen
+from ..student import stud_dict_gen
+from ..functions import functions as func
 
 ##############################################################
 ## ID config generations management
@@ -265,13 +263,13 @@ def generate_pstudent_population():
 def generate_ktstudent_population(kt_profil = 0):
     population = []
     for i in range(nb_students):
-        population.append(KTStudent(knowledge_names = knowledge_names, knowledge_params = KTStudent_profils[kt_profil]))
+        population.append(KTstudent(knowledge_names = knowledge_names, knowledge_params = KTstudent_profils[kt_profil]))
     return population
 
 def generate_ktfeatures_population(kt_profil = 0):
     population = []
     for i in range(nb_students):
-        population.append(KTStudent(config._knowledges_conf))
+        population.append(KTstudent(config._knowledges_conf))
     return population
 
     return population

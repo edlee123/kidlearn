@@ -10,9 +10,11 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-from riarit import *
-from hssbg import *
 import numpy as np
+
+from .riarit import RiaritHssbg, RiaritSsbg, RiaritSsb
+from .hssbg import HierarchicalSSBG,SSBanditGroup, SSbandit
+from ..functions import functions as func
 
 #########################################################
 #########################################################
@@ -20,16 +22,14 @@ import numpy as np
 
 class ZpdesHssbg(HierarchicalSSBG):
 
-    #ssbgClasse = ZpdesSsbg
-
     def __init__(self, params = None, params_file = "seq_test_1", directory = "params_files"):
         # params : RT, path
 
         params = params or func.load_json(params_file,directory)
-        HierarchicalSSBG.__init__(self, params = params)
+        HierarchicalSSBG.__init__(self, params=params)
         self.current_lvl_ex = {}
         if "riarit" in  params.keys():
-            self.riarit = RiaritHssbg(params_file = params["riarit"]["name"],directory = params["riarit"]["path"])
+            self.riarit = RiaritHssbg(params_file=params["riarit"]["name"],directory = params["riarit"]["path"])
         else:
             self.riarit = None
         #self.load_Error()
@@ -39,7 +39,7 @@ class ZpdesHssbg(HierarchicalSSBG):
 
     def compute_act_lvl(self, act, RT = None, **kwargs):
         if self.riarit != None:
-            return self.riarit.compute_act_lvl(self, act, RT)
+            return self.riarit.compute_act_lvl(act, RT)
         else:
             lvl = [0] * self.SSBGs[self.main_act].nvalue[0]
             lvl[act[self.main_act][0]] = 1
@@ -71,7 +71,9 @@ class ZpdesHssbg(HierarchicalSSBG):
                     nssbg = self.instantiate_ssbg(graph_def)
                     self.SSBGs[nameRT] = nssbg
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
-                    self.addSSBG(nssbg)
+                    self.addSSBG(nssbg,graph_def)
+                elif hierar:
+                    ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
 
 
     def update(self, act, corsol = 1, error_ID = None, *args):
@@ -129,23 +131,23 @@ class ZpdesSsbg(SSBanditGroup):
             self.nvalue.append(len(ssbg_def["ssbg"][act]))
             for val in ssbg_def["ssbg"][act]:
                 self.values_children[act].append(int(val in graph_def.keys()))
-                self.param_values.append(val)
+                self.param_values[act].append(val)
 
         self.CreateSSBs()
 
     def instanciate_ssb(self,ii,is_hierarchical):
         params = self.params["ZpdesSsb"]
 
-        return ZpdesSsb(ii,self.nvalue[ii], is_hierarchical = is_hierarchical, param_values = self.param_values[ii],params = params)
+        return ZpdesSsb(ii,self.nvalue[ii], is_hierarchical=is_hierarchical, param_values=self.param_values[ii], params=params)
 
-    def calcul_reward(self,act,answer_impact):
+    def calcul_reward(self, act, answer_impact):
         coeff_ans = answer_impact
         r_ES = []
         for ii in range(self.nactions):
             r_ES.append(self.SSB[ii].calcul_reward_ssb(act[ii],coeff_ans))
         return r_ES
 
-    def update(self,act,corsol,answer_impact,*args, **kwargs):
+    def update(self, act, corsol, answer_impact, *args, **kwargs):
         r_ES = self.calcul_reward(act,answer_impact)
         
         ## For simulation
@@ -168,8 +170,10 @@ class ZpdesSsbg(SSBanditGroup):
 ## class ZpdesSsb
 
 class ZpdesSsb(SSbandit):
-    def __init__(self,id, nval, is_hierarchical = 0, param_values = [], params = {}):
+    def __init__(self, id, nval, is_hierarchical=0, param_values=None, params=None):
         # params : 
+        if param_values == None: param_values = []
+        if params == None: params = {}
 
         SSbandit.__init__(self,id, nval, is_hierarchical,param_values, params = params)
         #self.name = "zssb"
@@ -209,7 +213,7 @@ class ZpdesSsb(SSbandit):
                             successUsed.append(sucToTreat[-stepSuccess:])
                             
                             if len(sucToTreat[-stepSuccess:]) > 0: 
-                                sumSucess += mean(sucToTreat[-stepSuccess:])
+                                sumSucess += np.mean(sucToTreat[-stepSuccess:])
                             else :
                                 sumSucess += 0
 
@@ -221,16 +225,16 @@ class ZpdesSsb(SSbandit):
     def spe_promote_async(self):
         stepSuccess = self.stepMax
 
-        succrate_active = self.success_rate(-self.stepMax, val = self.active_bandits())
+        succrate_active = self.success_rate(-self.stepMax, val=self.active_bandits())
 
         if succrate_active > self.upZPDval and 0 in self.len_success():# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
               self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
 
-        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate,val =[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate,val=[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
         
         if len(max_usable_val_to_deact) > 0:
             imaxd = self.active_bandits()[np.argmax(max_usable_val_to_deact)]
-            max_succrate_active_todeact = self.success_rate(-self.stepUpdate, val = [imaxd])
+            max_succrate_active_todeact = self.success_rate(-self.stepUpdate, val=[imaxd])
 
             if max_succrate_active_todeact > self.deactZPDval and self.bandval.count(0) < len(self.bandval)-1: #imaxd != self.nval-1:
                 #if self.bandval.count(0) < len(self.bandval)-1:
@@ -240,7 +244,7 @@ class ZpdesSsb(SSbandit):
         #Promote initialisation for beginning of the sequence with less than windows size bandit activated 
         if self.nval - self.len_success().count(0) < self.size_window :
             i = self.len_success().index(0)
-            if self.success_rate(-self.stepMax,val =[i-1]) > self.upZPDval and len(self.success[i-1]) > 1 :
+            if self.success_rate(-self.stepMax,val=[i-1]) > self.upZPDval and len(self.success[i-1]) > 1 :
                 self.bandval[i] = self.bandval[i-1]
         else :
             first = -1
@@ -257,7 +261,7 @@ class ZpdesSsb(SSbandit):
                 valToUp = self.deactZPDval
 
             if len(self.success[first][-self.stepMax:]) > 0:
-                if mean(self.success[first][-self.stepMax:]) > valToUp and len(self.success[last]) >= self.stepMax and first != last: 
+                if np.mean(self.success[first][-self.stepMax:]) > valToUp and len(self.success[last]) >= self.stepMax and first != last: 
                     self.bandval[first] = 0
 
                     if first+3 < len(self.bandval):
@@ -295,10 +299,10 @@ class ZpdesSsb(SSbandit):
     def not_active_bandits(self):
         return [x for x in range(self.nval) if self.bandval[x] == 0]
 
-    def len_success(self,first_val = 0, last_val = None):
+    def len_success(self, first_val = 0, last_val=None):
         return [len(x) for x in self.success][first_val:last_val]
 
-    def success_rate(self,first_step = 0,last_step = None, val = None, min_nb_ans = 2):
+    def success_rate(self, first_step=0, last_step=None, val=None, min_nb_ans=2):
         if val == None :
             val = range(self.nval)
         elif len(val) == 0:
@@ -315,15 +319,15 @@ class ZpdesSsb(SSbandit):
         else:
             return succrate[0]
 
-    def calcul_reward_ssb(self,val,coeff_ans):
+    def calcul_reward_ssb(self, val, coeff_ans):
         self.success[val].append(coeff_ans)
         #if len(self.sonSSBG.keys())> 0:
         #    print self.success
         if len(self.success[val]) > 2:
             y_step = min(self.stepUpdate,len(self.success[val]))
             y_range = y_step/2
-            sum_old = mean(self.success[val][-y_step:-y_range])
-            sum_range = mean(self.success[val][-y_range:])
+            sum_old = np.mean(self.success[val][-y_step:-y_range])
+            sum_range = np.mean(self.success[val][-y_range:])
             r = max(0,sum_range - sum_old)
         else:
             r = self.bandval[val]

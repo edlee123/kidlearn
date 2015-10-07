@@ -11,17 +11,17 @@
 
 #-------------------------------------------------------------------------------
 #from teacher_sequence import Sequence
-from riarit import RiaritHssbg
-import functions as func
 #import random
 import operator
 import copy
 import numpy as np
 
+from .riarit import RiaritHssbg
+from ..functions import functions as func
+
 class RandomSequence(RiaritHssbg):
 
-    def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
-
+    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"):
         params = params or func.load_json(params_file,directory)
         RiaritHssbg.__init__(self, params = params)
         self.random_type = params["random_type"]
@@ -30,22 +30,17 @@ class RandomSequence(RiaritHssbg):
             self.generate_acts(**params["seq_path"])
             self.calcul_all_Ex_lvl()
 
-        return
-
-    def sample(self, nb_stay = 0):
+    def sample(self, nb_stay=0):
         if self.random_type == 0:
-            r = np.random.randint(0,len(self.acts))
-            return  self.acts[r]
+            return  self.acts[np.random.randint(0,len(self.acts))]
 
         elif self.random_type == 1:
             return self.choose_lvl_random_ex()
 
         else:
-            act = self.speSample(self.SSBGs[self.main_act], nb_stay = nb_stay)
-            #self.lastAct = act
-            return act
+            return self.speSample(self.SSBGs[self.main_act], nb_stay = nb_stay)
 
-    def speSample(self,ssbgToS,act = None,nb_stay = 0):
+    def speSample(self, ssbgToS, act=None, nb_stay=0):
         if act is None : act = {}
         act[ssbgToS.ID] = ssbgToS.random_sample(nb_stay)
         for actRT in range(len(act[ssbgToS.ID])):
@@ -88,14 +83,10 @@ class RandomSequence(RiaritHssbg):
         for i in range(len(self.acts)):
             all_lvl[str(i)] = np.mean(self.compute_act_lvl(self.acts[i],"MAIN"))
         self.all_lvl = sorted(all_lvl.items(), key=operator.itemgetter(1))
-        #print sorted_lvl
-        return 
 
-    def generate_acts(self, params = None,  params_file = "expe_seq",directory = "sequence_def"):
+    def generate_acts(self, params=None, params_file="expe_seq", directory="sequence_def"):
         params = params or func.load_json(params_file,directory)
         self.acts = []
         for act_groups  in params["activity"]:
             for act in act_groups:
                 self.acts.append(act)
-
-        return

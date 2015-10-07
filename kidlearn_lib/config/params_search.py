@@ -10,13 +10,14 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-import functions as func
 import numpy as np
 import copy as copy
 import json
 import os
-import config
 from scipy.optimize import curve_fit
+
+from . import config
+from ..functions import functions as func
 
 def greed_search():
     return

@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        KTStudent
+# Name:        KTstudent
 #Purpose:
 #
 # Author:      Bclement
@@ -10,20 +10,21 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
-
-from operator import mul
-from student import *
-import functions as func
-import knowledge as knl
 import numpy as np
 import scipy.stats as sstats
+from operator import mul
+
+from .student import Student
+from ..knowledge import Knowledge, KTKnowledge
+from ..functions import functions as func
 
 
 ################################################################################
 ## Class KT student
 ################################################################################
 
-class KTStudent(Student):
+class KTstudent(Student):
+
     def __init__(self,params = None, params_file = "kt_stud", directory = "params_files", *args, **kwargs):
         params = params or func.load_json(params_file,directory)
         
@@ -36,7 +37,7 @@ class KTStudent(Student):
             for kt_keys in self.params["KT"].keys():
                 kc_params[kt_keys] = self.params["KT"][kt_keys][i]
             
-            self._knowledges.append(knl.KTKnowledge(name,level,kc_params))
+            self._knowledges.append(KTKnowledge(name,level,kc_params))
 
         self.kc_trans_dep = np.array(self.params["kc_trans_dep"])
 

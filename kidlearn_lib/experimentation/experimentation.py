@@ -13,17 +13,17 @@
 
 import os
 import sys
-from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
-from exercise import Exercise
-from student import *
-import functions as func
-import numpy as np
-import copy as copy
+import copy
 import json
-import config
-import graph_lib as graph
-import config.datafile as datafile
-import time
+import numpy as np
+
+from ..seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
+from ..exercise import Exercise
+from ..student import Student, Pstudent, Qstudent, KTstudent
+from ..config import datafile
+from .. import config
+from .. import functions as func
+#import config.datafile as datafile
 
 #########################################################
 #########################################################
@@ -34,7 +34,10 @@ class SessionStep(object):
         SessionStep Definition
     """
 
-    def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
+    def __init__(self, student_state=None, seq_manager_state=None, exercise=None, *args, **kwargs):
+        if student_state == None: student_state = {}
+        if seq_manager_state == None: seq_manager_state = {}
+
         self.student = student_state
         self.seq_manager = seq_manager_state
         if exercise != None:
@@ -58,14 +61,13 @@ class SessionStep(object):
 
     ###########################################################################
     ##### Data Analysis tools 
-    def get_attr(self,attr,*arg,**kwargs):
+    def get_attr(self, attr, *arg, **kwargs):
         data = getattr(self,attr)
         if len(arg)>0:
             if isinstance(data,dict) :
                 return data[arg[0]]
             else:
                 data = getattr(data,arg[0])
-
         return data
 
     def base(self):
@@ -93,7 +95,6 @@ class SessionStep(object):
 ## class WorkingSession
 
 class WorkingSession(object):
-    """TODO"""
 
     def __init__(self, params = None, params_file = None, directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
 

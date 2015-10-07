@@ -9,8 +9,10 @@
 # Copyright:   (c) BClement 2015
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
+import numpy as np
 
-from q_student import *
+from .q_student import Qstudent
+from ..functions import functions as func
 
 class Pstudent(Qstudent):
 
@@ -26,8 +28,7 @@ class Pstudent(Qstudent):
             for i in range(0,len(param)):
                 #print self.choose_tab(tab[key][i],param[i])
                 self.p_lvl[key].append(self.choose_tab(tab[key][i],param[i]))
-            
-        #self.q_profils = q_s.Student(skills,learn_prog,threshold = threshold)
+
         self.p_learning = p_learn_prog
         self.p_lvl_up_prob = 1 #0.6
         
@@ -257,8 +258,7 @@ class Pstudent(Qstudent):
 
     # Function to filter if the param is on the size of the table     
 
-
-if __name__ == '__main__':
-    S = Student(0)
-    for ii in range(0,10):
-        print S.Answer([1,0,0,0],0,[])
+# if __name__ == '__main__':
+#     S = Student(0)
+#     for ii in range(0,10):
+#         print S.Answer([1,0,0,0],0,[])

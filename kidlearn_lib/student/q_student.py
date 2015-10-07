@@ -10,10 +10,11 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
+import numpy as np
 
-from student import *
-import functions as func
-import knowledge as knl
+from .student import Student
+from ..functions import functions as func
+from ..knowledge import Knowledge
 
 class Qstudent(Student):
 
@@ -22,7 +23,7 @@ class Qstudent(Student):
 
         Student.__init__(self, params = params)
 
-        self._knowledges = [knl.Knowledge(kn,kl) for (kn,kl) in zip(self.params["knowledge_names"],self.params["knowledge_levels"])]
+        self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(self.params["knowledge_names"],self.params["knowledge_levels"])]
         
         if "logistic_values" in self.params.keys():
             self.log_vals = self.params["logistic_values"]

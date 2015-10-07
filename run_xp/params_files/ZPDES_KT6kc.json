@@ -1,0 +1,29 @@
+{
+    "name" : "ZpdesHssbg",
+    "graph": { 
+        "name":"KT6kc_graph",
+        "path" : "params_files/",
+        "main_act" : "KT6kc"
+        },
+    
+    "ZpdesSsbg": {
+        "name" : "ZpdesSsbg",
+        "levelupdate": 0.8,
+
+        "ZpdesSsb": {
+            "name" : "ZpdesSsb",
+            "filter1": 0.20, 
+            "filter2": 0.80, 
+            "uniformval": 0.05,
+            "stepUpdate" : 7,
+            "size_window": 3,
+            "thresZBegin" : 0.4,
+            "upZPDval" : 0.5,
+            "deactZPDval" : 0.6,
+            "promote_coeff" : 1,
+            "thresHierarProm" : 0.5,
+            "h_promote_coeff" : 0.25,
+            "spe_promo": 0
+        }
+    }
+}

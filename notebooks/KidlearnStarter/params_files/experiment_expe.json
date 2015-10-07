@@ -29,7 +29,8 @@
             "name" : "RiaritHssbg",
             "RT": { 
                 "name": "MAIN",
-                "path" : "RT/expe"
+                "path" : "RT/expe",
+                "main_act": "MAIN"
             },
 
             "RiaritSsbg": {
@@ -46,9 +47,14 @@
 
         "ZpdesHssbg":{
             "name" : "ZpdesHssbg",
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/expe"
+            "graph": { 
+                "name": "money_graph",
+                "path" : "params_files/",
+                "main_act": "MAIN"
+            },
+            "riarit":{
+                "name": "riarit_xp",
+                "path" : "params_files/"
             },
 
             "ZpdesSsbg": {
@@ -66,7 +72,8 @@
                     "deactZPDval" : 0.6,
                     "promote_coeff" : 1,
                     "thresHierarProm" : 0.3,
-                    "h_promote_coeff" : 1
+                    "h_promote_coeff" : 1,
+                    "spe_promo" : 0
                 }
             }
         },
@@ -80,7 +87,8 @@
 
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/expe"
+                "path" : "RT/expe",
+                "main_act": "MAIN"
             },
 
             "toLvlYp": 12,
@@ -108,7 +116,8 @@
 
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/expe"
+                "path" : "RT/expe",
+                "main_act": "MAIN"
             },
 
             "RiaritSsbg": {

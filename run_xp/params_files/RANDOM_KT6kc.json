@@ -1,0 +1,23 @@
+{
+    "name" : "RandomSequence",
+    "random_type" : 2,
+    "seq_path": 0,
+
+    "RT": { 
+        "name":"KT6kc",
+        "path" : "RT/",
+        "main_act" : "KT6kc"
+        },
+
+    "RiaritSsbg": {
+        "name" : "RiaritSsbg",
+        "levelupdate": 0.8,
+
+        "RiaritSsb": {
+            "name" : "RiaritSsb",
+            "filter1": 0.1, 
+            "filter2": 0.90, 
+            "uniformval": 0.05
+        }
+    }
+}

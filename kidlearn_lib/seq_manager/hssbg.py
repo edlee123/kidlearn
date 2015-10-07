@@ -1,21 +1,24 @@
 #-*- coding: utf-8 -*-
-## Hieratical Strategic Student Bandit
-## 2014 BCLEMENT
+#-------------------------------------------------------------------------------
+# Name:        HierarchicalSSBG
+# Purpose:     Hieratical Strategic Student Bandit
+#
+# Author:      Bclement
+#
+# Created:     14-03-2015
+# Copyright:   (c) BClement 2015
+# Licence:     GNU Affero General Public License v3.0
+#-------------------------------------------------------------------------------
 
-from numpy import *
 import os
 import sys
 import re
 import pickle
 import json
+import numpy as np
 
-""" auxiliary functions """
-def dissample(p):
-    s = random.multinomial(1,p)
-    return nonzero(s==1)[0][0]
+from ..functions import functions as func
 
-# class SSBanditGroup(object): pass
-# class SSBandit(object): pass
 
 #########################################################
 #########################################################
@@ -24,9 +27,7 @@ def dissample(p):
 
 class HierarchicalSSBG(object):
 
-    #ssbgClasse = SSBanditGroup
-
-    def __init__(self, params = None,  params_file = "seq_test_1", directory = "params_files"):
+    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"):
         # params : RT, path
 
         self.params = params
@@ -66,7 +67,7 @@ class HierarchicalSSBG(object):
             success[RT] = ssbg.getSuccess()
         return success
     
-    def setSuccess(self,successTab):
+    def setSuccess(self, successTab):
         for RT,ssbg in self.SSBGs.items():
             ssbg.setSuccess(successTab[RT])
         return
@@ -78,16 +79,16 @@ class HierarchicalSSBG(object):
             banditVal[RT] = ssbg.getBanditValue()
         return banditVal
 
-    def setBanditValue(self,banditTab):
+    def setBanditValue(self, banditTab):
         for RT,ssbg in self.SSBGs.items():
             ssbg.setBanditValue(banditTab[RT])
         return
 
     def instantiate_ssbg(self):
-        return SSBanditGroup(params = self.params["SSBanditGroup"])
+        return SSBanditGroup(params=self.params["SSBanditGroup"])
         #return self.ssbgClasse(RT, params = self.params)
 
-    def CreateHSSBG(self,seq_graph):
+    def CreateHSSBG(self, seq_graph):
         mainSSBG = self.instantiate_ssbg(seq_graph)
         self.ncompetences = mainSSBG.ncompetences
         self.SSBGs = {}
@@ -96,7 +97,7 @@ class HierarchicalSSBG(object):
         #self.lastAct = {}
         return
 
-    def addSSBG(self,ssbg_father):
+    def addSSBG(self, ssbg_father):
         for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
             for nameRT,hierar in zip(actRT,hierarchy) :
                 if hierar and nameRT not in self.SSBGs.keys():
@@ -107,7 +108,7 @@ class HierarchicalSSBG(object):
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
                     self.addSSBG(nssbg)
 
-    def update(self, act = None, corsol = True, error_ID = None, *args, **kwargs):
+    def update(self, act=None, corsol=True, error_ID=None, *args, **kwargs):
         return 0
 
     def sample(self):
@@ -115,7 +116,7 @@ class HierarchicalSSBG(object):
         #self.lastAct = act
         return act
 
-    def speSample(self,ssbgToS,act = None):
+    def speSample(self, ssbgToS, act=None):
         if act is None: act = {}
         act[ssbgToS.ID] = ssbgToS.sample()
         for actRT in range(len(act[ssbgToS.ID])):
@@ -135,7 +136,7 @@ class HierarchicalSSBG(object):
 
 class SSBanditGroup(object):
 
-    def __init__(self, params = None,  params_file = "ssb_test_1", directory = "params_files"):
+    def __init__(self, params=None, params_file="ssb_test_1", directory="params_files"):
         #params : RT
         self.params = params
         #self.sonSSBG = {}
@@ -151,7 +152,7 @@ class SSBanditGroup(object):
             successSSBG.append(self.SSB[i].getSuccess())
         return successSSBG
 
-    def setSuccess(self,tabSuccess):
+    def setSuccess(self, tabSuccess):
         for i in range(len(tabSuccess)):
             self.SSB[i].setSuccess(tabSuccess[i])
         return
@@ -162,7 +163,7 @@ class SSBanditGroup(object):
             banditVal.append(self.SSB[i].getBanditValue())
         return banditVal
 
-    def setBanditValue(self,banditTab):
+    def setBanditValue(self, banditTab):
         for i in range(len(banditTab)):
             self.SSB[i].setBanditValue(banditTab[i])
         return
@@ -171,8 +172,7 @@ class SSBanditGroup(object):
         tested = [False]*self.nactions
         return
 
-    def add_sonSSBG(self,nact,sonSSBG):
-        #self.sonSSBG[sonSSBG.ID] = sonSSBG
+    def add_sonSSBG(self, nact, sonSSBG):
         for ssb in sonSSBG.SSB:
             if ssb.is_hierarchical == 1:
                 self.SSB[nact].add_sonSSBG(sonSSBG)
@@ -182,24 +182,22 @@ class SSBanditGroup(object):
     def loadRT(self):
         return
 
-    def instanciate_ssb(self,ii,is_hierarchical):
+    def instanciate_ssb(self, ii, is_hierarchical):
         return SSbandit(ii,len(self.RT[ii]),self.ncompetences,is_hierarchical, param_values = self.param_values[ii], params = self.params)
 
     def CreateSSBs(self):
         self.SSB = [[] for i in range(self.nactions)]
         for ii in range(0,len(self.SSB)):
-            #is_hierarchical = (self.actions[ii][-1] == "H")
-            #self.SSB[ii] = self.instanciate_ssb(ii,is_hierarchical)
             self.SSB[ii] = self.instanciate_ssb(ii,self.h_actions[ii])
         return
 
-    def update(self,act,r):
+    def update(self, act, r):
         return
 
     def calcul_reward(self):
         return 0
 
-    def random_sample(self,nb_stay = None):
+    def random_sample(self, nb_stay=None):
         for i in range(self.nactions):
             nb_stay = nb_stay or self.nb_stay[i]
             if self.nbturn[i] % nb_stay == 0:
@@ -227,7 +225,7 @@ class SSBanditGroup(object):
 class SSbandit(object):
     """Strategic Student Bandit"""
 
-    def __init__(self,id, nval, is_hierarchical = 0, param_values = None, params = None):
+    def __init__(self, id, nval, is_hierarchical=0, param_values=None, params=None):
         if param_values is None : param_values = []
         if params is None : params = {}
         # params : filter1, filter2, uniformval,
@@ -251,18 +249,18 @@ class SSbandit(object):
     def getSuccess(self):
         return self.success
 
-    def setSuccess(self,tabSuccess):
+    def setSuccess(self, tabSuccess):
         self.success = tabSuccess
         return
 
     def getBanditValue(self):
         return self.bandval
 
-    def setBanditValue(self,banditTab):
+    def setBanditValue(self, banditTab):
         self.bandval = banditTab
         return
 
-    def add_sonSSBG(self,sonSSBG):
+    def add_sonSSBG(self, sonSSBG):
         self.sonSSBG[sonSSBG.ID] = sonSSBG
         return
 
@@ -270,7 +268,7 @@ class SSbandit(object):
         print self.bandval
         return
 
-    def update(self,val,r):
+    def update(self, val, r):
         self.bandval[val] = self.filter1*self.bandval[val] + self.filter2*r
 
     def promote(self):
@@ -278,11 +276,11 @@ class SSbandit(object):
 
     def random_sample(self):
         nn = [1.0/self.nval]*self.nval
-        return dissample(nn)
+        return func.dissample(nn)
 
-    def sample(self, exploration_coeff = 10):
+    def sample(self, exploration_coeff=10):
         
-        nn = array(self.bandval)
+        nn = np.array(self.bandval)
         norm_v = sum(nn)
         for i in range(0,len(nn)) :
             if nn[i] > 0 :
@@ -309,13 +307,8 @@ class SSbandit(object):
         if nb_0 == len(nn):
             print "band : %s " % str(nn)
         """
-        return dissample(nn)
+        return func.dissample(nn)
 
 
 ## class SSbandit
 #########################################################
-
-def spe_split(regex,line):
-    tmp=re.split(regex,line)
-    tmp = [x for x in tmp if x not in [None,'']]
-    return tmp

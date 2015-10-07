@@ -1,0 +1,7 @@
+Competences	KnowMoney	IntSum	IntSub	IntDec	DecSum	DecSub	DecDec
+Actions	TypeEx_H
+Nb_stay	4
+1   1	M	1	0.5	0.3	0.6	0.4	0.2	0.7	0	0	0	0	0	0	0	0	0	0	0	1	1	1
+1   1	R	1	0.5	0.8	0.7	0.4	0.7	0.7	0.3	0.2	0	0.3	0	0	0	0	0	0	0	1	1	1
+1   1	MM	1	1	0.4	1	1	0.3	1	0.3	0.3	0.3	0.3	0	0	0	0	0	0	0	1	1	1
+1   1	RM	1	1	1	1	1	1	1	0.3	0.5	0.3	0.3	0	0	0	1	1	1	1	1	1	1

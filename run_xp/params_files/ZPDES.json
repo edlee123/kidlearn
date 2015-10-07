@@ -1,0 +1,21 @@
+{
+    "name" : "ZpdesHssbg",
+    "RT": { 
+        "name":"N1",
+        "path" : "RT/"
+        },
+
+    "ZpdesSsbg": {
+        "name" : "ZpdesSsbg",
+        "levelupdate": 0.6,
+
+        "ZpdesSsb": {
+            "name" : "ZpdesSsb",
+            "filter1": 0.2, 
+            "filter2": 0.8, 
+            "uniformval": 0.05,
+            "stepUpdate" : 8,
+            "size_window": 3
+        }
+    }
+}
