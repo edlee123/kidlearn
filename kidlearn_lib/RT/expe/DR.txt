@@ -1,5 +1,0 @@
-Competences	KnowMoney	IntSum	IntSub	IntDec	DecSum	DecSub	DecDec
-Actions	Remainder
-Nb_stay	1
-1   1	NO1	1	0.7	1	1	0.6	1	1	0	0	0	0	0	0	0	0	0	0	0	0.8	0	1
-1   1	NO2	1	1	1	1	1	1	1	0	0	0	0	0	0.4	0	0	1	1	1	1	1	1

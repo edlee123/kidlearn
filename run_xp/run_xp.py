@@ -16,7 +16,7 @@ import copy
 import json
 import os
 import kidlearn_lib as k_lib
-import graph_lib as graph
+import k_lib.plot_graphics as graph
 
 
 # example of WorkingSession : one student and one seqequance manager
