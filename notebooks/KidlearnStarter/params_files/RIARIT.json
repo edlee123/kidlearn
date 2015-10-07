@@ -2,7 +2,8 @@
     "name" : "RiaritHssbg",
     "RT": { 
         "name":"N1",
-        "path" : "RT/"
+        "path" : "RT/",
+        "main_act":"N1"
         },
 
     "RiaritSsbg": {

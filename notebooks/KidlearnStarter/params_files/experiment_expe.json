@@ -52,6 +52,7 @@
                 "path" : "params_files/",
                 "main_act": "MAIN"
             },
+            
             "riarit":{
                 "name": "riarit_xp",
                 "path" : "params_files/"

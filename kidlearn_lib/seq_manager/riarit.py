@@ -206,6 +206,7 @@ class RiaritSsbg(SSBanditGroup):
         self.stop = [[] for i in range(self.nactions)]
         self.param_values = [[] for i in range(self.nactions)]
         self.values_children = [[] for i in range(self.nactions)]
+        self.nvalue = []
         for num_act in range(self.nactions):
             for key,val in params_RT["table"][self.actions[num_act]].items():
                 self.param_values[num_act].append(key)
@@ -217,6 +218,7 @@ class RiaritSsbg(SSBanditGroup):
                 self.RT[num_act].append(val["impact"])
                 self.requer[num_act].append(func.fill_data(val["requir"],self.ncompetences))
                 self.stop[num_act].append(func.fill_data(val["deacti"],self.ncompetences))
+            self.nvalue.append(len(self.param_values[num_act]))
 
     def load_textRT(self, RT):
         path_RT = os.path.join(RT["path"],RT["name"])+".txt"

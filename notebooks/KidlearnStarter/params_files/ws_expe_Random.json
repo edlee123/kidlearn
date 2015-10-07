@@ -16,7 +16,8 @@
 
          "RT": { 
             "name": "MAIN",
-            "path" : "RT/expe"
+            "path" : "RT/expe",
+            "main_act": "MAIN"
         },
 
         "RiaritSsbg": {
