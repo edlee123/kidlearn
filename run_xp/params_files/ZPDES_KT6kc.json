@@ -2,14 +2,13 @@
     "name" : "ZpdesHssbg",
     "graph": { 
         "name":"KT6kc_graph",
-        "path" : "params_files/",
+        "path" : "graph/",
         "main_act" : "KT6kc"
         },
     
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
-        "levelupdate": 0.8,
-
+        
         "ZpdesSsb": {
             "name" : "ZpdesSsb",
             "filter1": 0.20, 

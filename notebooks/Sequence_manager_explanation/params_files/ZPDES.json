@@ -1,8 +1,9 @@
 {
     "name" : "ZpdesHssbg",
-    "RT": { 
+    "graph": { 
         "name":"N1",
-        "path" : "RT/"
+        "path" : "graph/",
+        "main_act" : "N1"
         },
 
     "ZpdesSsbg": {

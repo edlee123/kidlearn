@@ -8,14 +8,14 @@
     "seq_manager": {
 
         "name" : "ZpdesHssbg",
-        "RT": { 
-            "name": "MAIN",
-            "path" : "RT/expe"
+        "graphe": { 
+            "name": "money_graph",
+            "path" : "graph/expe",
+            "main_act":"MAIN",
         },
 
         "ZpdesSsbg": {
             "name" : "ZpdesSsbg",
-            "levelupdate": 0.6,
 
             "ZpdesSsb" :{
                 "filter1": 0.2, 

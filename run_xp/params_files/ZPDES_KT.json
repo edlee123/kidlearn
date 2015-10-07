@@ -2,12 +2,12 @@
     "name" : "ZpdesHssbg",
     "RT": { 
         "name":"KT1",
-        "path" : "RT/"
+        "path" : "graph/",
+        "main_act":"KT1"
         },
 
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
-        "levelupdate": 0.8,
 
         "ZpdesSsb": {
             "name" : "ZpdesSsb",

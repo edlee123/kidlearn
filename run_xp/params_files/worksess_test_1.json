@@ -15,7 +15,7 @@
         "name" : "RiaritHssbg",
         "RT": { 
             "name":"test1",
-            "path" : "RT/test1"
+            "path" : "graph/test1"
             },
 
         "RiaritSsbg": {

@@ -23,7 +23,7 @@
             "name" : "RiaritHssbg",
             "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "graph/hierarchyRT/expe"
             },
 
             "RiaritSsbg": {
@@ -42,7 +42,7 @@
             "name" : "ZpdesHssbg",
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "graph/hierarchyRT/expe"
             },
 
             "ZpdesSsbg": {
@@ -63,7 +63,7 @@
             "name" : "Sequence",
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "graph/hierarchyRT/expe"
             },
 
             "toLvlYp": 12,
@@ -86,7 +86,7 @@
 
              "RT": { 
                 "name": "MAIN",
-                "path" : "RT/hierarchyRT/expe"
+                "path" : "graph/hierarchyRT/expe"
             },
 
             "RiaritSsbg": {

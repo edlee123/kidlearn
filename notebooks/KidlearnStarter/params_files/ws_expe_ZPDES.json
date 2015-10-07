@@ -10,10 +10,10 @@
         "name" : "ZpdesHssbg",
         "graph": { 
             "name": "money_graph",
-            "path" : "params_files/",
+            "path" : "graph/",
             "main_act": "MAIN"
         },
-        
+
         "riarit":{
             "name": "riarit_xp",
             "path" : "params_files/"
@@ -21,7 +21,6 @@
 
         "ZpdesSsbg": {
             "name" : "ZpdesSsbg",
-            "levelupdate": 0.6,
 
             "ZpdesSsb" :{
                 "filter1": 0.2, 

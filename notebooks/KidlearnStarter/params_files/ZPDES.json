@@ -2,13 +2,12 @@
     "name" : "ZpdesHssbg",
     "graph": { 
         "name":"N1",
-        "path" : "RT/",
+        "path" : "graph/",
         "main_act":"N1"
         },
 
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
-        "levelupdate": 0.6,
 
         "ZpdesSsb" :{
             "filter1": 0.2, 
