@@ -194,7 +194,7 @@ class RiaritSsbg(SSBanditGroup):
         self.competences = params_RT["competencies"]
         self.ncompetences = len(self.competences)
         self.estim_level = [0]*self.ncompetences
-        self.actions = params_RT["parameters"]
+        self.actions = params_RT["actions"]
         self.nactions = len(self.actions)
         self.act = [0]*self.nactions
         self.h_actions = [0]*self.nactions

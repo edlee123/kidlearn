@@ -8,7 +8,7 @@
     "seq_manager": {
 
         "name" : "ZpdesHssbg",
-        "graphe": { 
+        "graph": { 
             "name": "money_graph",
             "path" : "graph/expe",
             "main_act":"MAIN",

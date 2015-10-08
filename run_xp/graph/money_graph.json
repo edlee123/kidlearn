@@ -3,7 +3,7 @@
     "KC":["KnowMoney", "IntSum", "IntSub",  "IntDec",  "DecSum", "DecSub", "DecDec"],
 
     "MAIN":{
-        "actions":"ExType_H",
+        "actions":["ExType_H"],
         "h":[1],
         "nb_stay":[4],
         "ssbg":[["M","R","MM","RM"]]

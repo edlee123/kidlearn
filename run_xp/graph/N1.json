@@ -1,6 +1,6 @@
 {
     "competencies": ["S0","S1","S2"],
-    "parameters": ["Act1","Act2","Act3"],
+    "actions": ["Act1","Act2","Act3"],
     "nb_stay": [2,  1,  1],
     "table": {
         "Act1": {

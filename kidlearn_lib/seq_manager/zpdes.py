@@ -179,12 +179,19 @@ class ZpdesSsb(SSbandit):
         #self.name = "zssb"
         self.stepUpdate = params['stepUpdate']
         self.stepMax = self.stepUpdate/2
-        self.size_window = min(len(self.bandval),params['size_window'])
-        self.thresZBegin = params["thresZBegin"]
+
+        if size_window in params.keys():
+            self.size_window = min(len(self.bandval),params['size_window'])
+        else:
+            self.size_window = min(len(self.bandval),3)
+
         self.upZPDval = params["upZPDval"]
         self.deactZPDval = params["deactZPDval"]
         self.thresHierarProm = params["thresHierarProm"]
-        self.promote_coeff = params["promote_coeff"]
+        if "promote_coeff" in param.keys():
+            self.promote_coeff = params["promote_coeff"]
+        else:
+            self.promote_coeff = 1
         self.hier_promote_coeff = params["h_promote_coeff"]
         if "spe_promo" in params.keys():
             self.spe_promo = params["spe_promo"]
