@@ -108,7 +108,7 @@ class HierarchicalSSBG(object):
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
                     self.addSSBG(nssbg)
 
-    def update(self, act=None, corsol=True, error_ID=None, *args, **kwargs):
+    def update(self, act=None, result=True, error_ID=None, *args, **kwargs):
         return 0
 
     def sample(self):

@@ -148,7 +148,7 @@ class ZpdesSsbg(SSBanditGroup):
         r_ES = self.calcul_reward(act,result_impact)
         
         ## For simulation
-        #r_KC = RiaritSsbg.calcul_reward(self,lvl,corsol,answer_impact = corsol)
+        #r_KC = RiaritSsbg.calcul_reward(self,lvl,result,answer_impact = result)
         ## For simulation
 
         for ii in range(self.nactions):
@@ -177,23 +177,17 @@ class ZpdesSsb(SSbandit):
         self.stepUpdate = params['stepUpdate']
         self.stepMax = self.stepUpdate/2
 
-        if "size_window" in params.keys():
-            self.size_window = min(len(self.bandval),params["size_window"])
-        else:
-            self.size_window = min(len(self.bandval),3)
+        func.setattr_dic_or_default(self,"size_window",params,3)
+        self.size_window = min(len(self.bandval),self.size_window)
 
-        self.upZPDval = params["upZPDval"]
-        self.deactZPDval = params["deactZPDval"]
-        self.thresHierarProm = params["thresHierarProm"]
-        if "promote_coeff" in params.keys():
-            self.promote_coeff = params["promote_coeff"]
-        else:
-            self.promote_coeff = 1
-        self.hier_promote_coeff = params["h_promote_coeff"]
-        if "spe_promo" in params.keys():
-            self.spe_promo = params["spe_promo"]
-        else:
-            self.spe_promo = 0
+        func.setattr_dic_or_default(self,"upZPDval",params,0.5)
+        func.setattr_dic_or_default(self,"deactZPDval",params,0.8)
+
+        func.setattr_dic_or_default(self,"promote_coeff",params,1)
+        func.setattr_dic_or_default(self,"h_promote_coeff",params,1)
+        func.setattr_dic_or_default(self,"thresHierarProm",params,0.3)
+        func.setattr_dic_or_default(self,"spe_promo",params,0)
+
         self.promote(True)
 
     def hierarchical_promote(self):
@@ -227,9 +221,9 @@ class ZpdesSsb(SSbandit):
                     self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
 
     def spe_promote_async(self):
-        stepSuccess = self.stepMax
-
-        succrate_active = self.success_rate(-self.stepMax, val=self.active_bandits())
+        succrate_active = self.success_rate(-self.stepMax,
+                                            val=self.active_bandits(),
+                                            min_nb_ans= self.stepUpdate/2)
 
         if succrate_active > self.upZPDval and 0 in self.len_success():# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
               self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff

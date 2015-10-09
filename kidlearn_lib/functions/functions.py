@@ -100,7 +100,7 @@ def load_json(file_name, dir_path=""):
 # Auxiliary functions
 ###############################################################################
 
-# RiARiT : function to let empty space in table déclaration 
+# RiARiT : function to let empty space in table declaration 
 def fill_data(data, nb_data_expected):
     complete_data = data + [data[-1]]*(nb_data_expected-len(data))
     return complete_data
@@ -115,3 +115,11 @@ def spe_split(regex, line):
 def dissample(p):
     s = np.random.multinomial(1,p)
     return np.nonzero(s==1)[0][0]
+
+# Default value for argument from dictionaries
+def setattr_dic_or_default(obj, attrName, dic, defaultValue = 0):
+    if dic is None: dic = {}
+    if attrName in dic.keys():
+        setattr(obj,attrName,dic[attrName])
+    else:
+        setattr(obj,attrName,defaultValue)

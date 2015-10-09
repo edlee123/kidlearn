@@ -17,25 +17,18 @@ import pickle
 import json
 import copy
 
-from ..functions import functions as func
 from ..knowledge import Knowledge
+from .. import functions as func
 
 class Student(object):
 
     def __init__(self, id="x", params=None):
         self.params = params
-        if "id" in params.keys():
-            self._id = params["id"]
-        else:
-            self._id = id
+        func.setattr_dic_or_default(self,"id",params,id)
         self._knowledges = []
         self.logs = {}
         #self._skills = skills
         return
-
-    @property
-    def id(self):
-        return self._id
     
     @property
     def state(self):
