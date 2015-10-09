@@ -23,6 +23,6 @@ setup(name='kidlearn_lib',
       requires=['numpy','scipy','seaborn',
                ],
       packages = ['kidlearn_lib', 'kidlearn_lib.seq_manager',
-                           'kidlearn_lib.experimentaion',
+                           'kidlearn_lib.experimentation',
                            'kidlearn_lib.student',],
       )

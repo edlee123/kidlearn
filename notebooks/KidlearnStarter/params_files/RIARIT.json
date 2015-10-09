@@ -1,7 +1,7 @@
 {
-    "name" : "RiaritHssbg",
+    "algo_name" : "RiaritHssbg",
     "RT": { 
-        "name":"N1",
+        "file":"N1",
         "path" : "graph/",
         "main_act":"N1"
         },

@@ -343,11 +343,11 @@ class POMDP(object):
         lvl[act[self.main_act][0]] = 1
         return lvl
 
-    def update(self,act, corsol, nbFault=0, *args, **kwargs):
+    def update(self,act, result, nbFault=0, *args, **kwargs):
         act = act[self.main_act][0]
-        corsol = 1 - corsol
+        result = 1 - result
 
-        self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
+        self.current_belief = self.blfUpdt(self.current_belief,act,result)
 
     def sample(self, b=None, isQMDP=False):
         if b == None : 

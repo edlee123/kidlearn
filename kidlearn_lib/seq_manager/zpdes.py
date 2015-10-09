@@ -29,7 +29,7 @@ class ZpdesHssbg(HierarchicalSSBG):
         HierarchicalSSBG.__init__(self, params=params)
         self.current_lvl_ex = {}
         if "riarit" in  params.keys():
-            self.riarit = RiaritHssbg(params_file=params["riarit"]["name"],directory = params["riarit"]["path"])
+            self.riarit = RiaritHssbg(params_file=params["riarit"]["file"],directory = params["riarit"]["path"])
         else:
             self.riarit = None
         #self.load_Error()
@@ -52,7 +52,7 @@ class ZpdesHssbg(HierarchicalSSBG):
 
 
     def CreateHSSBG(self,graph_infos):
-        graph_def = func.load_json(graph_infos["name"],graph_infos["path"])
+        graph_def = func.load_json(graph_infos["file"],graph_infos["path"])
         graph_def["current_ssbg"] = graph_def["act_prime"]
         mainSSBG = self.instantiate_ssbg(graph_def)
         #self.ncompetences = mainSSBG.ncompetences
@@ -76,18 +76,15 @@ class ZpdesHssbg(HierarchicalSSBG):
                     ssbg_father.add_sonSSBG(i,self.SSBGs[nameRT])
 
 
-    def update(self, act, corsol = 1, error_ID = None, *args):
-        #if act is None:
-        #    act = self.lastAct
-        #self.computelvl(act)
-        answer_impact = self.return_answer_impact(corsol,error_ID)
+    def update(self, act, result, *args):
+        result_impact = self.compute_result_impact(result)
 
         for nameRT in act.keys():
-            self.SSBGs[nameRT].update(act[nameRT], corsol, answer_impact)
+            self.SSBGs[nameRT].update(act[nameRT], result_impact)
         return
 
-    def return_answer_impact(self,corsol,error_ID = None):
-        return corsol
+    def compute_result_impact(self,result):
+        return result
 
 ## class RiaritHssbg
 #########################################################
@@ -147,11 +144,11 @@ class ZpdesSsbg(SSBanditGroup):
             r_ES.append(self.SSB[ii].calcul_reward_ssb(act[ii],coeff_ans))
         return r_ES
 
-    def update(self, act, corsol, answer_impact, *args, **kwargs):
-        r_ES = self.calcul_reward(act,answer_impact)
+    def update(self, act, result_impact, *args, **kwargs):
+        r_ES = self.calcul_reward(act,result_impact)
         
         ## For simulation
-        #r_KC = RiaritSsbg.calcul_reward(self,lvl,corsol,answer_impact)
+        #r_KC = RiaritSsbg.calcul_reward(self,lvl,corsol,answer_impact = corsol)
         ## For simulation
 
         for ii in range(self.nactions):
@@ -180,15 +177,15 @@ class ZpdesSsb(SSbandit):
         self.stepUpdate = params['stepUpdate']
         self.stepMax = self.stepUpdate/2
 
-        if size_window in params.keys():
-            self.size_window = min(len(self.bandval),params['size_window'])
+        if "size_window" in params.keys():
+            self.size_window = min(len(self.bandval),params["size_window"])
         else:
             self.size_window = min(len(self.bandval),3)
 
         self.upZPDval = params["upZPDval"]
         self.deactZPDval = params["deactZPDval"]
         self.thresHierarProm = params["thresHierarProm"]
-        if "promote_coeff" in param.keys():
+        if "promote_coeff" in params.keys():
             self.promote_coeff = params["promote_coeff"]
         else:
             self.promote_coeff = 1

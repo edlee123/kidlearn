@@ -64,7 +64,7 @@ class RiaritHssbg(HierarchicalSSBG):
         for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
             for nameRT,hierar in zip(actRT,hierarchy) :
                 if hierar and nameRT not in self.SSBGs.keys():
-                    RT = {"name": nameRT, "path": self.graph_path}
+                    RT = {"file": nameRT, "path": self.graph_path}
                     #RT = "%s/%s.txt" % (self.graph_path, nameRT)
                     nssbg = self.instantiate_ssbg(RT)
                     self.SSBGs[nameRT] = nssbg
@@ -108,15 +108,15 @@ class RiaritHssbg(HierarchicalSSBG):
         return lvl
 
 
-    def update(self, act, corsol=True, error_ID=None, *args, **kwargs):
+    def update(self, act, result=True, error_ID=None, *args, **kwargs):
         #if act is None:
         #    act = self.lastAct
         #self.computelvl(act)
 
-        answer_impact = self.return_answer_impact(corsol,error_ID)
+        answer_impact = self.return_answer_impact(result,error_ID)
 
         for nameRT in act.keys():
-            self.SSBGs[nameRT].update(self.current_lvl_ex[nameRT],act[nameRT], corsol, answer_impact)
+            self.SSBGs[nameRT].update(self.current_lvl_ex[nameRT],act[nameRT], result, answer_impact)
         return
 
     # Special func to try to take into account error
@@ -136,8 +136,8 @@ class RiaritHssbg(HierarchicalSSBG):
             return
         return
 
-    def return_answer_impact(self, corsol, error_ID=None):
-        if corsol == 1:
+    def return_answer_impact(self, result, error_ID=None):
+        if result == 1:
             return [1]*max(1,self.ncompetences)
         elif error_ID != None:
             error_num = self.error_ID_tab.index(error_ID)
@@ -182,15 +182,15 @@ class RiaritSsbg(SSBanditGroup):
         return lvlDiff
     
     def loadRT(self, RT):
-        if os.path.exists(os.path.join(RT["path"],RT["name"]+".json")):
+        if os.path.exists(os.path.join(RT["path"],RT["file"]+".json")):
             self.load_jsonRT(RT)
         else:
             self.load_textRT(RT)
         self.CreateSSBs()
 
     def load_jsonRT(self, RT):
-        self.ID = RT["name"]
-        params_RT = func.load_json(RT["name"],RT["path"])
+        self.ID = RT["file"]
+        params_RT = func.load_json(RT["file"],RT["path"])
         self.competences = params_RT["competencies"]
         self.ncompetences = len(self.competences)
         self.estim_level = [0]*self.ncompetences
@@ -221,7 +221,7 @@ class RiaritSsbg(SSBanditGroup):
             self.nvalue.append(len(self.param_values[num_act]))
 
     def load_textRT(self, RT):
-        path_RT = os.path.join(RT["path"],RT["name"])+".txt"
+        path_RT = os.path.join(RT["path"],RT["file"])+".txt"
         reader = open(path_RT, 'rb')
         self.ID = ((path_RT.split("/")[-1]).split(".")[0])
         #self.ID = ((path_RT.split("/")[-1]).split(".")[0]).split("_")[1]
@@ -283,7 +283,7 @@ class RiaritSsbg(SSBanditGroup):
 
         return lvl
 
-    def calcul_reward(self, lvl, corsol, answer_impact):
+    def calcul_reward(self, lvl, result, answer_impact):
         r_KC = [0]*self.ncompetences
         for i in range(self.ncompetences):
             diff = lvl[i]-self.estim_level[i]
@@ -295,8 +295,8 @@ class RiaritSsbg(SSBanditGroup):
         r = max(0,sum(r_KC)/self.ncompetences)
         return r
 
-    def update(self, lvl, act, corsol, answer_impact, *args, **kwargs):
-        r_KC = self.calcul_reward(lvl,corsol,answer_impact)
+    def update(self, lvl, act, result, answer_impact, *args, **kwargs):
+        r_KC = self.calcul_reward(lvl,result,answer_impact)
 
         for ii in range(self.nactions):
             # update the value of each bandit

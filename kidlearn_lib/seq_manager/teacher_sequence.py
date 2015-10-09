@@ -61,12 +61,12 @@ class Sequence(RiaritHssbg):
             #self.seqLevels = [0]*len(self.acts)
         self.resetLevel();
 
-    def update(self,act, corsol=True, nbFault=0, *args, **kwargs):
-        RiaritHssbg.update(self, act, corsol)
+    def update(self,act, result=True, nbFault=0, *args, **kwargs):
+        RiaritHssbg.update(self, act, result)
         #print " Answer %s" % self.answers
-        #print "corsol %s" % corsol
+        #print "result %s" % result
         #print "nbFaul %s" % nbFault
-        if corsol:
+        if result:
             self.answers[self.num_question] = 1
             self.nbPoint += max(5 - nbFault,3)
         #consecutive = 0

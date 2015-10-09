@@ -27,7 +27,7 @@ from ..functions import functions as func
 def code_id(strid,strval,nbCar = 1):
     return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
 
-def data_from_json(json,id_values = None,form = 0, ignore = ["name","path"]):
+def data_from_json(json,id_values = None,form = 0, ignore = ["file","path"]):
     if id_values is None:
         if form == 0:
             id_values= {}
@@ -125,8 +125,14 @@ def access_dict_value(params,dict_keys, replace = None):
 ##############################################################
 
 def seq_manager(seq_params = None, params_file = None, directory = None):
-    seq_params = seq_params or func.load_json(params_file,directory)
-    seq_manager_name = seq_params["name"]
+    if seq_params != None:
+        seq_params = seq_params
+        if "file_name"in seq_params.keys():
+            params_file = seq_params["file_name"]
+            directory = seq_params["directory"]
+    if params_file != None :
+        seq_params = func.load_json(params_file,directory)
+    seq_manager_name = seq_params["algo_name"]
 
     return seq_dict_gen[seq_manager_name](seq_params)
 

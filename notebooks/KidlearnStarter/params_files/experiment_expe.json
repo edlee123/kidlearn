@@ -26,7 +26,7 @@
     "seq_managers": {
 
         "RiaritHssbg":{
-            "name" : "RiaritHssbg",
+            "algo_name" : "RiaritHssbg",
             "RT": { 
                 "name": "MAIN",
                 "path" : "graph/expe",
@@ -46,7 +46,7 @@
         },
 
         "ZpdesHssbg":{
-            "name" : "ZpdesHssbg",
+            "algo_name" : "ZpdesHssbg",
             "graph": { 
                 "name": "money_graph",
                 "path" : "graph/",
@@ -79,7 +79,7 @@
         },
 
         "Sequence":{
-            "name" : "Sequence",
+            "algo_name" : "Sequence",
             "seq_path": {
                 "params_file" : "expe_seq",
                 "directory" : "sequence_def"
@@ -107,7 +107,7 @@
         },
 
         "RandomSequence":{
-            "name" : "RandomSequence",
+            "algo_name" : "RandomSequence",
             "random_type" : 0,
             "seq_path": {
                 "params_file" : "expe_seq",

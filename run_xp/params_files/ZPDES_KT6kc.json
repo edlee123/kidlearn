@@ -1,7 +1,7 @@
 {
-    "name" : "ZpdesHssbg",
+    "algo_name" : "ZpdesHssbg",
     "graph": { 
-        "name":"KT6kc_graph",
+        "file" :"KT6kc_graph",
         "path" : "graph/",
         "main_act" : "KT6kc"
         },
