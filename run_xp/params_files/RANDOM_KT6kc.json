@@ -1,0 +1,29 @@
+{
+    "name" : "RandomSequence",
+    "random_type" : 2,
+    "seq_path": 0,
+
+    "graph": { 
+        "file" :"KT6kc_graph",
+        "path" : "graph/",
+        "main_act" : "KT6kc"
+        },
+
+
+    "ZpdesSsbg": {
+        "ZpdesSsb": {
+            "name" : "ZpdesSsb",
+            "filter1": 0.20, 
+            "filter2": 0.80, 
+            "uniformval": 0.05,
+            "stepUpdate" : 6,
+            "size_window": 3,
+            "upZPDval" : 0.5,
+            "deactZPDval" : 0.6,
+            "promote_coeff" : 1,
+            "thresHierarProm" : 0.5,
+            "h_promote_coeff" : 0.25,
+            "spe_promo": 0
+        }
+    }
+}

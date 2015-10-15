@@ -15,7 +15,8 @@
     
          "RT": { 
             "name": "MAIN",
-            "path" : "RT/expe"
+            "path" : "graph/expe",
+            "main_act": "MAIN"
         },
 
         "toLvlYp": 12,

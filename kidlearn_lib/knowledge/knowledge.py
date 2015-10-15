@@ -11,20 +11,14 @@
 
 #-------------------------------------------------------------------------------
 
-import os
-from numpy import *
-import re
-import pickle
-import json
-import functions as func
-
 class Knowledge(object):
-    def __init__(self,name,level =0, *args, **kwargs):
+    def __init__(self, name, level=0, *args, **kwargs):
         self._name = name
         self._level = level
 
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)
+
     @property
     def name(self):
         return self._name

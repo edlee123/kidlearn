@@ -1,13 +1,21 @@
 #-*- coding: utf-8 -*-
 ## POMDP
-## 2014 BCLEMENT
+## 2015 BCLEMENT
+## Use PERSEUS % References:
+##
+## M. Spaan, N. Vlassis. Perseus: Randomized point-based value iteration for
+## POMDPs. In "Journal of Artificial Intelligence Research", vol. 24, pp.
+## 195-220, 2005.
+
 import numpy as np
 import numpy.matlib as npmat
 import copy
 import scipy.sparse as sparse
-import functions as func
-import config.datafile as datafile
 
+from ..functions import functions as func
+from ..config import datafile
+
+# To compare with matlab code
 #np.random.seed(20)
 
 class POMDP(object):
@@ -31,7 +39,7 @@ class POMDP(object):
 #                       s'         s           a     P(s'|s,a)
 #  nB*    (Number of belief points to be sampled)
     
-    def __init__(self, params = None,  params_file = "POMDP", directory = "params_files", save_pomdp = 0, load_p = None):
+    def __init__(self, params=None, params_file="POMDP", directory="params_files", save_pomdp=0, load_p=None):
         #self._Ps = 0.05
         #self._Pg = 0.05
         #
@@ -77,9 +85,9 @@ class POMDP(object):
             self._s0[0] = 1
             self._AS = np.zeros(self._nS)
             self._AS[-1] = 1
-            self._R = np.array([np.zeros(self._nA) for x in range(self._nS)],dtype = 'float128')
-            self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)],dtype = 'float128')
-            self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)],dtype = 'float128')
+            self._R = np.array([np.zeros(self._nA) for x in range(self._nS)], dtype='float128')
+            self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)], dtype='float128')
+            self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)], dtype='float128')
 
             self.construct_transDepend_pomdpKT()
 
@@ -95,7 +103,7 @@ class POMDP(object):
             if save_pomdp:
                 self.save()
 
-    def load_learn_model(self,mparams):
+    def load_learn_model(self, mparams):
         params = func.load_json(mparams["file"],mparams["dir"])
 
         if params["model"] == "KTstudent":
@@ -108,12 +116,12 @@ class POMDP(object):
         else:
             return "error in params definition"
 
-    def save(self, path = "data/pomdp"):
+    def save(self, path="data/pomdp"):
         datafile.create_directories([path])
         datafile.save_file(self,self._ref,path)
         print "POMDP %s saved" % self._ref
 
-    def load(self,load_p):
+    def load(self, load_p):
         pomdp = datafile.load_file(load_p["file"],load_p["dir"])
         for key,val in pomdp.__dict__.items():
             object.__setattr__(self, key, val)
@@ -169,7 +177,7 @@ class POMDP(object):
                     self._P[aa][ii][ii] = 1-aux
                     self._O[aa][ii] = [self._Pg, 1-self._Pg]
 
-    def sampleBeliefs(self,nB = None):
+    def sampleBeliefs(self, nB=None):
 
         # Input (inputs marked with * are mandatory):
         # . POMDP* (POMDP Model: struct(nS, nA, nZ, {P}, {O}, r, gamma, s0, b0))
@@ -220,7 +228,7 @@ class POMDP(object):
 
             
              # Compute distance to exis
-            Dist = np.sum(np.power(npmat.repmat(b,i,1) - D[0:i,:],2),axis = 1)
+            Dist = np.sum(np.power(npmat.repmat(b,i,1) - D[0:i,:], 2), axis=1)
 
             #if np.min(Dist) >= 1e-5 :
             if np.matrix.min(Dist) >= 1e-5 :
@@ -249,7 +257,7 @@ class POMDP(object):
 
         return S
 
-    def step(self,S, A, B = None):
+    def step(self,S, A, B=None):
         # function [Snew, Rnew, Znew, Bnew] = POMDPstep(POMDP, S, A, B)
         #
         # Input (inputs marked with * are mandatory): 
@@ -291,11 +299,11 @@ class POMDP(object):
 
         return Snew, Rnew, Znew, Bnew
 
-    def reward(self,state,action):
+    def reward(self, state, action):
         return self._R[state,action]
 
 
-    def blfUpdt(self,B,A,Z):
+    def blfUpdt(self, B, A, Z):
         T = self._P[A]
         O = self._O[A][:,Z]
 
@@ -309,7 +317,7 @@ class POMDP(object):
 
         return Bnew
 
-    def traj(self, b0 = None, s0 = 0, nsteps = 10):
+    def traj(self, b0=None, s0=0, nsteps=10):
         b = b0 #or self._s0
         S = s0
         D = [["S","R","Z","a","b"]]
@@ -330,18 +338,18 @@ class POMDP(object):
     def init_traj(self):
         self.current_belief = self._s0
 
-    def compute_act_lvl(self, act, RT = None, **kwargs):
+    def compute_act_lvl(self, act, RT=None, **kwargs):
         lvl = [0]*self._nA
         lvl[act[self.main_act][0]] = 1
         return lvl
 
-    def update(self,act, corsol, nbFault = 0, *args, **kwargs):
+    def update(self,act, result, nbFault=0, *args, **kwargs):
         act = act[self.main_act][0]
-        corsol = 1 - corsol
+        result = 1 - result
 
-        self.current_belief = self.blfUpdt(self.current_belief,act,corsol)
+        self.current_belief = self.blfUpdt(self.current_belief,act,result)
 
-    def sample(self,b = None, isQMDP = False):
+    def sample(self, b=None, isQMDP=False):
         if b == None : 
             b = self.current_belief
 
@@ -385,8 +393,8 @@ class POMDP(object):
 #########################################################################################
 
 
-def greedy(mode,U):
-    Idx = np.argmax(U,axis = 0)
+def greedy(mode, U):
+    Idx = np.argmax(U, axis=0)
 
     if mode == 'samp':
         a = Idx[np.ceil(len(Idx) * np.random.rand())]
@@ -407,7 +415,7 @@ def perseus_init():
         eps = 1e-9
         return echo,max_iterr,eps
 
-def perseus(pomdp = None):
+def perseus(pomdp=None):
     # Input (inputs marked with * are mandatory): 
     # . POMDP* (POMDP Model: struct(nS, nA, nZ, {P}, {O}, r, Gamma, s0, b0))
     # . D      (Set of sampled beliefs)
@@ -436,7 +444,7 @@ def perseus(pomdp = None):
   #  print "rmin %s"  % pomdp._R.min(axis = 0)
 
     #V = np.ndarray(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
-    V = np.matrix(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
+    V = np.matrix(min(pomdp._R.min(axis=0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
   #  print "V %s" %  V
     
     while quit == 0:
@@ -446,10 +454,10 @@ def perseus(pomdp = None):
         Vnew = perseusBackup(pomdp, V, D)
         
         Vaux = D * Vnew.T
-        vNew = np.amax(Vaux,axis = 1)
+        vNew = np.amax(Vaux, axis=1)
         #print "vNew %s" % vNew
         Vaux = D * V.T
-        vOld = np.amax(Vaux,axis = 1)
+        vOld = np.amax(Vaux, axis=1)
         #print "vOld %s" % vOld
         
         Err = np.max(np.abs(vOld - vNew))
@@ -549,7 +557,7 @@ def perseusBackup(pomdp, V, D):
 
             idx = V * bnew
   #          print "idx %s" % idx
-            idx = np.argmax(idx, axis = 0)
+            idx = np.argmax(idx, axis=0)
  #           print "V %s" % V
             Vupd = V[idx,:][0]
             #Vupd = np.repeat(V, idx.shape[1], axis=0)
@@ -605,7 +613,7 @@ def perseusBackup(pomdp, V, D):
         else:
             #tmp = aNew(ones(size(Vnew, 1), 1),:) == Vnew
             tmp = np.equal(npmat.repmat(aNew,len(Vnew),1), Vnew)
-            tmp = np.sum(tmp.astype(float), axis =1)
+            tmp = np.sum(tmp.astype(float), axis=1)
             #print tmp 
 
         if np.all(tmp != pomdp._nS):

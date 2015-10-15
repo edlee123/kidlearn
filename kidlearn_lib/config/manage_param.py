@@ -17,10 +17,10 @@ def load_param(file_name, directory):
 ## ID config generations management
 ##############################################################
 
-def code_id(strid,strval,nbCar = 1):
+def code_id(strid, strval, nbCar = 1):
     return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
 
-def data_from_json(json,id_values = None,form = 0, ignore = ["name","path"]):
+def data_from_json(json, id_values=None, form=0, ignore=["name","path"]):
     if id_values is None:
         if form == 0:
             id_values= {}
@@ -69,7 +69,7 @@ def generate_diff_config_id(config_list):
 ##############################################################
 
 # Generate many parameters conf from base + file
-def exhaustive_params(multi_param_file, base_param_file, directory, one_conf = None):
+def exhaustive_params(multi_param_file, base_param_file, directory, one_conf=None):
     base_conf = func.load_json(base_param_file,directory)
     multi_params = func.load_json(multi_param_file,directory)
     
@@ -80,7 +80,7 @@ def exhaustive_params(multi_param_file, base_param_file, directory, one_conf = N
 
     return params_configs
 
-def gen_multi_conf(params_configs,paramKey,paramValue,access_keys):
+def gen_multi_conf(params_configs, paramKey, paramValue, access_keys):
     naccess_keys = copy.deepcopy(access_keys)
     naccess_keys.append(paramKey)
     if isinstance(paramValue,list):
@@ -101,7 +101,7 @@ def gen_multi_conf(params_configs,paramKey,paramValue,access_keys):
 ##########################################################################
 # Generate one config from base config + new param file
 
-def gen_new_conf(base_param_file,new_param_file,directory):
+def gen_new_conf(base_param_file, new_param_file, directory):
     config = func.load_json(base_param_file,directory)
     new_params = func.load_json(new_param_file,directory)
 
@@ -110,7 +110,7 @@ def gen_new_conf(base_param_file,new_param_file,directory):
         config = change_conf(config,paramKey,paramVal,access_keys)
     return config
 
-def change_conf(config,paramKey,paramValue,access_keys):
+def change_conf(config, paramKey, paramValue, access_keys):
     naccess_keys = copy.deepcopy(access_keys)
     naccess_keys.append(paramKey)
     if isinstance(paramValue,dict):
@@ -118,12 +118,12 @@ def change_conf(config,paramKey,paramValue,access_keys):
             config = change_conf(config,pkey,pval,naccess_keys)
     else:
         access_dict_value(config,naccess_keys,paramValue)
-
+        
     return config
 
 ########################################################################
 # acces to json value or repalce
-def access_dict_value(params,dict_keys, replace = None):
+def access_dict_value(params, dict_keys, replace=None):
     if len(dict_keys) > 1 :
         return access_dict_value(params[dict_keys[0]],dict_keys[1:],replace)
     else:

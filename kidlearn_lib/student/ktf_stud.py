@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
-# Name:        KTStudent
+# Name:        KTstudent
 #Purpose:
 #
 # Author:      Bclement
@@ -12,15 +12,18 @@
 #-------------------------------------------------------------------------------
 
 from operator import mul
-from student import *
-import function as func
+
+from .student import Student
+from ..knowledge import KTFeatures
+from ..function import function as func
 
 
 ################################################################################
-## Class KT student
+## Class KT with feature student
 ################################################################################
 
-class KTStudent(Student):
+class KTfstudent(Student):
+    
     def __init__(self,kc_params,id = "x"):
         Student.__init__(self,id)
         for i in range(len(kc_params)):

@@ -1,16 +1,15 @@
 {
-    "name" : "RiaritHssbg",
+    "algo_name" : "RiaritHssbg",
     "RT": { 
-        "name":"N1",
-        "path" : "RT/"
+        "file":"N1",
+        "path" : "graph/",
+        "main_act":"N1"
         },
 
     "RiaritSsbg": {
-        "name" : "RiaritSsbg",
         "levelupdate": 0.6,
 
         "RiaritSsb": {
-            "name" : "RiaritSsb",
             "filter1": 0.2, 
             "filter2": 0.8, 
             "uniformval": 0.05

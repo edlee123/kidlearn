@@ -14,11 +14,13 @@
 import numpy as np
 import copy
 import re
-from knowledge import *
+
+from ..knowledge import Knowledge
 
 class Exercise(object):
 
-    def __init__(self,act,knowledge_levels = None, knowledge_names = None, answer = None,  nbMax_try = 1, params = None, *args,**kwargs):
+    def __init__(self, act, knowledge_levels=None, knowledge_names=None, 
+            answer=None, nbMax_try=1, params=None, *args,**kwargs):
         # act : 
 
         self._act = act
@@ -64,7 +66,7 @@ class Exercise(object):
     def __str__(self):
         return self.__repr__()
 
-    def get_knowledges_worked(self, by_names = 0, by_gamma = 1):
+    def get_knowledges_worked(self, by_names=0, by_gamma=1):
         if by_gamma:
             return [int(gamma > 0) for gamma in self._gamma]
         elif by_names:
@@ -78,6 +80,6 @@ class Exercise(object):
     def get_attr(self):
         return {"act": self._act, "knowledge" : self._knowledges, "answer" : self._answer}
 
-    def add_attr(self,*args,**kwargs):
+    def add_attr(self, *args, **kwargs):
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)

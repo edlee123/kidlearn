@@ -13,17 +13,17 @@
 
 import os
 import sys
-from seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
-from exercise import Exercise
-from student import *
-import functions as func
-import numpy as np
-import copy as copy
+import copy
 import json
-import config
-import graph_lib as graph
-import config.datafile as datafile
-import time
+import numpy as np
+
+from ..seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
+from ..exercise import Exercise
+from ..student import Student, Pstudent, Qstudent, KTstudent
+from ..config import datafile
+from .. import config
+from .. import functions as func
+#import config.datafile as datafile
 
 #########################################################
 #########################################################
@@ -34,7 +34,10 @@ class SessionStep(object):
         SessionStep Definition
     """
 
-    def __init__(self, student_state = {}, seq_manager_state = {}, exercise = None, *args, **kwargs):
+    def __init__(self, student_state=None, seq_manager_state=None, exercise=None, *args, **kwargs):
+        if student_state == None: student_state = {}
+        if seq_manager_state == None: seq_manager_state = {}
+
         self.student = student_state
         self.seq_manager = seq_manager_state
         if exercise != None:
@@ -58,14 +61,13 @@ class SessionStep(object):
 
     ###########################################################################
     ##### Data Analysis tools 
-    def get_attr(self,attr,*arg,**kwargs):
+    def get_attr(self, attr, *arg, **kwargs):
         data = getattr(self,attr)
         if len(arg)>0:
             if isinstance(data,dict) :
                 return data[arg[0]]
             else:
                 data = getattr(data,arg[0])
-
         return data
 
     def base(self):
@@ -93,7 +95,6 @@ class SessionStep(object):
 ## class WorkingSession
 
 class WorkingSession(object):
-    """TODO"""
 
     def __init__(self, params = None, params_file = None, directory = "params_files", student = None, seq_manager = None, *args, **kwargs):
 
@@ -104,7 +105,7 @@ class WorkingSession(object):
         self._student = student or config.student(self.params["student"])
         self._seq_manager = seq_manager or config.seq_manager(self.params["seq_manager"])
 
-        self._KC = self._seq_manager.get_KC()
+        self._KC = self._student.KC_names
         
         self._step = []
         self._current_ex = None
@@ -150,7 +151,7 @@ class WorkingSession(object):
 
     def new_exercise(self):
         act = self._seq_manager.sample()
-        ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main",dict_form =1)
+        ex_skill_lvl = self._seq_manager.compute_act_lvl(act,"main")#,dict_form =1)
         self._current_ex = Exercise(act,ex_skill_lvl,self._KC)
         return self._current_ex
 
@@ -390,7 +391,8 @@ class Experiment(object):
         return 
 
     def add_WorkingGroup(self,params):
-        self._groups[params["seq_manager"]["name"]].append(WorkingGroup(params = params, population = self._population))
+        self.save_working_group_params(params)
+        self._groups[params["seq_manager"]["algo_name"]].append(WorkingGroup(params = params, population = self._population))
         #self._groups[seq_manager_name].append(WorkingGroup(population,self.define_seq_manager(seq_manager_name)))
 
     def do_simu_path(self,ref = "", directory = "", path = ""):
@@ -417,6 +419,9 @@ class Experiment(object):
     
     def create_xp_directory(self):
         datafile.create_directories([self._directory,self.save_directory])
+
+    def save_working_group_params(self,params):
+        return
 
     def save(self):
         datafile.save_file(self,self._ref_simu,self.save_directory)

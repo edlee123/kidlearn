@@ -1,0 +1,50 @@
+{
+    "act_prime" : "MAIN",
+    "KC":["KnowMoney", "IntSum", "IntSub",  "IntDec",  "DecSum", "DecSub", "DecDec"],
+
+    "MAIN":{
+        "actions":["ExType_H"],
+        "h":[1],
+        "nb_stay":[4],
+        "ssbg":[["M","R","MM","RM"]]
+        },
+    "M":{
+        "h":[1],
+        "ssbg":[["N01","N02","N03","mod","mod","mod"]]
+    },
+
+    "R":{
+        "h":[1],
+        "ssbg":[["N01","N02","mod","mod"]]
+    },
+
+    "MM":{
+        "h":[1],
+        "ssbg":[["UR","UR","Car","M4"]]
+    },
+
+    "RM":{
+        "h":[1],
+        "ssbg":[["UR","UR","Car","M4"]]
+    },
+
+    "mod": {"h":[0],
+            "ssbg":[["N01","N02"]]
+    },
+
+    "UR":{"h":[1],
+        "ssbg":[["N01","N02"]]
+    },
+
+    "DR":{"h":[1],
+        "ssbg":[["N01","N02"]]
+    },
+
+    "Car":{"h":[1],
+        "ssbg":[["UR","DR"]]
+    },
+
+    "M4":{"h":[1],
+        "ssbg":[["Car","Car"]]
+    }
+}
