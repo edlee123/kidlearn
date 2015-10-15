@@ -4,8 +4,8 @@
     "seq_path": 0,
 
     "RT": { 
-        "name":"KT6kc",
-        "path" : "RT/",
+        "file":"KT6kc",
+        "path" : "graph/",
         "main_act" : "KT6kc"
         },
 

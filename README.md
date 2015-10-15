@@ -7,8 +7,16 @@ We introduce two different algorithms ZPDES that uses a simple graph of knowledg
 
 B. Clement, D. Roy, P.-Y. Oudeyer, M. Lopes, Multi-Armed Bandits for Intelligent Tutoring Systems, Journal of Educational Data Mining (JEDM), 2015 [(arXiv:1310.3174 [cs.AI])](http://arxiv.org/abs/1310.3174)
 
-How to start:
-Check notebook/KidlearnStarter.ipynb
+#### Command to install the library : 
+git clone https://github.com/flowersteam/kidlearn.git
+python setup.py install
+
+#### How to start with kidlearn experiments:
+Check [KidlearnStarter notebook](notebook/KidlearnStarter/KidlearnStarter.ipynb)
+
+#### Sequences manager explanation :
+Check [Seq_manager_explanation notebook](notebook/Sequence_manager_explanation/Seq_manager_explanation.ipynb)
+
 
 People involved:
 Benjamin Clement, Didier Roy, Pierre-Yves Oudeyer, Manuel Lopes

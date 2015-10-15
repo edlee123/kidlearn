@@ -24,7 +24,7 @@ class Student(object):
 
     def __init__(self, id="x", params=None):
         self.params = params
-        func.setattr_dic_or_default(self,"id",params,id)
+        func.setattr_dic_or_default(self,"_id",params,id)
         self._knowledges = []
         self.logs = {}
         #self._skills = skills

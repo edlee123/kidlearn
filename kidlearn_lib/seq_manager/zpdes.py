@@ -223,7 +223,7 @@ class ZpdesSsb(SSbandit):
     def spe_promote_async(self):
         succrate_active = self.success_rate(-self.stepMax,
                                             val=self.active_bandits(),
-                                            min_nb_ans= self.stepUpdate/2)
+                                            min_nb_ans= 3)
 
         if succrate_active > self.upZPDval and 0 in self.len_success():# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
               self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
@@ -269,10 +269,6 @@ class ZpdesSsb(SSbandit):
 
         # Promote if initialisation
         if init == True :
-            self.use_to_active = []
-            self.past_prom = 0
-            self.past_active = []
-            self.past_deactive = []
 
             for ii in range((1-self.is_hierarchical)*(len(self.bandval)-1)+1):
                 self.bandval[ii] = self.uniformval#/pow((ii+1),7)
@@ -300,14 +296,14 @@ class ZpdesSsb(SSbandit):
     def len_success(self, first_val = 0, last_val=None):
         return [len(x) for x in self.success][first_val:last_val]
 
-    def success_rate(self, first_step=0, last_step=None, val=None, min_nb_ans=2):
+    def success_rate(self, first_step=0, last_step=None, val=None, min_nb_ans=3):
         if val == None :
             val = range(self.nval)
         elif len(val) == 0:
             return 0
         succrate = []
         for x in val:
-            if len(self.success[x][first_step:last_step]) <= min_nb_ans: 
+            if len(self.success[x][first_step:last_step]) < min_nb_ans: 
                 succrate.append(0)
             else:
                 succrate.append(np.mean(self.success[x][first_step:last_step]))

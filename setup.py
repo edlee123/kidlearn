@@ -11,18 +11,27 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
+import re
+import sys
+
 from setuptools import setup, find_packages
-from kidlearn_lib import __version__ as VERSION
+
+
+def version():
+    with open('experiment_manager/_version.py') as f:
+        return re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read()).group(1)
+
+def requirements():
+  with open('requirements.txt') as f:
+    return f.readlines()
 
 setup(name='kidlearn_lib',
-      version=VERSION,
+      version=version(),
       author='Benjamin Clement',
       author_email='',
       url='https://github.com/flowersteam/kidlearn.git',
-      description='Kidelarn librairie',
-      requires=['numpy','scipy','seaborn',
-               ],
-      packages = ['kidlearn_lib', 'kidlearn_lib.seq_manager',
-                           'kidlearn_lib.experimentation',
-                           'kidlearn_lib.student',],
+      description='Kidlearn library',
+      install_requires=[requirements()],
+      packages = find_packages(),
+      license = 'GNU AFFERO GENERAL PUBLIC LICENSE Version 3',
       )

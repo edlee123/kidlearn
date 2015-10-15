@@ -6,5 +6,4 @@ from . import config
 from . import seq_manager
 from . import experimentation
 
-version_info = (1, 0, 1)
-__version__ = '.'.join(str(v) for v in version_info)
+from ._version import __version__
