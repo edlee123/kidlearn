@@ -392,7 +392,7 @@ class Experiment(object):
 
     def add_WorkingGroup(self,params):
         self.save_working_group_params(params)
-        self._groups[params["seq_manager"]["name"]].append(WorkingGroup(params = params, population = self._population))
+        self._groups[params["seq_manager"]["algo_name"]].append(WorkingGroup(params = params, population = self._population))
         #self._groups[seq_manager_name].append(WorkingGroup(population,self.define_seq_manager(seq_manager_name)))
 
     def do_simu_path(self,ref = "", directory = "", path = ""):

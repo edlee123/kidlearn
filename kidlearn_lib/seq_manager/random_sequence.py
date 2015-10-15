@@ -16,15 +16,18 @@ import operator
 import copy
 import numpy as np
 
-from .zpdes import ZpdestHssbg
+from .zpdes import ZpdesHssbg
 from ..functions import functions as func
 
-class RandomSequence(RiaritHssbg):
+class RandomSequence(ZpdesHssbg):
 
     def __init__(self, params=None, params_file="seq_test_1", directory="params_files"):
         params = params or func.load_json(params_file,directory)
-        RiaritHssbg.__init__(self, params = params)
-        self.random_type = params["random_type"]
+        if "zpdes" in params.keys():
+            ZpdesHssbg.__init__(self, params_file=params["zpdes"]["file"],directory = params["zpdes"]["path"])
+        else:
+            ZpdesHssbg.__init__(self, params = params)
+        func.setattr_dic_or_default(self,"random_type",params,0)
         
         if params["seq_path"] != 0:
             self.generate_acts(**params["seq_path"])

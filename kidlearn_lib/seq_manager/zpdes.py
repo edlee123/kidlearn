@@ -218,7 +218,7 @@ class ZpdesSsb(SSbandit):
                 meanSucess = sumSucess*1.0/max(len(successUsed),1)
 
                 if meanSucess > self.thresHierarProm:
-                    self.bandval[i] = self.bandval[i-1]*self.hier_promote_coeff #TODO test with 4 for exemple
+                    self.bandval[i] = self.bandval[i-1]*self.h_promote_coeff #TODO test with 4 for exemple
 
     def spe_promote_async(self):
         succrate_active = self.success_rate(-self.stepMax,

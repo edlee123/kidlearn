@@ -1,5 +1,5 @@
 {
-    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence","RandomSequence"],
+    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence"],
     "nb_step" : 100,
     "ref_expe": "expe",
 
@@ -28,7 +28,7 @@
         "RiaritHssbg":{
             "algo_name" : "RiaritHssbg",
             "RT": { 
-                "name": "MAIN",
+                "file": "MAIN",
                 "path" : "graph/expe",
                 "main_act": "MAIN"
             },
@@ -48,19 +48,17 @@
         "ZpdesHssbg":{
             "algo_name" : "ZpdesHssbg",
             "graph": { 
-                "name": "money_graph",
+                "file": "money_graph",
                 "path" : "graph/",
                 "main_act": "MAIN"
             },
 
             "riarit":{
-                "name": "riarit_xp",
+                "file": "riarit_xp",
                 "path" : "params_files/"
             },
 
             "ZpdesSsbg": {
-                "name" : "ZpdesSsbg",
-
                 "ZpdesSsb" :{
                     "filter1": 0.2, 
                     "filter2": 0.8, 
@@ -85,8 +83,8 @@
                 "directory" : "sequence_def"
             },
 
-             "RT": { 
-                "name": "MAIN",
+             "graph": { 
+                "file": "MAIN",
                 "path" : "graph/expe",
                 "main_act": "MAIN"
             },
@@ -114,19 +112,31 @@
                 "directory" : "sequence_def"
             },
 
-             "RT": { 
-                "name": "MAIN",
-                "path" : "graph/expe",
+             "graph": { 
+                "file": "money_graph",
+                "path" : "graph/",
                 "main_act": "MAIN"
             },
 
-            "RiaritSsbg": {
-                "levelupdate": 0.6,
+            "riarit":{
+                "file": "riarit_xp",
+                "path" : "params_files/"
+            },
 
-                "RiaritSsb": {
+            "ZpdesSsbg": {
+                "ZpdesSsb" :{
                     "filter1": 0.2, 
                     "filter2": 0.8, 
-                    "uniformval": 0.05
+                    "uniformval": 0.05,
+                    "stepUpdate" : 6,
+                    "size_window": 3,
+                    "thresZBegin" : 0.4,
+                    "upZPDval" : 0.5,
+                    "deactZPDval" : 0.6,
+                    "promote_coeff" : 1,
+                    "thresHierarProm" : 0.3,
+                    "h_promote_coeff" : 1,
+                    "spe_promo" : 0
                 }
             }
         }

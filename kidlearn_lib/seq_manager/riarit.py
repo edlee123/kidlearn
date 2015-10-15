@@ -27,7 +27,8 @@ class RiaritHssbg(HierarchicalSSBG):
 
         params = params or func.load_json(params_file,directory)
         self.current_lvl_ex = {}
-        params["graph"] = params["RT"]
+        if "RT" in params.keys():
+            params["graph"] = params["RT"]
         HierarchicalSSBG.__init__(self, params=params)
         self.load_Error()
         #self.CreateHSSBG(RT)

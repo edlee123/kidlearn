@@ -1,7 +1,7 @@
 {
     "name" : "RiaritHssbg",
     "RT": { 
-        "name": "MAIN",
+        "file": "MAIN",
         "path" : "graph/expe",
         "main_act": "MAIN"
     },
