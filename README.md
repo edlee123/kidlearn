@@ -12,10 +12,10 @@ git clone https://github.com/flowersteam/kidlearn.git
 python setup.py install
 
 #### How to start with kidlearn experiments:
-Check [KidlearnStarter notebook](notebook/KidlearnStarter/KidlearnStarter.ipynb)
+Check [KidlearnStarter notebook](notebooks/KidlearnStarter/KidlearnStarter.ipynb)
 
 #### Sequences manager explanation :
-Check [Seq_manager_explanation notebook](notebook/Sequence_manager_explanation/Seq_manager_explanation.ipynb)
+Check [Seq_manager_explanation notebook](notebooks/Sequence_manager_explanation/Seq_manager_explanation.ipynb)
 
 
 People involved:
