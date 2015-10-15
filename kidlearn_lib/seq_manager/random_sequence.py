@@ -16,7 +16,7 @@ import operator
 import copy
 import numpy as np
 
-from .riarit import RiaritHssbg
+from .zpdes import ZpdestHssbg
 from ..functions import functions as func
 
 class RandomSequence(RiaritHssbg):
