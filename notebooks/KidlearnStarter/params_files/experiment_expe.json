@@ -5,7 +5,7 @@
 
     "population":{
         "model": "q_population",
-        "nb_students" : 100,
+        "nb_students" : 300,
         "mean" : [0.2,0.2,0.1,0.1,0.1,0.1,0.1],
         "var" : [0.005,0.005,0.01,0.01,0.01,0.005,0.01],
         "student" :{
@@ -26,10 +26,11 @@
     "seq_managers": {
 
         "RiaritHssbg":{
-            "name" : "RiaritHssbg",
+            "algo_name" : "RiaritHssbg",
             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/expe"
+                "file": "MAIN",
+                "path" : "graph/expe",
+                "main_act": "MAIN"
             },
 
             "RiaritSsbg": {
@@ -45,36 +46,47 @@
         },
 
         "ZpdesHssbg":{
-            "name" : "ZpdesHssbg",
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/expe"
+            "algo_name" : "ZpdesHssbg",
+            "graph": { 
+                "file": "money_graph",
+                "path" : "graph/",
+                "main_act": "MAIN"
+            },
+
+            "riarit":{
+                "file": "riarit_xp",
+                "path" : "params_files/"
             },
 
             "ZpdesSsbg": {
-                "name" : "ZpdesSsbg",
-                "levelupdate": 0.6,
-
                 "ZpdesSsb" :{
                     "filter1": 0.2, 
                     "filter2": 0.8, 
                     "uniformval": 0.05,
-                    "stepUpdate" : 8,
-                    "size_window": 3
+                    "stepUpdate" : 6,
+                    "size_window": 3,
+                    "thresZBegin" : 0.4,
+                    "upZPDval" : 0.5,
+                    "deactZPDval" : 0.6,
+                    "promote_coeff" : 1,
+                    "thresHierarProm" : 0.3,
+                    "h_promote_coeff" : 1,
+                    "spe_promo" : 0
                 }
             }
         },
 
         "Sequence":{
-            "name" : "Sequence",
+            "algo_name" : "Sequence",
             "seq_path": {
                 "params_file" : "expe_seq",
                 "directory" : "sequence_def"
             },
 
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/expe"
+             "graph": { 
+                "file": "MAIN",
+                "path" : "graph/expe",
+                "main_act": "MAIN"
             },
 
             "toLvlYp": 12,
@@ -93,25 +105,38 @@
         },
 
         "RandomSequence":{
-            "name" : "RandomSequence",
+            "algo_name" : "RandomSequence",
             "random_type" : 0,
             "seq_path": {
                 "params_file" : "expe_seq",
                 "directory" : "sequence_def"
             },
 
-             "RT": { 
-                "name": "MAIN",
-                "path" : "RT/expe"
+             "graph": { 
+                "file": "money_graph",
+                "path" : "graph/",
+                "main_act": "MAIN"
             },
 
-            "RiaritSsbg": {
-                "levelupdate": 0.6,
+            "riarit":{
+                "file": "riarit_xp",
+                "path" : "params_files/"
+            },
 
-                "RiaritSsb": {
+            "ZpdesSsbg": {
+                "ZpdesSsb" :{
                     "filter1": 0.2, 
                     "filter2": 0.8, 
-                    "uniformval": 0.05
+                    "uniformval": 0.05,
+                    "stepUpdate" : 6,
+                    "size_window": 3,
+                    "thresZBegin" : 0.4,
+                    "upZPDval" : 0.5,
+                    "deactZPDval" : 0.6,
+                    "promote_coeff" : 1,
+                    "thresHierarProm" : 0.3,
+                    "h_promote_coeff" : 1,
+                    "spe_promo" : 0
                 }
             }
         }

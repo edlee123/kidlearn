@@ -10,20 +10,16 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-import os
-import sys
-from numpy import *
 import copy
-import re
-from zpdes import *
-import copy
-import functions as func
 import collections
+import numpy as np
+
+from ..functions import functions as func
+from .riarit import RiaritHssbg
 
 class Sequence(RiaritHssbg):
      
-    def __init__(self,params = None,  params_file = "seq_test_1", directory = "params_files"):
-
+    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"):
         sizeSerie = params['sizeSerie']
         RiaritHssbg.__init__(self, params = params)
         #self.fault = [0]*sizeSerie utsing ?
@@ -35,19 +31,16 @@ class Sequence(RiaritHssbg):
         self.nbPoint = 0
         self.toLvlYp = params['toLvlYp']
         self.minAns = params['minAns'] 
-        #self.ssbh = ZpdesHssbg(RT, levelupdate, filter1, filter2, uniformval, algo = "RiARiT")
-        return
 
     def getSeqLevel(self):
         return self.seqLevels
 
-    def reinit(self,ans,lvls,cGroup,nQuestion, nbPoint):
+    def reinit(self, ans, lvls, cGroup, nQuestion, nbPoint):
         self.answers = ans
         self.seqLevels = lvls
         self.currentGroup = cGroup
         self.num_question = nQuestion
         self.nbPoint = nbPoint
-        return
 
     def resetLevel(self):
         self.answers = [0]*len(self.answers)
@@ -68,12 +61,12 @@ class Sequence(RiaritHssbg):
             #self.seqLevels = [0]*len(self.acts)
         self.resetLevel();
 
-    def update(self,act = None, corsol = True, nbFault = 0, *args, **kwargs):
-        RiaritHssbg.update(self,act,corsol)
+    def update(self,act, result=True, nbFault=0, *args, **kwargs):
+        RiaritHssbg.update(self, act, result)
         #print " Answer %s" % self.answers
-        #print "corsol %s" % corsol
+        #print "result %s" % result
         #print "nbFaul %s" % nbFault
-        if corsol:
+        if result:
             self.answers[self.num_question] = 1
             self.nbPoint += max(5 - nbFault,3)
         #consecutive = 0
@@ -105,12 +98,10 @@ class Sequence(RiaritHssbg):
         act = copy.deepcopy(self.acts[self.currentGroup][self.seqLevels[self.currentGroup]])
         return act
 
-    def generate_acts(self, params = None,  params_file = "expe_seq",directory = "sequence_def"):
+    def generate_acts(self, params=None, params_file="expe_seq", directory="sequence_def"):
         params = params or func.load_json(params_file,directory)
         self.acts = []
         #seq_dict = collections.OrderedDict(params["activity"])
         #for key,act_groups  in params["activity"].items():
         for act_groups  in params["activity"]:
             self.acts.append(act_groups)
-
-        return

@@ -2,7 +2,7 @@
     "name" : "Sequence",
      "RT": { 
         "name": "MAIN",
-        "path" : "RT/expe"
+        "path" : "graph/expe"
     },
 
     "toLvlYp": 12,

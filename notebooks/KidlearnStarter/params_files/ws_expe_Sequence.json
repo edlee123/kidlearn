@@ -8,9 +8,15 @@
     "seq_manager": {
 
         "name" : "Sequence",
+        "seq_path": {
+                "params_file" : "expe_seq",
+                "directory" : "sequence_def"
+        },
+    
          "RT": { 
             "name": "MAIN",
-            "path" : "RT/expe"
+            "path" : "graph/expe",
+            "main_act": "MAIN"
         },
 
         "toLvlYp": 12,

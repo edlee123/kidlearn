@@ -14,32 +14,39 @@
 import numpy as np
 import copy
 import re
-from knowledge import *
+
+from ..knowledge import Knowledge
 
 class Exercise(object):
 
-    def __init__(self,act,knowledge_levels = None, knowledge_names = None, answer = None, gamma = [],  nbMax_try = 1, params = None, *args,**kwargs):
+    def __init__(self, act, knowledge_levels=None, knowledge_names=None, 
+            answer=None, nbMax_try=1, params=None, *args,**kwargs):
         # act : 
 
-        self._gamma = np.array(gamma)
         self._act = act
         self._answer = answer
         self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
-        self.add_attr(args,kwargs)
+        
         self._nbMax_try = nbMax_try
+        params = np.array(params)
+        
+        self.add_attr(args,kwargs)
+
+    @property
+    def state(self):
+        state = {}
+        state["act"] = self._act
+        state["answer"] = self._answer
+        state["knowledges"] = self.get_knowledges_level()
+        return state
 
     @property
     def nbMax_try(self):
         return self._nbMax_try
-    
 
     @property
     def act(self):
         return self._act
-
-    @property
-    def gamma(self):
-        return self._gamma
     
     @property
     def answer(self):
@@ -59,7 +66,7 @@ class Exercise(object):
     def __str__(self):
         return self.__repr__()
 
-    def get_knowledges_worked(self, by_names = 0, by_gamma = 1):
+    def get_knowledges_worked(self, by_names=0, by_gamma=1):
         if by_gamma:
             return [int(gamma > 0) for gamma in self._gamma]
         elif by_names:
@@ -68,14 +75,11 @@ class Exercise(object):
             return [self._knowledges.index(kc) for kc in self._knowledges if kc._level != 0]
 
     def get_knowledges_level(self):
-        levels = []
-        for kc in self._knowledges:
-            levels.append(kc._level)
-        return levels
+        return np.array([kc._level for kc in self._knowledges])
 
     def get_attr(self):
         return {"act": self._act, "knowledge" : self._knowledges, "answer" : self._answer}
 
-    def add_attr(self,*args,**kwargs):
+    def add_attr(self, *args, **kwargs):
         for key, val in kwargs.iteritems():
             object.__setattr__(self, key, val)

@@ -1,0 +1,7 @@
+numpy
+scipy
+seaborn
+matplotlib
+paramiko
+uuid
+importlib

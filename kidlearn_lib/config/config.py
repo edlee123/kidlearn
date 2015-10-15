@@ -10,23 +10,129 @@
 # Licence:     GNU Affero General Public License v3.0
 #-------------------------------------------------------------------------------
 
-from seq_manager import * 
-from exercise import *
-from student import *
-from knowledge import *
-from experimentation import *
-import functions as func
 import numpy as np
-import copy as copy
+import copy
 import json
 import os
+import re
+
+from ..seq_manager import seq_dict_gen
+from ..student import stud_dict_gen
+from ..functions import functions as func
+
+##############################################################
+## ID config generations management
+##############################################################
+
+def code_id(strid,strval,nbCar = 1):
+    return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
+
+def data_from_json(json,id_values = None,form = 0, ignore = ["file","path"]):
+    if id_values is None:
+        if form == 0:
+            id_values= {}
+        else:
+            id_values = []
+    for key,val in json.items():
+        if key not in ignore:
+            if isinstance(val,dict):
+                data_from_json(val,id_values,form,ignore)
+            else:
+                if form == 0:
+                    id_values[key] = val
+                elif form == 1:
+                    id_values.append(code_id(str(key),str(val)))
+                elif form == 2:
+                    id_values.append([str(key),str(val)])
+    return id_values
+
+def id_str_ftab(id_tab):
+    idstr = ""
+    for strValId in id_tab:
+        idstr += strValId
+    return idstr
+
+def generate_diff_config_id(config_list):
+    all_id = []
+    for conf in config_list:
+        all_id.append(data_from_json(conf,form =0))
+    final_all_id = []
+    for numConf in range(len(all_id)):
+        nconf_id = []
+        for key,val in all_id[numConf].items():
+            valOK = 0
+            for numConfb in range(len(all_id)):
+                if numConf != numConfb and val != all_id[numConfb][key]:
+                    valOK += 1
+            if valOK > 0 :
+                val = str(val)
+                val = val.replace(".","")
+                nconf_id.append(code_id(key,str(val)))
+        nconf_id.sort()
+        final_all_id.append(id_str_ftab(nconf_id))
+    
+    return final_all_id
+
+##############################################################
+## Multi Parameters For Algorithms
+##############################################################
+
+# Generate many parameters conf from base + file
+def exhaustive_params(multi_param_file, base_param_file, directory):
+    base_params = func.load_json(base_param_file,directory)
+    multi_params = func.load_json(multi_param_file,directory)
+    
+    params_configs = [base_params]
+    for paramKey,paramVal in multi_params.items():
+        access_keys = []
+        params_configs = gen_multi_conf(params_configs,paramKey,paramVal,access_keys)
+
+    return params_configs
+
+def gen_multi_conf(params_configs,paramKey,paramValue,access_keys):
+    naccess_keys = copy.deepcopy(access_keys)
+    naccess_keys.append(paramKey)
+    if isinstance(paramValue,list):
+        conf = copy.deepcopy(params_configs)
+        for pconf in conf:
+            nc = copy.deepcopy(pconf)
+            for newParamVal in paramValue:
+                nnc = copy.deepcopy(nc)
+                access_dict_value(nnc,naccess_keys,newParamVal)
+                params_configs.append(nnc)
+
+    elif isinstance(paramValue,dict):
+        for pkey,pval in paramValue.items():
+            params_configs = gen_multi_conf(params_configs,pkey,pval,naccess_keys)
+
+    return params_configs
+
+# acces to json value or repalce
+def access_dict_value(params,dict_keys, replace = None):
+    if len(dict_keys) > 1 :
+        return access_dict_value(params[dict_keys[0]],dict_keys[1:],replace)
+    else:
+        if replace != None:
+            params[dict_keys[0]] = replace
+        else:
+            return params[dict_keys[0]]
+
+##############################################################
+## Define Objects from Modules
+##############################################################
 
 # Define sequence manager
 ##############################################################
 
 def seq_manager(seq_params = None, params_file = None, directory = None):
-    seq_params = seq_params or func.load_json(params_file,directory)
-    seq_manager_name = seq_params["name"]
+    if seq_params != None:
+        seq_params = seq_params
+        if "file_name"in seq_params.keys():
+            params_file = seq_params["file_name"]
+            directory = seq_params["directory"]
+    if params_file != None :
+        seq_params = func.load_json(params_file,directory)
+    seq_manager_name = seq_params["algo_name"]
 
     return seq_dict_gen[seq_manager_name](seq_params)
 
@@ -54,6 +160,85 @@ def population(pop_params = None, params_file = None, directory = None):
 
     pop_params = pop_params or func.load_json(params_file,directory)
     return pop_dict_define[pop_params["model"]](pop_params)
+
+
+# Q population
+##############################################################
+
+def q_population(pop_params):
+    nb_students = pop_params["nb_students"]
+    mean = pop_params["mean"] 
+    var = pop_params["var"]
+
+    population_q_profiles = generate_q_profiles(nb_students,mean,var)
+    population = []
+
+    for stud_skills in population_q_profiles:
+        params = pop_params["student"]
+        params["knowledge_levels"] = stud_skills
+
+        population.append(params)
+
+    return population
+
+def generate_q_profiles(nb_students,mean,var):
+    
+    population_q_profiles = generate_normal_population(nb_students,mean,var)
+    for stud in population_q_profiles:
+        stud = correct_skill_vector(stud)
+    return population_q_profiles
+
+# KT population
+##############################################################
+
+def kt_population(pop_params):
+    nb_students = pop_params["nb_students"]
+    mean = pop_params["mean"] 
+    var = pop_params["var"]
+
+
+def generate_p_profiles(nb_students,p_student_profiles):
+    # To verify
+
+    nb_class = len(p_student_profiles)
+    nbStudClass = nb_students/nb_class
+    population_p_profiles = []
+    for p in p_student_profiles:
+        for i in range(0,nbStudClass):
+            population_p_profiles.append(p)
+    
+    return population_p_profiles
+
+# Population Generation Tools
+##############################################################
+
+def generate_normal_population(size_population, mean,var):
+    cov = np.diag(var)
+    population_normal = np.random.multivariate_normal(mean,cov,(size_population))
+    #for i in range(0,len(lvl)) :
+    #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
+    return population_normal
+
+
+def correct_skill_vector(skill_vector):
+    for i in [2,5]:
+        if skill_vector[i] > skill_vector[i-1]:
+            skill_vector[i] = skill_vector[i-1]
+    for i in range(len(skill_vector)):
+        if skill_vector[i] < 1 or skill_vector[i] > 1:
+            skill_vector[i] = min(max(skill_vector[i],0),1)
+        if i > 3: 
+            if skill_vector[i] > skill_vector[i-3]:
+                skill_vector[i] = skill_vector[i-1]
+        skill_vector[i] = round(skill_vector[i],2)
+    return skill_vector
+
+
+
+# OLD
+##############################################################
+def generate_kt_parametrisation():
+    return
 
 def population_profiles(model_student, stud_params):
     if model_student == 0:
@@ -84,105 +269,17 @@ def generate_pstudent_population():
 def generate_ktstudent_population(kt_profil = 0):
     population = []
     for i in range(nb_students):
-        population.append(KTStudent(knowledge_names = knowledge_names, knowledge_params = KTStudent_profils[kt_profil]))
+        population.append(KTstudent(knowledge_names = knowledge_names, knowledge_params = KTstudent_profils[kt_profil]))
     return population
 
 def generate_ktfeatures_population(kt_profil = 0):
     population = []
     for i in range(nb_students):
-        population.append(KTStudent(config._knowledges_conf))
+        population.append(KTstudent(config._knowledges_conf))
     return population
 
     return population
 
-# Generate population parameters
-##############################################################
-def generate_kt_parametrisation():
-    return
 
-def q_population(pop_params):
-    nb_students = pop_params["nb_students"]
-    mean = pop_params["mean"] 
-    var = pop_params["var"]
-
-    population_q_profiles = generate_q_profiles(nb_students,mean,var)
-    population = []
-
-    for stud_skills in population_q_profiles:
-        params = pop_params["student"]
-        params["knowledge_levels"] = stud_skills
-
-        population.append(params)
-
-    return population
-
-
-def generate_q_profiles(nb_students,mean,var):
-    
-    population_q_profiles = generate_normal_population(nb_students,mean,var)
-    for stud in population_q_profiles:
-        stud = correct_skill_vector(stud)
-    return population_q_profiles
-
-def generate_normal_population(size_population, mean,var):
-    cov = np.diag(var)
-    population_normal = np.random.multivariate_normal(mean,cov,(size_population))
-    #for i in range(0,len(lvl)) :
-    #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
-    return population_normal
-
-def generate_p_profiles(nb_students,p_student_profiles):
-    # To verify
-
-    nb_class = len(p_student_profiles)
-    nbStudClass = nb_students/nb_class
-    population_p_profiles = []
-    for p in p_student_profiles:
-        for i in range(0,nbStudClass):
-            population_p_profiles.append(p)
-    
-    return population_p_profiles
-
-def correct_skill_vector(skill_vector):
-    for i in [2,5]:
-        if skill_vector[i] > skill_vector[i-1]:
-            skill_vector[i] = skill_vector[i-1]
-    for i in range(len(skill_vector)):
-        if skill_vector[i] < 1 or skill_vector[i] > 1:
-            skill_vector[i] = min(max(skill_vector[i],0),1)
-        if i > 3: 
-            if skill_vector[i] > skill_vector[i-3]:
-                skill_vector[i] = skill_vector[i-1]
-        skill_vector[i] = round(skill_vector[i],2)
-    return skill_vector
-
-
-
-##################################################
-# Old things
-##################################################
-
-class Config(object):
-    def __init__(self):
-        knowledges_conf = []
-        knowledges_conf.append({"name" : "S1", "num_id":0, "beta_0": 0.1, "beta":[0.2,0,0]})
-        knowledges_conf.append({"name" : "S2", "num_id":1, "beta_0": 0, "beta":[0,0.2,0]})
-        knowledges_conf.append({"name" : "S3", "num_id":2, "beta_0": 0, "beta":[0.3,0,0.1]})
-        self.knowledges_conf = knowledges_conf
-
-        exercises = []
-        exercises.append(Exercise(0,gamma = [1,0,0]))
-        exercises.append(Exercise(0,gamma = [0.7,0,0]))
-        exercises.append(Exercise(0,gamma = [0,0.7,0]))
-        exercises.append(Exercise(0,gamma = [0.1,0,0.8]))
-        exercises.append(Exercise(0,gamma = [0.3,0,0.6]))
-        exercises.append(Exercise(0,gamma = [0.3,0.3,0.3]))
-        self._exercises = exercises
-
-    """
-    TO DO : 
-    Load config file
-    Load json file
-    Load with direct parameter
-    Load config from an other simulation (config copy)
-    """
+#TO DO : 
+#class Config(object):

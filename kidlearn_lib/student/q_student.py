@@ -10,9 +10,11 @@
 # Licence:     GNU Affero General Public License v3.0
 
 #-------------------------------------------------------------------------------
+import numpy as np
 
-from student import *
-import functions as func
+from .student import Student
+from ..functions import functions as func
+from ..knowledge import Knowledge
 
 class Qstudent(Student):
 
@@ -110,7 +112,7 @@ class Qstudent(Student):
         
         return prob
 
-    def answer(self,exercise, answer = None, nb_try = 0):#act,lvls):
+    def answer(self,exercise, nb_try = 0):#act,lvls):
         self.learn(exercise.get_knowledges_level())
         prob_correct = self.compute_prob_correct_answer(exercise.get_knowledges_level())
         #print prob_correct

@@ -1,21 +1,24 @@
 {
     "name" : "ZpdesHssbg",
-    "RT": { 
+    "graph": { 
         "name":"N1",
-        "path" : "RT/"
+        "path" : "graph/",
+        "main_act":"N1"
         },
 
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
-        "levelupdate": 0.6,
 
-        "ZpdesSsb": {
-            "name" : "ZpdesSsb",
+        "ZpdesSsb" :{
             "filter1": 0.2, 
             "filter2": 0.8, 
             "uniformval": 0.05,
-            "stepUpdate" : 8,
-            "size_window": 3
+            "stepUpdate" : 6,
+            "upZPDval" : 0.5,
+            "deactZPDval" : 0.6,
+            "promote_coeff" : 1,
+            "thresHierarProm" : 0.3,
+            "h_promote_coeff" : 1
         }
     }
 }
