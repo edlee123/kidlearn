@@ -1,5 +1,5 @@
 {
-    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence"],
+    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence","RandomSequence"],
     "nb_step" : 100,
     "ref_expe": "expe",
 
