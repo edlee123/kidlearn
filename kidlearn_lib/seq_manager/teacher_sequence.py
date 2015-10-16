@@ -14,8 +14,8 @@ import copy
 import collections
 import numpy as np
 
-from ..functions import functions as func
 from .riarit import RiaritHssbg
+from .. import functions as func
 
 class Sequence(RiaritHssbg):
      

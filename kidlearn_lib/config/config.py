@@ -18,7 +18,7 @@ import re
 
 from ..seq_manager import seq_dict_gen
 from ..student import stud_dict_gen
-from ..functions import functions as func
+from .. import functions as func
 
 ##############################################################
 ## ID config generations management
@@ -27,7 +27,7 @@ from ..functions import functions as func
 def code_id(strid,strval,nbCar = 1):
     return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
 
-def data_from_json(json,id_values = None,form = 0, ignore = ["file","path"]):
+def data_from_json(json,id_values = None,form = 0, ignore = ["file_name","path"]):
     if id_values is None:
         if form == 0:
             id_values= {}
@@ -79,6 +79,8 @@ def generate_diff_config_id(config_list):
 
 # Generate many parameters conf from base + file
 def exhaustive_params(multi_param_file, base_param_file, directory):
+    """/
+    """
     base_params = func.load_json(base_param_file,directory)
     multi_params = func.load_json(multi_param_file,directory)
     
@@ -126,7 +128,6 @@ def access_dict_value(params,dict_keys, replace = None):
 
 def seq_manager(seq_params = None, params_file = None, directory = None):
     if seq_params != None:
-        seq_params = seq_params
         if "file_name"in seq_params.keys():
             params_file = seq_params["file_name"]
             directory = seq_params["directory"]

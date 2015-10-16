@@ -9,6 +9,9 @@ Sign in, or create an account (<1min)
 Create a new project
 Enter the project
 in the Terminal command in the upper right corner, type "git clone https://github.com/flowersteam/kidlearn.git"
-When the clone is finished (few seconds), enter the directory kidlearn, and then the notebooks one.
+When the clone is finished (few seconds), enter the directory kidlearn and install kidlearn_lib :
+python setup.py install
+
+When the installation is finished then go to one of the notebooks directory.
 Open the notebook (click on name_file.ipynb) that you want to work. 
 Note: If a module is missing (and you're notified by Jupyter), you can add it via the terminal command "pip install --user MODULE"

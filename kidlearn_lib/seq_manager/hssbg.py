@@ -17,7 +17,7 @@ import pickle
 import json
 import numpy as np
 
-from ..functions import functions as func
+from .. import functions as func
 
 
 #########################################################

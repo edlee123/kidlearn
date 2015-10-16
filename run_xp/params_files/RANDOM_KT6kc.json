@@ -4,7 +4,7 @@
     "seq_path": 0,
 
     "graph": { 
-        "file" :"KT6kc_graph",
+        "file_name" :"KT6kc_graph",
         "path" : "graph/",
         "main_act" : "KT6kc"
         },
@@ -12,7 +12,6 @@
 
     "ZpdesSsbg": {
         "ZpdesSsb": {
-            "name" : "ZpdesSsb",
             "filter1": 0.20, 
             "filter2": 0.80, 
             "uniformval": 0.05,

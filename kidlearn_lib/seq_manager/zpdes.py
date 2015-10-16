@@ -14,7 +14,7 @@ import numpy as np
 
 from .riarit import RiaritHssbg, RiaritSsbg, RiaritSsb
 from .hssbg import HierarchicalSSBG,SSBanditGroup, SSbandit
-from ..functions import functions as func
+from .. import functions as func
 
 #########################################################
 #########################################################
@@ -29,7 +29,7 @@ class ZpdesHssbg(HierarchicalSSBG):
         HierarchicalSSBG.__init__(self, params=params)
         self.current_lvl_ex = {}
         if "riarit" in  params.keys():
-            self.riarit = RiaritHssbg(params_file=params["riarit"]["file"],directory = params["riarit"]["path"])
+            self.riarit = RiaritHssbg(params_file=params["riarit"]["file_name"], directory=params["riarit"]["path"])
         else:
             self.riarit = None
         #self.load_Error()
@@ -52,7 +52,7 @@ class ZpdesHssbg(HierarchicalSSBG):
 
 
     def CreateHSSBG(self,graph_infos):
-        graph_def = func.load_json(graph_infos["file"],graph_infos["path"])
+        graph_def = func.load_json(graph_infos["file_name"],graph_infos["path"])
         graph_def["current_ssbg"] = graph_def["act_prime"]
         mainSSBG = self.instantiate_ssbg(graph_def)
         #self.ncompetences = mainSSBG.ncompetences

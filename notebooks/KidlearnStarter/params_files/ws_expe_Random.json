@@ -7,15 +7,15 @@
 
     "seq_manager": {
 
-        "name" : "RandomSequence",
+        "algo_name" : "RandomSequence",
         "random_type" : 2,
         "seq_path": {
             "params_file" : "expe_seq",
             "directory" : "sequence_def"
         },
 
-         "RT": { 
-            "name": "MAIN",
+         "graph": { 
+            "file_name": "MAIN",
             "path" : "graph/expe",
             "main_act": "MAIN"
         },

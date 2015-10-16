@@ -11,14 +11,13 @@
 
     "seq_manager": {
 
-        "name" : "RiaritHssbg",
+        "algo_name" : "RiaritHssbg",
         "RT": { 
-            "name":"N1",
+            "file_name":"N1",
             "path" : "graph/test1"
             },
 
         "RiaritSsbg": {
-            "name" : "RiaritSsbg",
             "levelupdate": 0.6,
 
             "RiaritSsb": {

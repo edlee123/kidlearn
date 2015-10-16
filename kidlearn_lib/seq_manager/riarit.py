@@ -14,7 +14,7 @@ import os
 import numpy as np
 
 from .hssbg import HierarchicalSSBG,SSBanditGroup, SSbandit
-from ..functions import functions as func
+from .. import functions as func
 
 #########################################################
 #########################################################
@@ -65,7 +65,7 @@ class RiaritHssbg(HierarchicalSSBG):
         for actRT,hierarchy,i in zip(ssbg_father.param_values,ssbg_father.values_children ,range(len(ssbg_father.param_values))):
             for nameRT,hierar in zip(actRT,hierarchy) :
                 if hierar and nameRT not in self.SSBGs.keys():
-                    RT = {"file": nameRT, "path": self.graph_path}
+                    RT = {"file_name": nameRT, "path": self.graph_path}
                     #RT = "%s/%s.txt" % (self.graph_path, nameRT)
                     nssbg = self.instantiate_ssbg(RT)
                     self.SSBGs[nameRT] = nssbg
@@ -183,15 +183,15 @@ class RiaritSsbg(SSBanditGroup):
         return lvlDiff
     
     def loadRT(self, RT):
-        if os.path.exists(os.path.join(RT["path"],RT["file"]+".json")):
+        if os.path.exists(os.path.join(RT["path"],RT["file_name"]+".json")):
             self.load_jsonRT(RT)
         else:
             self.load_textRT(RT)
         self.CreateSSBs()
 
     def load_jsonRT(self, RT):
-        self.ID = RT["file"]
-        params_RT = func.load_json(RT["file"],RT["path"])
+        self.ID = RT["file_name"]
+        params_RT = func.load_json(RT["file_name"],RT["path"])
         self.competences = params_RT["competencies"]
         self.ncompetences = len(self.competences)
         self.estim_level = [0]*self.ncompetences
@@ -222,7 +222,7 @@ class RiaritSsbg(SSBanditGroup):
             self.nvalue.append(len(self.param_values[num_act]))
 
     def load_textRT(self, RT):
-        path_RT = os.path.join(RT["path"],RT["file"])+".txt"
+        path_RT = os.path.join(RT["path"],RT["file_name"])+".txt"
         reader = open(path_RT, 'rb')
         self.ID = ((path_RT.split("/")[-1]).split(".")[0])
         #self.ID = ((path_RT.split("/")[-1]).split(".")[0]).split("_")[1]

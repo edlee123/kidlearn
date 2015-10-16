@@ -12,7 +12,7 @@
 import numpy as np
 
 from .q_student import Qstudent
-from ..functions import functions as func
+from .. import functions as func
 
 class Pstudent(Qstudent):
 

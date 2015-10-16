@@ -15,7 +15,7 @@ from operator import mul
 
 from .student import Student
 from ..knowledge import KTFeatures
-from ..function import function as func
+from .. import function as func
 
 
 ################################################################################

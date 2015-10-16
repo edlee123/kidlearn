@@ -7,21 +7,19 @@
 
     "seq_manager": {
 
-        "name" : "ZpdesHssbg",
+        "algo_name" : "ZpdesHssbg",
         "graph": { 
-            "name": "money_graph",
+            "file_name": "money_graph",
             "path" : "graph/",
             "main_act": "MAIN"
         },
 
         "riarit":{
-            "name": "riarit_xp",
+            "file_name": "riarit_xp",
             "path" : "params_files/"
         },
 
         "ZpdesSsbg": {
-            "name" : "ZpdesSsbg",
-
             "ZpdesSsb" :{
                 "filter1": 0.2, 
                 "filter2": 0.8, 

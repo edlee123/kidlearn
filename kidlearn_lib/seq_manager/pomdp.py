@@ -12,8 +12,8 @@ import numpy.matlib as npmat
 import copy
 import scipy.sparse as sparse
 
-from ..functions import functions as func
 from ..config import datafile
+from .. import functions as func
 
 # To compare with matlab code
 #np.random.seed(20)

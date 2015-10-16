@@ -17,7 +17,7 @@ import copy
 import numpy as np
 
 from .zpdes import ZpdesHssbg
-from ..functions import functions as func
+from .. import functions as func
 
 class RandomSequence(ZpdesHssbg):
 
