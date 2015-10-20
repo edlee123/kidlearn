@@ -16,6 +16,7 @@ import sys
 import copy
 import json
 import numpy as np
+import uuid
 
 from ..seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
 from ..exercise import Exercise
@@ -103,6 +104,7 @@ class WorkingSession(object):
         self.params = params
 
         self._student = student or config.student(self.params["student"])
+        self.uuid = self._student.uuid
         self._seq_manager = seq_manager or config.seq_manager(self.params["seq_manager"])
 
         self._KC = self._student.KC_names
@@ -338,6 +340,7 @@ class Experiment(object):
             for key, val in kwargs.iteritems():
                 params[key] = val
         
+        self.uuid = str(uuid.uuid1())
         self.params = params
         self.logs = {}
 
@@ -403,19 +406,6 @@ class Experiment(object):
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self.nb_students,self.nb_step,ref)
         self.save_directory = "%s/%s/" % (self._directory,self._ref_simu)
         self.create_xp_directory()
-
-    #def student_simulation(self, student, seq_manager_name):
-    #    WorkingSession = WorkingSession(student,self.define_seq_manager(seq_manager_name))
-    #    WorkingSession.run(self.nb_step)
-    #    #print WorkingSession.get_WorkingSession_logs()
-    #    self._groups[seq_manager_name].append(WorkingSession)
-
-    #def population_simulation(self):
-    #    for seq_manager_name in self._seq_manager_list_name:
-    #        print seq_manager_name
-    #        population = copy.deepcopy(self._population)
-    #        for student in population:
-    #            self.student_simulation(student,seq_manager_name)
     
     def create_xp_directory(self):
         datafile.create_directories([self._directory,self.save_directory])

@@ -7,7 +7,7 @@
     "n_Observation" : 2,
     "gamma" : 0.99,
     "learn_model" : {
-        "file": "kt3_stud",
-        "dir" : "params_files"
+        "file_name": "stud_KT6kc",
+        "path" : "params_files/studModel"
     }
 }

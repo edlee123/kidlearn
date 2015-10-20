@@ -70,6 +70,7 @@ kidlearn_soft/
 Simulation/
 Expe/
 result_xp/
+*.bz2
 
 *.doc
 *.pdf

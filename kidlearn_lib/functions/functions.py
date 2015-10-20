@@ -123,3 +123,13 @@ def setattr_dic_or_default(obj, attrName, dic, defaultValue = 0):
         setattr(obj,attrName,dic[attrName])
     else:
         setattr(obj,attrName,defaultValue)
+
+# Acces to json value or repalce
+def access_dict_value(params, dict_keys, replace=None):
+    if len(dict_keys) > 1 :
+        return access_dict_value(params[dict_keys[0]],dict_keys[1:],replace)
+    else:
+        if replace != None:
+            params[dict_keys[0]] = replace
+        else:
+            return params[dict_keys[0]]

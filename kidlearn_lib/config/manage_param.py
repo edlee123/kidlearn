@@ -1,10 +1,10 @@
 #-*- coding: utf-8 -*-
-import functions as func
 import numpy as np
 import copy as copy
 import json
 import os
 import re
+from .. import functions as func
 
 ##############################################################
 ## General Param Loader
@@ -58,6 +58,8 @@ def generate_diff_config_id(config_list):
                 if numConf != numConfb and val != all_id[numConfb][key]:
                     valOK += 1
             if valOK > 0 :
+                val = str(val)
+                val = val.replace(".","")
                 nconf_id.append(code_id(key,str(val)))
         nconf_id.sort()
         final_all_id.append(id_str_ftab(nconf_id))
@@ -69,41 +71,52 @@ def generate_diff_config_id(config_list):
 ##############################################################
 
 # Generate many parameters conf from base + file
-def exhaustive_params(multi_param_file, base_param_file, directory, one_conf=None):
-    base_conf = func.load_json(base_param_file,directory)
-    multi_params = func.load_json(multi_param_file,directory)
+def multi_conf(multi_param_file=None, base_param_file=None, directory=None, combine=0, base_conf=None, multi_params=None, base_conf_in=1):
+    base_conf = base_conf or func.load_json(base_param_file,directory)
+    multi_params = multi_params or func.load_json(multi_param_file,directory)
     
     params_configs = [base_conf]
     for paramKey,paramVal in multi_params.items():
         access_keys = []
-        params_configs = gen_multi_conf(params_configs,paramKey,paramVal,access_keys)
+        params_configs = gen_multi_conf(params_configs,paramKey,paramVal,access_keys,combine)
+
+    if base_conf_in == 0:
+        del params_configs[0]
 
     return params_configs
 
-def gen_multi_conf(params_configs, paramKey, paramValue, access_keys):
+#gen multi conf with combinaison or not
+def gen_multi_conf(params_configs, paramKey, paramValue, access_keys, combine = 0):
     naccess_keys = copy.deepcopy(access_keys)
     naccess_keys.append(paramKey)
     if isinstance(paramValue,list):
-        conf = copy.deepcopy(params_configs)
-        for pconf in conf:
-            nc = copy.deepcopy(pconf)
-            for newParamVal in paramValue:
-                nnc = copy.deepcopy(nc)
-                access_dict_value(nnc,naccess_keys,newParamVal)
-                params_configs.append(nnc)
+        if combine:
+            conf = copy.deepcopy(params_configs)
+            for pconf in conf:
+                nc = copy.deepcopy(pconf)
+                for newParamVal in paramValue:
+                    nnc = copy.deepcopy(nc)
+                    func.access_dict_value(nnc,naccess_keys,newParamVal)
+                    params_configs.append(nnc)
+        else:
+            while len(params_configs) < len(paramValue)+1:
+                params_configs.append(copy.deepcopy(params_configs[0]))
+            for i in range(len(paramValue)):
+                if paramValue[i] != None:
+                    func.access_dict_value(params_configs[i+1],naccess_keys,paramValue[i])
 
     elif isinstance(paramValue,dict):
         for pkey,pval in paramValue.items():
-            params_configs = gen_multi_conf(params_configs,pkey,pval,naccess_keys)
+            params_configs = gen_multi_conf(params_configs,pkey,pval,naccess_keys,combine)
 
     return params_configs
 
 ##########################################################################
-# Generate one config from base config + new param file
+# Generate one config from base config + new param file 
+def gen_new_conf(base_param_file=None, new_param_file=None, directory=None, base_conf=None, new_params=None):
 
-def gen_new_conf(base_param_file, new_param_file, directory):
-    config = func.load_json(base_param_file,directory)
-    new_params = func.load_json(new_param_file,directory)
+    config = base_conf or func.load_json(base_param_file,directory)
+    new_params = new_params or func.load_json(new_param_file,directory)
 
     for paramKey,paramVal in new_params.items():
         access_keys = []
@@ -117,17 +130,7 @@ def change_conf(config, paramKey, paramValue, access_keys):
         for pkey,pval in paramValue.items():
             config = change_conf(config,pkey,pval,naccess_keys)
     else:
-        access_dict_value(config,naccess_keys,paramValue)
+        func.access_dict_value(config,naccess_keys,paramValue)
         
     return config
 
-########################################################################
-# acces to json value or repalce
-def access_dict_value(params, dict_keys, replace=None):
-    if len(dict_keys) > 1 :
-        return access_dict_value(params[dict_keys[0]],dict_keys[1:],replace)
-    else:
-        if replace != None:
-            params[dict_keys[0]] = replace
-        else:
-            return params[dict_keys[0]]

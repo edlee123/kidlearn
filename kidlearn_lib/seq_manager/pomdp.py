@@ -104,7 +104,7 @@ class POMDP(object):
                 self.save()
 
     def load_learn_model(self, mparams):
-        params = func.load_json(mparams["file"],mparams["dir"])
+        params = func.load_json(mparams["file_name"],mparams["path"])
 
         if params["model"] == "KTstudent":
             self._KC = params["knowledge_names"]
@@ -122,7 +122,7 @@ class POMDP(object):
         print "POMDP %s saved" % self._ref
 
     def load(self, load_p):
-        pomdp = datafile.load_file(load_p["file"],load_p["dir"])
+        pomdp = datafile.load_file(load_p["file_name"],load_p["path"])
         for key,val in pomdp.__dict__.items():
             object.__setattr__(self, key, val)
 

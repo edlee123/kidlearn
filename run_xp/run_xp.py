@@ -18,6 +18,8 @@ import os
 import sys
 import kidlearn_lib as k_lib
 
+from kidlearn_lib.config import manage_param as mp
+
 sys.path.append("../..")
 import plot_graphics as graph
 
@@ -44,7 +46,7 @@ def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, n
         files_to_load = {}
     
     def_files_to_load = {}
-    def_files_to_load["pomdp"] = {"file":"POMDP_{}".format(ref_xp), "dir":"data/pomdp"}
+    def_files_to_load["pomdp"] = {"file_name":"POMDP_{}".format(ref_xp), "path":"data/pomdp"}
     def_files_to_load["stud"] = "stud_{}".format(ref_xp)
     def_files_to_load["zpdes"] = "ZPDES_{}".format(ref_xp)
     def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
@@ -102,11 +104,11 @@ def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, n
 
 # Expe to tune ZPDES
 def expe_zpdes_promot(ref_xp="kt_multiZ",path_to_save="experimentation/data/", nb_step=100, nb_stud=100):
-    zpdes_confs = k_lib.config.exhaustive_params("multi_conf_test","ZPDES_KT6kc","params_files")
+    zpdes_confs = mp.multi_conf("multi_conf_test","ZPDES_KT6kc","params_files",combine=1)
     
     stud = k_lib.student.KTstudent(params_file="stud_KT6kc")
 
-    zpdes_confs = {k_lib.config.generate_diff_config_id(zpdes_confs)[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
+    zpdes_confs = {mp.generate_diff_config_id(zpdes_confs)[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
 
     wkgs = {}
     for ref,conf in zpdes_confs.items():
