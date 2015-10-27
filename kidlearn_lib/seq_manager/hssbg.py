@@ -236,7 +236,7 @@ class SSbandit(object):
         self.bandval = [0]*nval
         
         self.filter1 = params["filter1"]
-        self.filter2 = params["filter2"]
+        self.filter2 = 1 - params["filter1"]
         self.uniformval = params["uniformval"]
 
         self.success = [[] for x in xrange(nval)]

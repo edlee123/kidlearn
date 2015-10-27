@@ -8,8 +8,7 @@
     
     "ZpdesSsbg": {
         "ZpdesSsb": {
-            "filter1": 0.20, 
-            "filter2": 0.80, 
+            "filter1": 0.20,
             "uniformval": 0.05,
             "stepUpdate" : 6,
             "upZPDval" : 0.5,

@@ -227,6 +227,7 @@ class WorkingGroup(object):
             params = {}
         self.params = params
         self.logs = {}
+        self.uuid = str(uuid.uuid1())
 
         if WorkingSessions:
             self._working_sessions = WorkingSessions
@@ -268,7 +269,7 @@ class WorkingGroup(object):
     def step_forward(self):
         for ws in self._working_sessions:
             ws.step_forward()
-            
+
     def run(self,nb_ex):
         for ws in self._working_sessions:
             ws.run(nb_ex)
@@ -429,6 +430,11 @@ class Experiment(object):
     def load(self,filename = "sim"):
         #TODO
         return
+
+    def step_forward(self):
+        for name,group in self._groups.items():
+            for sub_group in group:
+                sub_group.step_forward()
 
     def run(self, nb_ex = None):
         nb_ex = nb_ex or self.nb_step

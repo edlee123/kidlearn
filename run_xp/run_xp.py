@@ -18,30 +18,128 @@ import os
 import sys
 import kidlearn_lib as k_lib
 import scipy.optimize as soptimize
+import uuid
 
 from kidlearn_lib.config import manage_param as mp
+from experiment_manager.job_queue import get_jobqueue
+from experiment_manager.job import IteratedJob
 
 sys.path.append("../..")
 import plot_graphics as graph
 
 # example of WorkingSession : one student and one seqequance manager
 
-def do_work_session():
-    WorkingSession = k_lib.experimentation.WorkingSession(params_file="worksess_test_1")
+#########################################################
+#########################################################
+# Xp on Avakas
+#########################################################
+
+def avakas_xp(objs_to_job):
+    jq_config = {
+        'jq_type': 'avakas',
+        'ssh_cfg':{'username':'bclement'},
+        'max_jobs' : 100
+    }
+
+    jq = get_jobqueue(**jq_config)
+
+    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/feature/xp_script#egg=kidlearn_lib'
+    expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/develop#egg=experiment_manager'
+    jrequirements = [expeManageUrl,kidleanrUrl]
+
+    for obj in objs_to_job:
+        file_to_save = obj.uuid+".dat"
+        jq.add_job(IteratedJob(filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 3600,virtual_env="test",requirements=jrequirements))
+
+    return jq
+
+def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
     
-    return
+    filter1_vals = [round(x,1) for x in np.arange(0.1,0.9,0.2)]
+    stepUp_vals = range(4,10,2)
+    upZPD_vals = [round(x,1) for x in np.arange(0.3,0.7,0.1)]
+    deact_vals = [round(x,1) for x in np.arange(0.5,0.9,0.1)]
+    prom_coef_vals = [round(x,1) for x in np.arange(0.2,2,0.3)]
 
-def optimize_zpdes():
-    x0 = [0.2,6,0.1,0.9,1]
-    bound = ((0,1),(0,None),(4,None),(0,1),(0,1),(0.01,None))
+    multi_confs = {
+        "ZpdesSsbg": {
+            "ZpdesSsb": {
+                "filter1": filter1_vals,
+                "stepUpdate" : stepUp_vals,
+                "upZPDval" : upZPD_vals,
+                "deactZPDval" : deact_vals,
+                "promote_coeff" : prom_coef_vals,
+            }
+        }
+    }
+
+    zpdes_confs = mp.multi_conf(base_param_file="ZPDES_KT6kc",directory="params_files/ZPDES",multi_params=multi_confs, combine=1)
+    #conf_ids = mp.generate_diff_config_id(zpdes_confs)
+    #zpdes_confs = {conf_ids[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
+    uid = str(uuid.uuid1())
+
+    jstr = json.dumps(zpdes_confs)
     
-    #options = {'disp': None, 'iprint': -1, 'gtol': 1e-05, 'eps': 1e-08, 'maxiter': 15000, 'ftol': 2.220446049250313e-09, 'maxcor': 10, 'maxfun': 15000}
-    #res = soptimize.minimize(calcul_cost_zpdes,x0,method='L-BFGS-B',bounds=bound,options=options)
+    k_lib.config.datafile.create_directories([save_path])
+    save_path = save_path + "KT6kc_all_confs.json"
+    k_lib.functions.write_in_file(save_path,jstr)
 
-    return res
+    return zpdes_confs
 
-def calcul_cost_zpdes(zpdes_param):
+def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/"):
+    stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
+
+    wkgs = {}
+    for ref,conf in zpdes_confs.items():
+        zpdes = k_lib.seq_manager.ZpdesHssbg(params=conf)
+        wss = []
+        for k in range(nb_stud):
+            wss.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(zpdes)))
+        wkgs["zpdes_{}".format(ref)] = [k_lib.experimentation.WorkingGroup(WorkingSessions=wss)]
+
+    xp = k_lib.experimentation.Experiment(WorkingGroups=wkgs,
+                        ref_expe=ref_xp,
+                        path_to_save=base_path_to_save,
+                        seq_manager_list=wkgs.keys(),
+                        nb_step=nb_step,
+                        population={"nb_students" : nb_stud, 
+                                    "model" : "KT_student"})
+    return xp
+
+
+def optimize_zpdes_on_avakas(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/"):
+    zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+
+    zpdes_to_test = zpdes_confs[0:10]
+    
+    conf_ids = mp.generate_diff_config_id(zpdes_to_test)
+    zpdes_to_test = {conf_ids[x] : zpdes_to_test[x] for x in range(len(zpdes_to_test))}
+
+    xp_list = [gen_xp_to_optimize(zpdes_to_test)]
+
+    jq = avakas_xp(xp_list)
+
+    #xp_list=[]
+    #nb_group_per_xp = 10
+    #nb_conf_to_test = 10 #len(zpdes_confs)
+    #for i in range(nb_conf_to_test/nb_group_per_xp):
+    #    if nb_group_per_xp < len(zpdes_confs)-i*nb_group_per_xp: 
+    #        nb_conf = nb_group_per_xp
+    #    else:
+    #        nb_conf = nb_group_per_xp - len(zpdes_confs)-i*nb_group_per_xp
+    #    
+   
+
+    return jq
+
+#########################################################
+# Xp on Avakas
+#########################################################
+#########################################################
+
+def calcul_cost_zpdes(zpdes_param,nb_stud = 100,nb_step = 100):
     print zpdes_param
+
     params = {
     "algo_name" : "ZpdesHssbg",
     "graph": { 
@@ -71,10 +169,10 @@ def calcul_cost_zpdes(zpdes_param):
     stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
     zpdes = k_lib.seq_manager.ZpdesHssbg(params=params)
     ws_tab_zpdes = []
-    for i in range(100):
+    for i in range(nb_stud):
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
     wG_zpdes = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_zpdes)
-    wG_zpdes.run(100)
+    wG_zpdes.run(nb_step)
     print np.mean(wG_zpdes.calcul_cost())
     return np.mean(wG_zpdes.calcul_cost())
 
