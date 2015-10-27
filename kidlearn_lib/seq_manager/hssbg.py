@@ -288,7 +288,7 @@ class SSbandit(object):
     
         nb_0 = 0
         for i in range(0,len(nn)) :
-            if nn[i] < pow(10,-30) :
+            if nn[i] < pow(10,-70) :
                 nb_0 += 1
         
         if nb_0 == len(nn):

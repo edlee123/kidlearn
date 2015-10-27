@@ -166,13 +166,19 @@ class WorkingSession(object):
     def update_manager(self, ex):
         self._seq_manager.update(ex.act, ex._answer)
 
-    # to delete
-
     def actual_step(self,ex = None):
         return SessionStep(copy.deepcopy(self._student.get_state()),copy.deepcopy(self._seq_manager.get_state()),copy.deepcopy(ex or self._current_ex))
         
     def save_actual_step(self,ex = None):
         self._step.append(self.actual_step(ex))
+
+    def compute_all_act_level(self, data, model="KT"):
+        if model == "KT":
+            pass
+        elif model == "":
+            pass
+        return
+
 
     ###########################################################################
     ##### Data Analysis tools 
@@ -259,6 +265,10 @@ class WorkingGroup(object):
 
         return self._working_sessions[num_stud]
 
+    def step_forward(self):
+        for ws in self._working_sessions:
+            ws.step_forward()
+            
     def run(self,nb_ex):
         for ws in self._working_sessions:
             ws.run(nb_ex)
@@ -402,19 +412,19 @@ class Experiment(object):
         for seqName in self._seq_manager_list_name:
             directory += "%s" % seqName[0]
         directory = "%sms%s" % (directory,self.model_student)
-        self._directory = "%s/%s" % (path,directory) 
+        self.path = "%s/%s" % (path,directory) 
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self.nb_students,self.nb_step,ref)
-        self.save_directory = "%s/%s/" % (self._directory,self._ref_simu)
+        self.save_path = "%s/%s_%s/" % (self.path,self._ref_simu,self.uuid)
         self.create_xp_directory()
     
     def create_xp_directory(self):
-        datafile.create_directories([self._directory,self.save_directory])
+        datafile.create_directories([self.path,self.save_path])
 
     def save_working_group_params(self,params):
         return
 
     def save(self):
-        datafile.save_file(self,self._ref_simu,self.save_directory)
+        datafile.save_file(self,self._ref_simu,self.save_path)
 
     def load(self,filename = "sim"):
         #TODO

@@ -17,6 +17,7 @@ import json
 import os
 import sys
 import kidlearn_lib as k_lib
+import scipy.optimize as soptimize
 
 from kidlearn_lib.config import manage_param as mp
 
@@ -29,6 +30,54 @@ def do_work_session():
     WorkingSession = k_lib.experimentation.WorkingSession(params_file="worksess_test_1")
     
     return
+
+def optimize_zpdes():
+    x0 = [0.2,6,0.1,0.9,1]
+    bound = ((0,1),(0,None),(4,None),(0,1),(0,1),(0.01,None))
+    
+    #options = {'disp': None, 'iprint': -1, 'gtol': 1e-05, 'eps': 1e-08, 'maxiter': 15000, 'ftol': 2.220446049250313e-09, 'maxcor': 10, 'maxfun': 15000}
+    #res = soptimize.minimize(calcul_cost_zpdes,x0,method='L-BFGS-B',bounds=bound,options=options)
+
+    return res
+
+def calcul_cost_zpdes(zpdes_param):
+    print zpdes_param
+    params = {
+    "algo_name" : "ZpdesHssbg",
+    "graph": { 
+        "file_name" :"KT6kc_graph",
+        "path" : "graph/",
+        "main_act" : "KT6kc"
+        },
+    
+    "ZpdesSsbg": {
+        "ZpdesSsb" :{
+            "filter1": zpdes_param[0], 
+            "filter2": 1-zpdes_param[0], 
+            "uniformval": 0.05,
+            "stepUpdate" : int(zpdes_param[2]),
+            "upZPDval" : zpdes_param[3],
+            "deactZPDval" : zpdes_param[4],
+            "promote_coeff" : zpdes_param[5],
+            "thresHierarProm" : 0.3,
+            "h_promote_coeff" : 1,
+            "thresZBegin" : 0.4,
+            "size_window": 3,
+            "spe_promo" : 0
+            }
+        }
+    }
+
+    stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
+    zpdes = k_lib.seq_manager.ZpdesHssbg(params=params)
+    ws_tab_zpdes = []
+    for i in range(100):
+        ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
+    wG_zpdes = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_zpdes)
+    wG_zpdes.run(100)
+    print np.mean(wG_zpdes.calcul_cost())
+    return np.mean(wG_zpdes.calcul_cost())
+
 
 # example of complete simulation
 def do_q_simu():
@@ -104,9 +153,9 @@ def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, n
 
 # Expe to tune ZPDES
 def expe_zpdes_promot(ref_xp="kt_multiZ",path_to_save="experimentation/data/", nb_step=100, nb_stud=100):
-    zpdes_confs = mp.multi_conf("multi_conf_test","ZPDES_KT6kc","params_files",combine=1)
+    zpdes_confs = mp.multi_conf("multi_conf_test","ZPDES_KT6kc","params_files/ZPDES",combine=1)
     
-    stud = k_lib.student.KTstudent(params_file="stud_KT6kc")
+    stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
 
     zpdes_confs = {mp.generate_diff_config_id(zpdes_confs)[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
 
@@ -126,7 +175,7 @@ def expe_zpdes_promot(ref_xp="kt_multiZ",path_to_save="experimentation/data/", n
                             population={"nb_students" : nb_stud, 
                                         "model" : "KT_student"})
     xp.run()
-    
+    xp.save()
     draw_xp_graph(xp, ref_xp, ["V1","V2","V3","V4","V5","V6"], nb_ex_type=[1,1,1,1,1,1])
 
     return xp
@@ -135,7 +184,7 @@ def draw_xp_histo(xp, ref_xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,
     # draw histo graph to visualise exercise in time
     for seq_name,group in xp._groups.items():
         data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=xp.nb_step+1, main_rt = xp.main_act,type_ex = type_ex, nb_ex_type=nb_ex_type)
-        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_directory), ref = "exTime_%s_%s" % (xp.ref_expe,seq_name),legend = type_ex,dataToUse = range(len([data])), show=0)
+        graph.kGraph.plot_cluster_lvl_sub([data],xp.nb_students,xp.nb_step, title = "%s \nStudent distribution per erxercices type over time" % (seq_name),path = "%s" % (xp.save_path), ref = "exTime_%s_%s" % (xp.ref_expe,seq_name),legend = type_ex,dataToUse = range(len([data])), show=0)
 
 def draw_xp_kc_curve(xp):
     # draw learning curve
@@ -151,7 +200,7 @@ def draw_xp_kc_curve(xp):
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
         
-        graph.kGraph.draw_curve([mean_data], labels=[xp._groups.keys()], nb_ex=len(data), typeData="skill_level", type_data_spe="" , ref="%s_%s" %(xp.ref_expe,skill_labels[k]), markers=None, colors=[["#00BBBB","green","black",'#FF0000']], line_type=['dashed','dashdot','solid',"dotted"], legend_position=5, std_data=[std_data], path= "%s" % (xp.save_directory), showPlot=False)
+        graph.kGraph.draw_curve([mean_data], labels=[xp._groups.keys()], nb_ex=len(data), typeData="skill_level", type_data_spe="" , ref="%s_%s" %(xp.ref_expe,skill_labels[k]), markers=None, colors=[["#00BBBB","green","black",'#FF0000']], line_type=['dashed','dashdot','solid',"dotted"], legend_position=5, std_data=[std_data], path= "%s" % (xp.save_path), showPlot=False)
 
 
 # Script to draw xp graphs
@@ -170,7 +219,7 @@ def calcul_xp_cost(xp):
     
     data_cost = {"mean": mean_cost, "std": std_cost}
 
-    path_to_save = "{}/{}".format(xp.save_directory, "cost.txt")
+    path_to_save = "{}/{}".format(xp.save_path, "cost.txt")
 
     with open(path_to_save, 'w') as outfile:
         json.dump(data_cost,outfile)

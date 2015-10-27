@@ -306,7 +306,7 @@ class ZpdesSsb(SSbandit):
             if len(self.success[x][first_step:last_step]) < min_nb_ans: 
                 succrate.append(0)
             else:
-                succrate.append(np.mean(self.success[x][first_step:last_step]))
+                succrate.append(np.mean(self.success[x][int(first_step):last_step]))
         #succrate = [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
         if len(succrate) > 1:
             return np.mean(succrate)

@@ -67,13 +67,13 @@
                     "filter2": 0.8, 
                     "uniformval": 0.05,
                     "stepUpdate" : 6,
-                    "size_window": 3,
-                    "thresZBegin" : 0.4,
                     "upZPDval" : 0.5,
                     "deactZPDval" : 0.6,
                     "promote_coeff" : 1,
                     "thresHierarProm" : 0.3,
                     "h_promote_coeff" : 1,
+                    "thresZBegin" : 0.4,
+                    "size_window": 3,
                     "spe_promo" : 0
                 }
             }

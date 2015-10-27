@@ -14,6 +14,8 @@ seaborn.set_style("darkgrid")
 
 from scipy.cluster.vq import vq, kmeans, whiten, kmeans2
 import copy
+import colorsys
+
 
 ###################################################################
 ###                   Variable global Graph                    ###
@@ -966,8 +968,21 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
     plt.xlabel(xylabels[0], fontsize=20)
     plt.ylabel(xylabels[1], fontsize=20)
     
+    colorsBis = []
     for nbPdata in range(0,len(data)):
         nb_group = len(data[nbPdata])
+        for group in range(0,nb_group):
+            HSV_tuples = [(x*1.0/nb_group, 0.5, 0.5) for x in range(nb_group)]
+            #RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+            RGB_tuples2 = [colorsys.hsv_to_rgb(*x) for x in HSV_tuples]
+            rgb2 = [tuple([(x*255) for x in y]) for y in RGB_tuples2]
+            colorsTmp = ['#%02x%02x%02x' % x for x in rgb2]
+            colorsBis.append(colorsTmp)
+
+
+    for nbPdata in range(0,len(data)):
+        nb_group = len(data[nbPdata])
+
         for group in range(0,nb_group):
             _lineWidth = 2
             if  line_type[(nbPdata*nb_group + group) % len(line_type)] == 'solid' :
@@ -989,7 +1004,7 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
             #x = range(len(data[nbPdata][group]))  
             x = range(len(data[nbPdata][group]))
             if std_data == None : 
-                plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
+                plt.plot(x, data[nbPdata][group], label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             else:
 
                 y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(nb_ex)]
@@ -1002,9 +1017,9 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
                 #        y3[i] += abs(y4[i])
                 #        y4[i] = 0
 
-                plt.fill_between(x,y3, y4, facecolor = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], alpha=0.1)
-                plt.plot(x, data[nbPdata][group], label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
-                #plt.errorbar(x, data[nbPdata][group],std_data[nbPdata][group], errorevery = 5)#, label = lab, color = colors[nbPdata % len(colors)][group % len(colors[nbPdata % len(colors)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
+                plt.fill_between(x,y3, y4, facecolor = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], alpha=0.1)
+                plt.plot(x, data[nbPdata][group], label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
+                #plt.errorbar(x, data[nbPdata][group],std_data[nbPdata][group], errorevery = 5)#, label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             
             if markers != None: # and len(markers[group]) > skill:
                 markers_data = []
