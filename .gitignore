@@ -54,6 +54,7 @@ docs/_build/
 
 # Project spe
 kidlearn_soft/
+*/jobs/*
 *data/
 *.ipynb_checkpoints/
 .ipynb_checkpoints/
@@ -71,6 +72,7 @@ Simulation/
 Expe/
 result_xp/
 *.bz2
+*.dat
 
 *.doc
 *.pdf

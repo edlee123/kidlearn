@@ -219,6 +219,7 @@ class WorkingSession(object):
 #########################################################
 ## class WorkingGroup
 class WorkingGroup(object):
+
     def __init__(self, params = None, params_file = None, directory = "params_files",population = None, WorkingSessions = None, *args, **kwargs):
         #params : 
         if params != None or params_file != None: 
@@ -239,7 +240,6 @@ class WorkingGroup(object):
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}
                 self._working_sessions.append(WorkingSession(params = params))
 
-
     @property
     def KC(self):
         return self._working_sessions[0].KC
@@ -256,7 +256,6 @@ class WorkingGroup(object):
     def students(self):
         students = [ws.student for ws in self._working_sessions]
         return students
-    
 
     def get_WorkingSession(self,num_stud = 0, id_stud = None):
         if id_stud:
@@ -366,7 +365,7 @@ class Experiment(object):
         self.ref_expe = self.params["ref_expe"]
         self.do_simu_path(self.params["ref_expe"], path = self.params["path_to_save"])
 
-        if WorkingGroups:
+        if WorkingGroups != None:
             self._groups = WorkingGroups
 
         else:
@@ -447,7 +446,10 @@ class Experiment(object):
         for sub_group in group:
             sub_group.run(nb_ex)
 
-    
+    def merge(self,xp_bis):
+        for key, groups in xp_bis.groups:
+            pass
+
     ###########################################################################
     ##### Data Analysis tools 
 

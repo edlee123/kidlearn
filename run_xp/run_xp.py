@@ -12,7 +12,7 @@
 
 #-------------------------------------------------------------------------------
 import numpy as np
-import copy 
+import copy
 import json
 import os
 import sys
@@ -22,7 +22,7 @@ import uuid
 
 from kidlearn_lib.config import manage_param as mp
 from experiment_manager.job_queue import get_jobqueue
-from experiment_manager.job import IteratedJob
+from experiment_manager.job.kidlearn_job import  KidlearnJob
 
 sys.path.append("../..")
 import plot_graphics as graph
@@ -49,7 +49,20 @@ def avakas_xp(objs_to_job):
 
     for obj in objs_to_job:
         file_to_save = obj.uuid+".dat"
-        jq.add_job(IteratedJob(filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 3600,virtual_env="test",requirements=jrequirements))
+        jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
+
+    return jq
+
+def local_xp(objs_to_job):
+    jq_config = {
+        'jq_type': 'local'
+    }
+
+    jq = get_jobqueue(**jq_config)
+
+    for obj in objs_to_job:
+        file_to_save = obj.uuid+".dat"
+        jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100, estimated_time = 3600))
 
     return jq
 
@@ -107,17 +120,18 @@ def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, b
     return xp
 
 
-def optimize_zpdes_on_avakas(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/"):
-    zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+def xp_to_job(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/", first_conf=0, last_conf=10, zpdes_confs = None, conf_ids = None):
+    zpdes_confs = zpdes_confs or k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+    conf_ids = conf_ids or mp.generate_diff_config_id(zpdes_confs)
 
-    zpdes_to_test = zpdes_confs[0:10]
-    
-    conf_ids = mp.generate_diff_config_id(zpdes_to_test)
-    zpdes_to_test = {conf_ids[x] : zpdes_to_test[x] for x in range(len(zpdes_to_test))}
+    zpdes_to_test = zpdes_confs[first_conf:last_conf]
+    conf_ids_to_test = conf_ids[first_conf:last_conf]
 
-    xp_list = [gen_xp_to_optimize(zpdes_to_test)]
+    zpdes_to_test = {conf_ids_to_test[x] : zpdes_to_test[x] for x in range(len(zpdes_to_test))}
 
-    jq = avakas_xp(xp_list)
+    xp = gen_xp_to_optimize(zpdes_to_test,nb_stud=nb_stud,nb_step=nb_step)
+
+    #jq = avakas_xp(xp_list)
 
     #xp_list=[]
     #nb_group_per_xp = 10
@@ -128,9 +142,28 @@ def optimize_zpdes_on_avakas(base_ref_xp="optimize",nb_stud=1000,nb_step=100, ba
     #    else:
     #        nb_conf = nb_group_per_xp - len(zpdes_confs)-i*nb_group_per_xp
     #    
-   
 
-    return jq
+    return xp
+
+def full_optimize_zpdes(nb_group_per_xp=10):
+    zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+    conf_ids = mp.generate_diff_config_id(zpdes_confs)
+
+    nb_conf_to_test = len(zpdes_confs)
+
+    xp_list = []
+    for i in range(nb_conf_to_test/nb_group_per_xp):
+        if nb_group_per_xp < len(zpdes_confs)-i*nb_group_per_xp: 
+            nb_conf = nb_group_per_xp
+        else:
+            nb_conf = nb_group_per_xp - len(zpdes_confs)-i*nb_group_per_xp
+
+        first_conf = i*nb_group_per_xp
+        last_conf = i*nb_group_per_xp + nb_conf
+
+        xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=10, nb_step=50))
+
+    return xp_list
 
 #########################################################
 # Xp on Avakas
@@ -309,15 +342,19 @@ def draw_xp_graph(xp, ref_xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,
     return 
 
 # calcul xp costs 
-def calcul_xp_cost(xp):
+def calcul_xp_cost(xp = None, cost = None):
     #calcul cost for each student
-    cost = xp.calcul_cost()
+    if cost is not None:
+        cost = cost
+        path_to_save = "mean_std_cost.json"
+    else:
+        cost = xp.calcul_cost()
+        path_to_save = "{}/{}".format(xp.save_path, "cost.txt")
     mean_cost = {key: np.mean(cost[key]) for key in cost.keys()}
     std_cost = {key: np.std(cost[key]) for key in cost.keys()}
     
     data_cost = {"mean": mean_cost, "std": std_cost}
 
-    path_to_save = "{}/{}".format(xp.save_path, "cost.txt")
 
     with open(path_to_save, 'w') as outfile:
         json.dump(data_cost,outfile)
