@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/cm/local/apps/torque/current/spool/mom_priv/jobs/4055358.master.cm.cluster.SC", line 25, in <module>
-    job.run()
-  File "/home/bclement/virtualenvs/test/src/experiment-manager/experiment_manager/job/job.py", line 52, in run
-    self.script()
-  File "/home/bclement/virtualenvs/test/src/experiment-manager/experiment_manager/job/classic_job.py", line 66, in script
-    getattr(self.data,self.step_fun)()
-AttributeError: 'Experiment' object has no attribute 'step_forward'

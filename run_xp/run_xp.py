@@ -21,20 +21,21 @@ import scipy.optimize as soptimize
 import uuid
 
 from kidlearn_lib.config import manage_param as mp
+from kidlearn_lib import functions as func
 from experiment_manager.job_queue import get_jobqueue
 from experiment_manager.job.kidlearn_job import  KidlearnJob
 
 sys.path.append("../..")
 import plot_graphics as graph
 
-# example of WorkingSession : one student and one seqequance manager
+# example of WorkingSession : one student and one sequence manager
 
 #########################################################
 #########################################################
 # Xp on Avakas
 #########################################################
 
-def avakas_xp(objs_to_job):
+def avakas_xp(objs_to_job=None):
     jq_config = {
         'jq_type': 'avakas',
         'ssh_cfg':{'username':'bclement'},
@@ -44,32 +45,34 @@ def avakas_xp(objs_to_job):
     jq = get_jobqueue(**jq_config)
 
     kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/feature/xp_script#egg=kidlearn_lib'
-    expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/develop#egg=experiment_manager'
+    expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl,kidleanrUrl]
 
-    for obj in objs_to_job:
-        file_to_save = obj.uuid+".dat"
-        jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
+    if objs_to_job != None :
+        for obj in objs_to_job:
+            file_to_save = obj.uuid+".dat"
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
 
     return jq
 
-def local_xp(objs_to_job):
+def local_xp(objs_to_job=None):
     jq_config = {
         'jq_type': 'local'
     }
 
     jq = get_jobqueue(**jq_config)
 
-    for obj in objs_to_job:
-        file_to_save = obj.uuid+".dat"
-        jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100, estimated_time = 3600))
+    if objs_to_job != None :
+        for obj in objs_to_job:
+            file_to_save = obj.uuid+".dat"
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100, estimated_time = 3600))
 
     return jq
 
 def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
     
     filter1_vals = [round(x,1) for x in np.arange(0.1,0.9,0.2)]
-    stepUp_vals = range(4,10,2)
+    stepUp_vals = range(5,11,2)
     upZPD_vals = [round(x,1) for x in np.arange(0.3,0.7,0.1)]
     deact_vals = [round(x,1) for x in np.arange(0.5,0.9,0.1)]
     prom_coef_vals = [round(x,1) for x in np.arange(0.2,2,0.3)]
@@ -100,7 +103,8 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
     return zpdes_confs
 
 def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/"):
-    stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
+    studconf = func.load_json(params_file="stud_KT6kc",directory="params_files/studModel")
+    #stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
 
     wkgs = {}
     for ref,conf in zpdes_confs.items():
@@ -145,13 +149,19 @@ def xp_to_job(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save
 
     return xp
 
-def full_optimize_zpdes(nb_group_per_xp=10):
+def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
     zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
     conf_ids = mp.generate_diff_config_id(zpdes_confs)
 
     nb_conf_to_test = len(zpdes_confs)
 
-    xp_list = []
+    if xp_type == 1: jq = avakas_xp()
+    else: jq = local_xp()
+
+    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/feature/xp_script#egg=kidlearn_lib'
+    expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
+    jrequirements = [expeManageUrl,kidleanrUrl]
+
     for i in range(nb_conf_to_test/nb_group_per_xp):
         if nb_group_per_xp < len(zpdes_confs)-i*nb_group_per_xp: 
             nb_conf = nb_group_per_xp
@@ -161,9 +171,42 @@ def full_optimize_zpdes(nb_group_per_xp=10):
         first_conf = i*nb_group_per_xp
         last_conf = i*nb_group_per_xp + nb_conf
 
-        xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=10, nb_step=50))
+        xp = xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step)
 
-    return xp_list
+        file_to_save = xp.uuid+".dat"
+        if xp_type == 1:
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=xp,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
+        else:
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=xp, step_fun="step_forward", steps=100, estimated_time = 3600))
+
+        #xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step))
+
+    return jq
+
+def cost_evol_conf(cost_mean, ref_conf):
+    conf_dict_cost = []
+    for key,val in cost_mean.items():
+        conf_dict_cost.append(find_zpdes_conf(key,val))
+
+    return conf_dict_cost
+
+def find_zpdes_conf(confkey,cost=None):
+    #for confkey,val in cost_mean.items():
+    strconf = func.spe_split('_',confkey)[1]
+    paramsconf = func.spe_split('[0-9]',strconf)
+    valsconf = func.spe_split('[a-z]',strconf)
+    values = {}
+    for key,val in zip(paramsconf,valsconf):
+        if int(val) > 100:
+            val = val[1:]
+        
+        if val[0] == "0":
+            val = "{}.{}".format(val[0],val[1:])
+
+        values[key] = float(val)
+    values["cost"]=cost
+
+    return values
 
 #########################################################
 # Xp on Avakas
@@ -244,10 +287,35 @@ def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, n
     ws_tab_pomdp = []
     pomdP = k_lib.seq_manager.POMDP(load_p = files_to_load["pomdp"])
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
-    stud = k_lib.student.KTstudent(params_file = files_to_load["stud"])
-    zpdes = k_lib.seq_manager.ZpdesHssbg(params_file = files_to_load["zpdes"])
-    riarit = k_lib.seq_manager.RiaritHssbg(params_file = files_to_load["riarit"])
-    random = k_lib.seq_manager.RandomSequence(params_file = files_to_load["random"])
+    stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
+    zpdes_params = {
+        "algo_name" : "ZpdesHssbg",
+        "graph": { 
+            "file_name" :"KT6kc_graph",
+            "path" : "graph/",
+            "main_act" : "KT6kc"
+            },
+        
+        "ZpdesSsbg": {
+            "ZpdesSsb": {
+                "filter1": 0.50,
+                "uniformval": 0.05,
+                "stepUpdate" : 6,
+                "upZPDval" : 0.6,
+                "deactZPDval" : 0.5,
+                "promote_coeff" : 0.2,
+                "thresHierarProm" : 0.5,
+                "h_promote_coeff" : 0.25,
+                "size_window": 3,
+                "spe_promo": 0
+            }
+        }
+    }
+
+
+    zpdes = k_lib.seq_manager.ZpdesHssbg(params=zpdes_params)
+    riarit = k_lib.seq_manager.RiaritHssbg(params_file = files_to_load["riarit"],directory="params_files/RIARIT")
+    random = k_lib.seq_manager.RandomSequence(params_file = files_to_load["random"],directory="params_files/RANDOM")
 
     for i in range(nb_stud):
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
