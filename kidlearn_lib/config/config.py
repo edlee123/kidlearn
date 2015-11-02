@@ -116,7 +116,7 @@ def generate_p_profiles(nb_students,p_student_profiles):
 
 def generate_normal_population(size_population, mean,var):
     cov = np.diag(var)
-    population_normal = np.random.multivariate_normal(mean,cov,(size_population))
+    population_normal = np.random.multivariate_normal(mean,cov,size_population)
     #for i in range(0,len(lvl)) :
     #    print "%s max : %s min : %s" %(i, max(lvl[i]),min(lvl[i]))
     return population_normal
