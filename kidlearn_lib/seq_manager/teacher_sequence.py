@@ -19,7 +19,7 @@ from .. import functions as func
 
 class Sequence(RiaritHssbg):
      
-    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"):
+    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"): 
         sizeSerie = params['sizeSerie']
         RiaritHssbg.__init__(self, params = params)
         #self.fault = [0]*sizeSerie utsing ?

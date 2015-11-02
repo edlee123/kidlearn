@@ -18,6 +18,8 @@ def load_param(file_name, directory):
 ##############################################################
 
 def code_id(strid, strval, nbCar = 1):
+    nstrid=""
+    strid = [ nstrid+x for x in func.spe_split("[0-9]",strid)]
     return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
 
 def data_from_json(json, id_values=None, form=0, ignore=["name","path"]):
