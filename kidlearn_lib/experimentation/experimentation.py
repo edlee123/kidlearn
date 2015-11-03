@@ -20,7 +20,7 @@ import uuid
 
 from ..seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
 from ..exercise import Exercise
-from ..student import Student, Pstudent, Qstudent, KTstudent
+from ..student import Student, Pstudent, Qstudent, KTstudent, Population
 from ..config import datafile
 from .. import config
 from .. import functions as func
@@ -235,6 +235,9 @@ class WorkingGroup(object):
 
         else:
             population = population or config.population(params = params["population"])
+            if type(population) == Population:
+                population = population.students
+
             self._working_sessions = []
             for student_params in population:
                 params = {"student": student_params, "seq_manager": self.params["seq_manager"]}

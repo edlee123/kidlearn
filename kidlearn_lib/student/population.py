@@ -16,6 +16,7 @@ import uuid
 import copy
 
 from .student import Student
+from .kt_student import KTstudent
 from .. import functions as func
 
 
@@ -31,37 +32,39 @@ class Population(object):
 
         self.uuid = str(uuid.uuid1())
         self.base_model = params["base_model"]
-        self.perturbated_models = params["base_model"]
+        self.perturbed_models = params
         self.nb_students = params["nb_students"]
         self.students_models = []
+        self.students = []
+        self.perturb_KT_model()
 
 
-    def perturbate_KT_model(self):
-        trans_dep_mv = perturbated_models["kc_trans_dep"]
+    def perturb_KT_model(self):
+        trans_dep_mv = self.perturbed_models["kc_trans_dep"]
         trans_dep_pert = []
         for i in range(len(self.base_model["kc_trans_dep"])):
             mean = trans_dep_mv["mean"][i]
             cov = np.diag(trans_dep_mv["var"][i])
             trans_dep_pert.append(np.array(np.random.multivariate_normal(mean,cov,self.nb_students)))
 
-        kt_mv = perturbated_models["KT"]
+        kt_mv = self.perturbed_models["KT"]
         kt_pert = {}
         for key in self.base_model["KT"].keys():
-            mean = kt_params["mean"][key]
-            cov = np.diag(kt_params["var"][key])
+            mean = kt_mv["mean"][key]
+            cov = np.diag(kt_mv["var"][key])
             kt_pert[key] = np.array(np.random.multivariate_normal(mean,cov,self.nb_students))
+            for i in range(len(kt_pert[key])):
+                for j in range(len(kt_pert[key][i])):
+                    if kt_pert[key][i][j]<0:
+                        kt_pert[key][i][j] = 0.01
 
         for i in range(self.nb_students):
             new_model = copy.deepcopy(self.base_model)
             for x in range(len(trans_dep_pert)):
                 new_model["kc_trans_dep"][x] = np.array(new_model["kc_trans_dep"][x]) - trans_dep_pert[x][i]
+                new_model["kc_trans_dep"][x] = [max(new_model["kc_trans_dep"][x][y],0.01) for y in range(len(new_model["kc_trans_dep"][x]))]
+
             for key in self.base_model["KT"].keys():
                 new_model["KT"][key] = np.array(new_model["KT"][key]) - kt_pert[key][i]
             self.students_models.append(new_model)
-
-
-
-
-        
-    def gen_population(self):
-        pass
+            self.students.append(KTstudent(params=new_model))

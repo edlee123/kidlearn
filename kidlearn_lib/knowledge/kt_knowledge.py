@@ -52,6 +52,7 @@ class KTKnowledge(Knowledge):
             prob = adding_prob + self.p_T[pT_idx]
 
         if self._level != 1:
+            #print prob
             learn = np.random.multinomial(1,[1-prob,prob])
             learn = np.nonzero(learn==1)[0][0]
             if learn : 

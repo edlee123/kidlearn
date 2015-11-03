@@ -34,8 +34,12 @@ class KTstudent(Student):
             name = self.params["knowledge_names"][i]
             level = self.params["knowledge_levels"][i]
             kc_params = {}
+            
             for kt_keys in self.params["KT"].keys():
-                kc_params[kt_keys] = self.params["KT"][kt_keys][i]
+                if kt_keys == "L0":
+                    kc_params[kt_keys] = max(self.params["KT"][kt_keys][i],0)
+                else:
+                    kc_params[kt_keys] = max(self.params["KT"][kt_keys][i],0.01)
             
             self._knowledges.append(KTKnowledge(name,level,kc_params))
 
@@ -68,8 +72,12 @@ class KTstudent(Student):
 
     def emission_prob(self,exercise):
         prob_correct = []
+        #print "yolo"
         for kc in exercise._knowledges:
+            #print kc
+            #print kc.level
             if kc.level > 0 :
+                #print self.get_knowledge(kc.name).emission_prob()
                 prob_correct.append(self.get_knowledge(kc.name).emission_prob())
 
         return np.mean(prob_correct)

@@ -104,7 +104,7 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
 
 def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/"):
     studconf = func.load_json(params_file="stud_KT6kc",directory="params_files/studModel")
-    #stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
+    stud = k_lib.student.KTstudent(params_file="stud_KT6kc",directory="params_files/studModel")
 
     wkgs = {}
     for ref,conf in zpdes_confs.items():
@@ -213,6 +213,30 @@ def find_zpdes_conf(confkey,cost=None):
 #########################################################
 #########################################################
 
+def perturbated_population(zpdes_confs,ref_xp="perturbation",nb_step=100, base_path_to_save="experimentation/data/"):
+    population_conf = func.load_json(params_file="perturbation_KT6kc",directory="params_files/studModel")
+    population = k_lib.student.Population(params=population_conf)
+    nb_stud = population.nb_students
+
+    wkgs = {}
+    for ref,conf in zpdes_confs.items():
+        zpdes = k_lib.seq_manager.ZpdesHssbg(params=conf)
+        wss = []
+        for k in range(nb_stud):
+            wss.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(population.students[k])), seq_manager=copy.deepcopy(zpdes))
+        wkgs["zpdes_{}".format(ref)] = [k_lib.experimentation.WorkingGroup(WorkingSessions=wss)]
+
+    xp = k_lib.experimentation.Experiment(WorkingGroups=wkgs,
+                        ref_expe=ref_xp,
+                        path_to_save=base_path_to_save,
+                        seq_manager_list=wkgs.keys(),
+                        nb_step=nb_step,
+                        population={"nb_students" : nb_stud, 
+                                    "model" : "KT_student"})
+    return xp
+
+
+
 def calcul_cost_zpdes(zpdes_param,nb_stud = 100,nb_step = 100):
     print zpdes_param
 
@@ -264,7 +288,7 @@ def do_q_simu():
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title="%s \nStudent distribution per erxercices type over time" % ("test"), path="simulation/graphics/", ref="clust_xseq_global_%s" % (seq_name), legend=["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"], dataToUse=range(len([data])))
 
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
-def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, nb_stud=100, files_to_load=None, ref_bis=""):
+def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb_stud=100, files_to_load=None, ref_bis="perturbation"):
     if files_to_load == None:
         files_to_load = {}
     
@@ -286,9 +310,11 @@ def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, n
     ws_tab_random = []
     ws_tab_pomdp = []
     pomdP = k_lib.seq_manager.POMDP(load_p = files_to_load["pomdp"])
+    
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
-    stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
-    zpdes_params = {
+    #stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
+    
+    zpdes_params2 = {
         "algo_name" : "ZpdesHssbg",
         "graph": { 
             "file_name" :"KT6kc_graph",
@@ -312,23 +338,28 @@ def kt_expe(ref_xp="KT_PZR", path_to_save="experimentation/data/", nb_step=51, n
         }
     }
 
+    #population_conf = func.load_json()
+    population = k_lib.student.Population(params_file="perturbation_KT6kc",directory="params_files/studModel")
+    nb_stud = population.nb_students
 
-    zpdes = k_lib.seq_manager.ZpdesHssbg(params=zpdes_params)
-    riarit = k_lib.seq_manager.RiaritHssbg(params_file = files_to_load["riarit"],directory="params_files/RIARIT")
-    random = k_lib.seq_manager.RandomSequence(params_file = files_to_load["random"],directory="params_files/RANDOM")
+    zpdes_params = func.load_json(file_name=files_to_load["zpdes"],dir_path="params_files/ZPDES")
+    zpdes = k_lib.seq_manager.ZpdesHssbg(zpdes_params)#params=zpdes_params)
+    riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
+    random = k_lib.seq_manager.RandomSequence(params_file=files_to_load["random"],directory="params_files/RANDOM")
 
     for i in range(nb_stud):
+        stud = population.students[i]
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
         ws_tab_pomdp.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(pomdP)))
-        ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
+        #ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
         ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(random)))
 
     wG_zpdes = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_zpdes)
     wG_pomdp = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_pomdp)
-    wG_riarit = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_riarit)
+    #wG_riarit = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_riarit)
     wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_random)
 
-    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random], "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
+    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]}#, "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
 
     params = {
         "ref_expe" : ref_xp,
