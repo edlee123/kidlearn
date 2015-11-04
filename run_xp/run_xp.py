@@ -123,6 +123,10 @@ def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, b
                                     "model" : "KT_student"})
     return xp
 
+def xp_conf_to_job(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/", first_conf=0, last_conf=10, zpdes_confs = None, conf_ids = None):
+    
+
+    pass
 
 def xp_to_job(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/", first_conf=0, last_conf=10, zpdes_confs = None, conf_ids = None):
     zpdes_confs = zpdes_confs or k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
@@ -162,6 +166,9 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl,kidleanrUrl]
 
+    zpdes_confs = zpdes_confs or k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+    conf_ids = conf_ids or mp.generate_diff_config_id(zpdes_confs)
+
     for i in range(nb_conf_to_test/nb_group_per_xp):
         if nb_group_per_xp < len(zpdes_confs)-i*nb_group_per_xp: 
             nb_conf = nb_group_per_xp
@@ -171,7 +178,12 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
         first_conf = i*nb_group_per_xp
         last_conf = i*nb_group_per_xp + nb_conf
 
-        xp = xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step)
+        zpdes_to_test = zpdes_confs[first_conf:last_conf]
+        conf_ids_to_test = conf_ids[first_conf:last_conf]
+
+        zpdes_to_test = {conf_ids_to_test[x] : zpdes_to_test[x] for x in range(len(zpdes_to_test))}
+
+        xp_conf = xp_conf_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step)
 
         file_to_save = xp.uuid+".dat"
         if xp_type == 1:
