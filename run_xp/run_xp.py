@@ -88,8 +88,9 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
             }
         }
     }
-
-    zpdes_confs = mp.multi_conf(base_param_file="ZPDES_KT6kc",directory="params_files/ZPDES",multi_params=multi_confs, combine=1)
+    base_conf = func.load_json("ZPDES_KT6kc","params_files/ZPDES")
+    base_conf["graph"].update(func.load_json(base_conf["graph"]["file_name"],base_conf["graph"]["path"]))
+    zpdes_confs = mp.multi_conf(base_conf=base_conf, multi_params=multi_confs, combine=1)
     #conf_ids = mp.generate_diff_config_id(zpdes_confs)
     #zpdes_confs = {conf_ids[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
     uid = str(uuid.uuid1())
@@ -123,41 +124,53 @@ def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, b
                                     "model" : "KT_student"})
     return xp
 
-def xp_conf_to_job(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/", first_conf=0, last_conf=10, zpdes_confs = None, conf_ids = None):
-    
 
-    pass
+def gen_set_zpdes_confs(nb_group_per_xp=10):
+    all_zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+    all_conf_ids = mp.generate_diff_config_id(all_zpdes_confs)
+    nb_conf_to_test = len(all_zpdes_confs)
 
-def xp_to_job(base_ref_xp="optimize",nb_stud=1000,nb_step=100, base_path_to_save="experimentation/data/", first_conf=0, last_conf=10, zpdes_confs = None, conf_ids = None):
-    zpdes_confs = zpdes_confs or k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
-    conf_ids = conf_ids or mp.generate_diff_config_id(zpdes_confs)
+    set_zpdes_confs = []
 
-    zpdes_to_test = zpdes_confs[first_conf:last_conf]
-    conf_ids_to_test = conf_ids[first_conf:last_conf]
+    for i in range(nb_conf_to_test/nb_group_per_xp):
+        if nb_group_per_xp <= len(all_zpdes_confs)-i*nb_group_per_xp: 
+            nb_conf = nb_group_per_xp
+        else:
+            nb_conf = nb_group_per_xp - len(all_zpdes_confs)-i*nb_group_per_xp
 
-    zpdes_to_test = {conf_ids_to_test[x] : zpdes_to_test[x] for x in range(len(zpdes_to_test))}
+        first_conf = i*nb_group_per_xp
+        last_conf = i*nb_group_per_xp + nb_conf
 
-    xp = gen_xp_to_optimize(zpdes_to_test,nb_stud=nb_stud,nb_step=nb_step)
+        zpdes_conf = all_zpdes_confs[first_conf:last_conf]
+        #print "i %s nbconf %s, z %s" % (i, nb_conf,len(zpdes_conf))
 
-    #jq = avakas_xp(xp_list)
+        conf_ids = all_conf_ids[first_conf:last_conf]
 
-    #xp_list=[]
-    #nb_group_per_xp = 10
-    #nb_conf_to_test = 10 #len(zpdes_confs)
-    #for i in range(nb_conf_to_test/nb_group_per_xp):
-    #    if nb_group_per_xp < len(zpdes_confs)-i*nb_group_per_xp: 
-    #        nb_conf = nb_group_per_xp
-    #    else:
-    #        nb_conf = nb_group_per_xp - len(zpdes_confs)-i*nb_group_per_xp
-    #    
+        zpdes_conf = {conf_ids[x] : zpdes_conf[x] for x in range(len(zpdes_conf))}
+        set_zpdes_confs.append(zpdes_conf)
 
-    return xp
+    return set_zpdes_confs
+
+def gen_stud_confs(nb_students=1000, perturbated=0, params_file="stud_KT6kc"):
+    studconf = func.load_json(params_file,"params_files/studModel")
+    if perturbated == 1 :
+        pass
+    else:
+        stud_confs = [copy.deepcopy(studconf) for x in range(nb_students)]
+
+    return stud_confs
+
+def xp_conf_to_job(zpdes_conf,stud_confs, nb_step=100):
+    xp_conf = {}
+    xp_conf["zpdes_conf"] = zpdes_conf
+    xp_conf["stud_confs"] = stud_confs
+    xp_conf["nb_steps"] = nb_step
+
+    return xp_conf
+
+
 
 def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
-    zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
-    conf_ids = mp.generate_diff_config_id(zpdes_confs)
-
-    nb_conf_to_test = len(zpdes_confs)
 
     if xp_type == 1: jq = avakas_xp()
     else: jq = local_xp()
@@ -166,30 +179,17 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl,kidleanrUrl]
 
-    zpdes_confs = zpdes_confs or k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
-    conf_ids = conf_ids or mp.generate_diff_config_id(zpdes_confs)
+    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp)
 
-    for i in range(nb_conf_to_test/nb_group_per_xp):
-        if nb_group_per_xp < len(zpdes_confs)-i*nb_group_per_xp: 
-            nb_conf = nb_group_per_xp
-        else:
-            nb_conf = nb_group_per_xp - len(zpdes_confs)-i*nb_group_per_xp
+    for set_zpdes in set_zpdes_conf:
+        stud_confs = gen_stud_confs(nb_students=nb_stud)
+        xp_conf = xp_conf_to_job(set_zpdes,stud_confs, nb_step=nb_step)
 
-        first_conf = i*nb_group_per_xp
-        last_conf = i*nb_group_per_xp + nb_conf
-
-        zpdes_to_test = zpdes_confs[first_conf:last_conf]
-        conf_ids_to_test = conf_ids[first_conf:last_conf]
-
-        zpdes_to_test = {conf_ids_to_test[x] : zpdes_to_test[x] for x in range(len(zpdes_to_test))}
-
-        xp_conf = xp_conf_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step)
-
-        file_to_save = xp.uuid+".dat"
+        #file_to_save = xp.uuid+".dat"
         if xp_type == 1:
-            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=xp,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
+            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
         else:
-            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=xp, step_fun="step_forward", steps=100, estimated_time = 3600))
+            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time = 3600))
 
         #xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step))
 

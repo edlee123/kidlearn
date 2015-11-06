@@ -51,8 +51,12 @@ class ZpdesHssbg(HierarchicalSSBG):
         return ZpdesSsbg(params = params)
 
 
-    def CreateHSSBG(self,graph_infos):
-        graph_def = func.load_json(graph_infos["file_name"],graph_infos["path"])
+    def CreateHSSBG(self, graph_infos):
+        if "act_prime" in graph_infos.keys():
+            graph_def = graph_infos
+        else:
+            graph_def = func.load_json(graph_infos["file_name"],graph_infos["path"])
+            
         graph_def["current_ssbg"] = graph_def["act_prime"]
         mainSSBG = self.instantiate_ssbg(graph_def)
         #self.ncompetences = mainSSBG.ncompetences
