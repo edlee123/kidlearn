@@ -185,7 +185,7 @@ class WorkingSession(object):
     
     def calcul_cost(self,begin = 1,time=None, gamma = 0.99):
         if time is None:
-            time = self.time_max_level()
+            time = len(self._step)
         return sum([pow(gamma,t) * sum(self.student_level_time(time = t,kc=range(len(self._KC)))) for t in range(begin,time)])
 
     def time_max_level(self):

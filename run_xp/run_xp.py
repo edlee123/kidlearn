@@ -39,7 +39,8 @@ def avakas_xp(objs_to_job=None):
     jq_config = {
         'jq_type': 'avakas',
         'ssh_cfg':{'username':'bclement'},
-        'max_jobs' : 100
+        'max_jobs' : 350,
+        'auto_update': False
     }
 
     jq = get_jobqueue(**jq_config)
@@ -52,12 +53,12 @@ def avakas_xp(objs_to_job=None):
         for obj in objs_to_job:
             file_to_save = obj.uuid+".dat"
             jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
-
+        jq.check_virtualenvs()
     return jq
 
 def local_xp(objs_to_job=None):
     jq_config = {
-        'jq_type': 'local'
+        'jq_type': 'local',
     }
 
     jq = get_jobqueue(**jq_config)
@@ -71,11 +72,18 @@ def local_xp(objs_to_job=None):
 
 def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
     
-    filter1_vals = [round(x,1) for x in np.arange(0.1,0.9,0.2)]
-    stepUp_vals = range(5,11,2)
-    upZPD_vals = [round(x,1) for x in np.arange(0.3,0.7,0.1)]
-    deact_vals = [round(x,1) for x in np.arange(0.5,0.9,0.1)]
-    prom_coef_vals = [round(x,1) for x in np.arange(0.2,2,0.3)]
+    filter1_vals = [round(x,1) for x in np.arange(0.1,0.6,0.1)]
+    stepUp_vals = range(6,11,2)
+    upZPD_vals = [round(x,1) for x in np.arange(0.3,0.8,0.1)]
+    deact_vals = [round(x,1) for x in np.arange(0.4,0.9,0.1)]
+    prom_coef_vals = [round(x,1) for x in np.arange(0.2,2,0.2)]
+
+    print filter1_vals
+    print stepUp_vals
+    print upZPD_vals
+    print deact_vals
+    print prom_coef_vals
+
 
     multi_confs = {
         "ZpdesSsbg": {
@@ -91,6 +99,7 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
     base_conf = func.load_json("ZPDES_KT6kc","params_files/ZPDES")
     base_conf["graph"].update(func.load_json(base_conf["graph"]["file_name"],base_conf["graph"]["path"]))
     zpdes_confs = mp.multi_conf(base_conf=base_conf, multi_params=multi_confs, combine=1)
+
     #conf_ids = mp.generate_diff_config_id(zpdes_confs)
     #zpdes_confs = {conf_ids[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
     uid = str(uuid.uuid1())
@@ -125,10 +134,10 @@ def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, b
     return xp
 
 
-def gen_set_zpdes_confs(nb_group_per_xp=10):
+def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test = None):
     all_zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
     all_conf_ids = mp.generate_diff_config_id(all_zpdes_confs)
-    nb_conf_to_test = len(all_zpdes_confs)
+    nb_conf_to_test = nb_conf_to_test or len(all_zpdes_confs)
 
     set_zpdes_confs = []
 
@@ -170,7 +179,7 @@ def xp_conf_to_job(zpdes_conf,stud_confs, nb_step=100):
 
 
 
-def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
+def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0, nb_conf_to_test = None):
 
     if xp_type == 1: jq = avakas_xp()
     else: jq = local_xp()
@@ -179,7 +188,7 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl,kidleanrUrl]
 
-    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp)
+    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp,nb_conf_to_test)
 
     for set_zpdes in set_zpdes_conf:
         stud_confs = gen_stud_confs(nb_students=nb_stud)
@@ -191,6 +200,8 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0):
         else:
             jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time = 3600))
 
+    if xp_type == 1:
+        jq.check_virtualenvs()
         #xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step))
 
     return jq
@@ -300,7 +311,7 @@ def do_q_simu():
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title="%s \nStudent distribution per erxercices type over time" % ("test"), path="simulation/graphics/", ref="clust_xseq_global_%s" % (seq_name), legend=["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"], dataToUse=range(len([data])))
 
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
-def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb_stud=100, files_to_load=None, ref_bis="perturbation"):
+def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb_stud=100, files_to_load=None, ref_bis=""):
     if files_to_load == None:
         files_to_load = {}
     
@@ -317,14 +328,10 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb
         if key not in files_to_load.keys():
             files_to_load[key] = val
 
-    ws_tab_zpdes = []
-    ws_tab_riarit = []
-    ws_tab_random = []
-    ws_tab_pomdp = []
+    
     pomdP = k_lib.seq_manager.POMDP(load_p = files_to_load["pomdp"])
     
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
-    #stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
     
     zpdes_params2 = {
         "algo_name" : "ZpdesHssbg",
@@ -336,12 +343,12 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb
         
         "ZpdesSsbg": {
             "ZpdesSsb": {
-                "filter1": 0.50,
+                "filter1": 0.30,
                 "uniformval": 0.05,
                 "stepUpdate" : 6,
                 "upZPDval" : 0.6,
                 "deactZPDval" : 0.5,
-                "promote_coeff" : 0.2,
+                "promote_coeff" : 1.7,
                 "thresHierarProm" : 0.5,
                 "h_promote_coeff" : 0.25,
                 "size_window": 3,
@@ -350,28 +357,38 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb
         }
     }
 
+    stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
     #population_conf = func.load_json()
     population = k_lib.student.Population(params_file="perturbation_KT6kc",directory="params_files/studModel")
     nb_stud = population.nb_students
 
     zpdes_params = func.load_json(file_name=files_to_load["zpdes"],dir_path="params_files/ZPDES")
     zpdes = k_lib.seq_manager.ZpdesHssbg(zpdes_params)#params=zpdes_params)
-    riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
+    zpdes2 = k_lib.seq_manager.ZpdesHssbg(zpdes_params2)#params=zpdes_params)
+    #riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
     random = k_lib.seq_manager.RandomSequence(params_file=files_to_load["random"],directory="params_files/RANDOM")
 
+    ws_tab_zpdes = []
+    ws_tab_zpdes2 = []
+    ws_tab_riarit = []
+    ws_tab_random = []
+    ws_tab_pomdp = []
+
     for i in range(nb_stud):
-        stud = population.students[i]
+        #stud = population.students[i]
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
+        ws_tab_zpdes2.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes2)))
         ws_tab_pomdp.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(pomdP)))
         #ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
         ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(random)))
 
     wG_zpdes = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_zpdes)
+    wG_zpdes2 = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_zpdes2)
     wG_pomdp = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_pomdp)
     #wG_riarit = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_riarit)
     wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions = ws_tab_random)
 
-    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random]}#, "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
+    wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random], "ZPDES2": [wG_zpdes2]}#, "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
 
     params = {
         "ref_expe" : ref_xp,

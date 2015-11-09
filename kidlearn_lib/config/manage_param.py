@@ -19,7 +19,7 @@ def load_param(file_name, directory):
 
 def code_id(strid, strval, nbCar = 1):
     nstrid=""
-    strid = [ nstrid+x for x in func.spe_split("[0-9]",strid)]
+    strid = [ nstrid+x for x in func.spe_split("[0-9]",strid)][0]
     return "{}{}{}".format(strid[:nbCar],strid[-nbCar:],strval)
 
 def data_from_json(json, id_values=None, form=0, ignore=["name","path"]):
@@ -47,10 +47,10 @@ def id_str_ftab(id_tab):
         idstr += strValId
     return idstr
 
-def generate_diff_config_id(config_list):
+def generate_diff_config_id(config_list,form=0):
     all_id = []
     for conf in config_list:
-        all_id.append(data_from_json(conf,form =0))
+        all_id.append(data_from_json(conf,form=form))
     final_all_id = []
     for numConf in range(len(all_id)):
         nconf_id = []
@@ -92,14 +92,16 @@ def gen_multi_conf(params_configs, paramKey, paramValue, access_keys, combine = 
     naccess_keys = copy.deepcopy(access_keys)
     naccess_keys.append(paramKey)
     if isinstance(paramValue,list):
-        if combine:
+        if combine==1:
             conf = copy.deepcopy(params_configs)
             for pconf in conf:
                 nc = copy.deepcopy(pconf)
                 for newParamVal in paramValue:
                     nnc = copy.deepcopy(nc)
                     func.access_dict_value(nnc,naccess_keys,newParamVal)
-                    params_configs.append(nnc)
+                    if nnc not in params_configs:
+                        params_configs.append(nnc)
+
         else:
             while len(params_configs) < len(paramValue)+1:
                 params_configs.append(copy.deepcopy(params_configs[0]))
