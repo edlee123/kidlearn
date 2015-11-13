@@ -28,6 +28,9 @@ from experiment_manager.job.kidlearn_job import  KidlearnJob
 sys.path.append("../..")
 import plot_graphics as graph
 
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
 # example of WorkingSession : one student and one sequence manager
 
 #########################################################
@@ -70,13 +73,18 @@ def local_xp(objs_to_job=None):
 
     return jq
 
-def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
-    
+def all_values_zpdes():
     filter1_vals = [round(x,1) for x in np.arange(0.1,0.6,0.1)]
     stepUp_vals = range(6,11,2)
     upZPD_vals = [round(x,1) for x in np.arange(0.3,0.8,0.1)]
     deact_vals = [round(x,1) for x in np.arange(0.4,0.9,0.1)]
     prom_coef_vals = [round(x,1) for x in np.arange(0.2,2,0.2)]
+
+    return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals
+
+def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
+    
+    filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals = all_values_zpdes()
 
     print filter1_vals
     print stepUp_vals
@@ -222,12 +230,16 @@ def find_zpdes_conf(confkey,cost=None):
     for key,val in zip(paramsconf,valsconf):
         if int(val) > 100:
             val = val[1:]
-        
-        if val[0] == "0":
+
+        if key != "se":
+            val = "{}.{}".format(val[0],val[1:])
+
+        if val[0] == "0" and val[1] != ".":
             val = "{}.{}".format(val[0],val[1:])
 
         values[key] = float(val)
-    values["cost"]=cost
+    if cost != None:
+        values["cost"]=cost
 
     return values
 
@@ -311,12 +323,12 @@ def do_q_simu():
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title="%s \nStudent distribution per erxercices type over time" % ("test"), path="simulation/graphics/", ref="clust_xseq_global_%s" % (seq_name), legend=["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"], dataToUse=range(len([data])))
 
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
-def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb_stud=100, files_to_load=None, ref_bis=""):
+def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc",disruption=0):
     if files_to_load == None:
         files_to_load = {}
     
     def_files_to_load = {}
-    def_files_to_load["pomdp"] = {"file_name":"POMDP_{}".format(ref_xp), "path":"data/pomdp"}
+    def_files_to_load["pomdp"] = {"file_name":"POMDP_{}_3".format(ref_xp), "path":"data/pomdp"}
     def_files_to_load["stud"] = "stud_{}".format(ref_xp)
     def_files_to_load["zpdes"] = "ZPDES_{}".format(ref_xp)
     def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
@@ -343,23 +355,24 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb
         
         "ZpdesSsbg": {
             "ZpdesSsb": {
-                "filter1": 0.30,
-                "uniformval": 0.05,
-                "stepUpdate" : 6,
-                "upZPDval" : 0.6,
-                "deactZPDval" : 0.5,
-                "promote_coeff" : 1.7,
-                "thresHierarProm" : 0.5,
-                "h_promote_coeff" : 0.25,
-                "size_window": 3,
-                "spe_promo": 0
+                "filter1": 0.4,# 0.30,
+                "uniformval": 0.05,# 0.05,
+                "stepUpdate" : 6,# 6,
+                "upZPDval" : 0.6,# 0.6,
+                "deactZPDval" : 0.4,# 0.5,
+                "promote_coeff" : 14,# 1.7,
+                "thresHierarProm" : 0.5,# 0.5,
+                "h_promote_coeff" : 0.25,# 0.25,
+                "size_window": 3,# 3,
+                "spe_promo": 0# 0
             }
         }
     }
 
-    stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
     #population_conf = func.load_json()
-    population = k_lib.student.Population(params_file="perturbation_KT6kc",directory="params_files/studModel")
+    population = k_lib.student.Population(params_file=disruption_pop_file,directory="params_files/studModel")
+    stud = k_lib.student.KTstudent(params=population.base_model)
+    #stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
     nb_stud = population.nb_students
 
     zpdes_params = func.load_json(file_name=files_to_load["zpdes"],dir_path="params_files/ZPDES")
@@ -375,7 +388,8 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=51, nb
     ws_tab_pomdp = []
 
     for i in range(nb_stud):
-        #stud = population.students[i]
+        if disruption == 1:
+            stud = population.students[i]
         ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes)))
         ws_tab_zpdes2.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(zpdes2)))
         ws_tab_pomdp.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(pomdP)))
@@ -469,6 +483,11 @@ def draw_xp_graph(xp, ref_xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,
     
     return 
 
+#############################################################################
+# Cost 
+#############################################################################
+
+
 # calcul xp costs 
 def calcul_xp_cost(xp = None, cost = None):
     #calcul cost for each student
@@ -489,3 +508,45 @@ def calcul_xp_cost(xp = None, cost = None):
 
     return data_cost
 
+def curve_cost_evolv(cost_mean):
+    filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals = all_values_zpdes()
+
+    dict_cost_conf = {}
+    opti_conf_key = find_opti_conf(cost_mean)[0]
+
+    opti_conf = find_zpdes_conf(opti_conf_key)#,cost=cost_mean[opti_conf_key])
+
+    val_tab_to_curve = {}
+
+    for key in opti_conf.keys():
+        val_tab_to_curve[key]=[]
+        for confkey,cost in cost_mean.items():
+            conf = find_zpdes_conf(confkey)#,cost=cost)
+            equal = 0
+            for key2 in opti_conf.keys():
+                #print "key {} key2 {}".format(key,key2)
+                if key2 != key and conf[key2] == opti_conf[key2]:
+                    equal += 1
+            if equal == len(opti_conf.keys())-1:
+                val_tab_to_curve[key].append((conf[key],cost))
+        val_tab_to_curve[key].sort()
+    return val_tab_to_curve
+
+
+def find_opti_conf(cost_mean):
+
+    max_val_key = []
+    for key,val in cost_mean.items():
+        if val == max(cost_mean.values()):
+            max_val_key.append(key)
+
+    return max_val_key
+
+def curve_cost_val_compare_conf(conf_val):
+    for key,val in conf_val.items():
+        plt.cla()
+        plt.clf()
+        print key
+        plt.close()
+        plt.plot([valu[0] for valu in val],[valu[1] for valu in val])
+        plt.show()
