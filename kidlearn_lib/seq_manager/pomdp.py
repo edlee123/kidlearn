@@ -57,6 +57,7 @@ class POMDP(object):
             self.load(load_p)
         else: 
             params = params or func.load_json(params_file,directory)
+            self.params = params
             self._ref = "POMDP_{}".format(params["ref"]) 
             self.main_act = params["actions"]
             self._nA = params["n_Action"]
@@ -74,7 +75,7 @@ class POMDP(object):
                     self._Ps = params["p_slip"]
                     
                     self._Pt = np.array(params["p_transitions"])
-                    self._trans_dep = np.array(params["trans_dep"])
+                    self._trans_dep = np.array(params["kc_trans_dep"])
             except ValueError:
                 print "Bad POMDP params definition"
 
@@ -103,8 +104,9 @@ class POMDP(object):
             if save_pomdp:
                 self.save()
 
-    def load_learn_model(self, mparams):
-        params = func.load_json(mparams["file_name"],mparams["path"])
+    def load_learn_model(self, params=None,):
+        if "file_name" in params.keys():
+            params = func.load_json(params["file_name"],params["path"])
 
         if params["model"] == "KTstudent":
             self._KC = params["knowledge_names"]
@@ -354,6 +356,7 @@ class POMDP(object):
             b = self.current_belief
 
         V = self.alpha_v
+        b = np.matrix(b)
         # If Q-MDP choose action directly
         if isQMDP:
             Q = V * b.T
@@ -363,7 +366,7 @@ class POMDP(object):
         else:
             Q = np.zeros( self._nA)
             for a in range(self._nA):
-                b = np.matrix(b)
+                #b = np.matrix(b)
 
                 # Compute updated beliefs for current action and all observations
 
@@ -394,17 +397,27 @@ class POMDP(object):
 
 
 def greedy(mode, U):
-    Idx = np.argmax(U, axis=0)
+    #print U
+    #print np.shape(U)
+    #raw_input()
+    #Idx = np.argmax(U, axis=0)
+    Idx = np.argwhere(U == np.amax(U, axis=0)).flatten().tolist()
 
     if mode == 'samp':
+        print Idx
+        print len(Idx) * np.random.rand()
+        print np.ceil(len(Idx) * np.random.rand())
         a = Idx[np.ceil(len(Idx) * np.random.rand())]
     elif mode == 'prob':
         a = Idx
     
-    if isinstance(a,int):
-        p = 1
-    else:
-        p = 1/len(a);
+        if isinstance(a,int):
+            p = 1
+        else:
+            p = 1.0/len(a)
+        p = np.array([1.0/len(a)]*len(a))
+
+        a = a[func.dissample(p)]
 
     return a
 

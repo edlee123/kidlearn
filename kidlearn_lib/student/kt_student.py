@@ -39,7 +39,7 @@ class KTstudent(Student):
                 if kt_keys == "L0":
                     kc_params[kt_keys] = max(self.params["KT"][kt_keys][i],0)
                 else:
-                    kc_params[kt_keys] = max(self.params["KT"][kt_keys][i],0.01)
+                    kc_params[kt_keys] = max(self.params["KT"][kt_keys][i],0)
             
             self._knowledges.append(KTKnowledge(name,level,kc_params))
 

@@ -17,6 +17,7 @@ import copy
 import json
 import numpy as np
 import uuid
+import time
 
 from ..seq_manager import Sequence, ZpdesHssbg, RiaritHssbg, RandomSequence, POMDP
 from ..exercise import Exercise
@@ -354,6 +355,7 @@ class Experiment(object):
                 params[key] = val
         
         self.uuid = str(uuid.uuid1())
+        self.date = time.strftime('%Y-%m-%d_%H-%M-%S')
         self.params = params
         self.logs = {}
 
@@ -417,7 +419,7 @@ class Experiment(object):
         directory = "%sms%s" % (directory,self.model_student)
         self.path = "%s/%s" % (path,directory) 
         self._ref_simu = "%s_ns%s_ne%s_%s" % (directory,self.nb_students,self.nb_step,ref)
-        self.save_path = "%s/%s_%s/" % (self.path,self._ref_simu,self.uuid)
+        self.save_path = "%s/%s_%s_%s/" % (self.path,self._ref_simu,self.date,self.uuid)
         self.create_xp_directory()
     
     def create_xp_directory(self):

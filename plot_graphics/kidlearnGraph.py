@@ -948,6 +948,62 @@ def draw_p_learn_curve(p_al,p_def,nbstud,path = ""):
         
     return
 
+# Generate colors
+def gen_colors(data):
+    colors=[]
+    for nbPdata in range(0,len(data)):
+        nb_group = len(data[nbPdata])
+        for group in range(0,nb_group):
+            HSV_tuples = [(x*1.0/nb_group, 0.5, 0.5) for x in range(nb_group)]
+            #RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+            RGB_tuples2 = [colorsys.hsv_to_rgb(*x) for x in HSV_tuples]
+            rgb2 = [tuple([(x*255) for x in y]) for y in RGB_tuples2]
+            colorsTmp = ['#%02x%02x%02x' % x for x in rgb2]
+            colors.append(colorsTmp)
+    return colors
+
+#draw_curve
+def draw_simple_curves(data, stdData=None, x_range=None, y_range=None, labels=None, title="", xlabel="Time",ylabel="Skill", path="", colors=None,linetype=None, showPlot = True, lineWidth=1, fontSize=20, legendSize=14, bboxAnchor=(0,0,1.1,0), ncol=1, xticks=None, yticks=None):
+
+    plt.cla()
+    plt.clf()
+    plt.close()
+    #plt.figure()
+    fig = plt.figure(figsize=(20, 13))
+    ax = fig.add_subplot(111)
+
+    if labels == None:
+        labels = [None]*len(data)
+
+    for nbSet in range(len(data)):
+        if std_data != None :
+            y3 = [data[nbSet][i] + std_data[nbSet][i] for i in range(nb_ex)]
+            y4 = [data[nbSet][i] - std_data[nbSet][i] for i in range(nb_ex)]
+
+            plt.fill_between(x_range,y3, y4, facecolor=colors[nbSet], alpha=0.1)
+            
+        plt.plot(x, data[nbSet], label=labels[nbSet], color=colors[nbSet], linestyle=line_type[nbSet],linewidth = lineWidth)
+
+    plt.xlabel(xlabel, fontsize=fontSize)
+    plt.ylabel(ylabel, fontsize=fontSize)
+    plt.title(title, fontsize=fontSize)
+    plt.legend(bbox_to_anchor=bboxAnchor,ncol=ncol, fancybox=True, shadow=True, prop={'size':legendSize})
+
+    if xticks != None:
+        plt.xticks(xticks)
+    if yticks != None:
+        plt.yticks(yticks)
+
+    if path != "" :
+        plt.draw()
+        path_f = path
+        plt.savefig(path_f)
+
+    if showPlot:
+        plt.show()
+
+
+
 def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb_ex = 100, typeData = "successRate",type_data_spe = "MAIN", ref = "", markers = None, titleC = "", colors = [["#00BBBB","black",'#FF0000']], line_type = ['dashed','solid','dashdot','dotted'], legend_position = 1,showPlot = True,std_data = None):
 
     plt.cla()
@@ -968,18 +1024,8 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
     plt.xlabel(xylabels[0], fontsize=20)
     plt.ylabel(xylabels[1], fontsize=20)
     
-    colorsBis = []
-    for nbPdata in range(0,len(data)):
-        nb_group = len(data[nbPdata])
-        for group in range(0,nb_group):
-            HSV_tuples = [(x*1.0/nb_group, 0.5, 0.5) for x in range(nb_group)]
-            #RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
-            RGB_tuples2 = [colorsys.hsv_to_rgb(*x) for x in HSV_tuples]
-            rgb2 = [tuple([(x*255) for x in y]) for y in RGB_tuples2]
-            colorsTmp = ['#%02x%02x%02x' % x for x in rgb2]
-            colorsBis.append(colorsTmp)
-
-
+    colorsBis = gen_colors(data)
+    
     for nbPdata in range(0,len(data)):
         nb_group = len(data[nbPdata])
 
@@ -1003,9 +1049,7 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
             #print data[nbPdata][group]
             #x = range(len(data[nbPdata][group]))  
             x = range(len(data[nbPdata][group]))
-            if std_data == None : 
-                plt.plot(x, data[nbPdata][group], label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
-            else:
+            if std_data != None :
 
                 y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(nb_ex)]
                 y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i] for i in range(nb_ex)]
@@ -1018,7 +1062,8 @@ def draw_curve(data, path = "", labels = [["Predefined", "RiARiT", "ZPDES"]], nb
                 #        y4[i] = 0
 
                 plt.fill_between(x,y3, y4, facecolor = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], alpha=0.1)
-                plt.plot(x, data[nbPdata][group], label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
+                
+            plt.plot(x, data[nbPdata][group], label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
                 #plt.errorbar(x, data[nbPdata][group],std_data[nbPdata][group], errorevery = 5)#, label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
             
             if markers != None: # and len(markers[group]) > skill:

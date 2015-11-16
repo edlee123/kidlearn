@@ -323,13 +323,13 @@ def do_q_simu():
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title="%s \nStudent distribution per erxercices type over time" % ("test"), path="simulation/graphics/", ref="clust_xseq_global_%s" % (seq_name), legend=["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"], dataToUse=range(len([data])))
 
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
-def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc",disruption=0):
+def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc",disruption=0, ref_pomdp="_2", ref_stud="_2"):
     if files_to_load == None:
         files_to_load = {}
     
     def_files_to_load = {}
-    def_files_to_load["pomdp"] = {"file_name":"POMDP_{}_3".format(ref_xp), "path":"data/pomdp"}
-    def_files_to_load["stud"] = "stud_{}".format(ref_xp)
+    def_files_to_load["pomdp"] = {"file_name":"POMDP_{}{}".format(ref_xp,ref_pomdp), "path":"data/pomdp"}
+    def_files_to_load["stud"] = "stud_{}{}".format(ref_xp,ref_stud)
     def_files_to_load["zpdes"] = "ZPDES_{}".format(ref_xp)
     def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
     def_files_to_load["random"] = "RANDOM_{}".format(ref_xp)
@@ -371,8 +371,8 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
     #population_conf = func.load_json()
     population = k_lib.student.Population(params_file=disruption_pop_file,directory="params_files/studModel")
-    stud = k_lib.student.KTstudent(params=population.base_model)
-    #stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
+    #stud = k_lib.student.KTstudent(params=population.base_model)
+    stud = k_lib.student.KTstudent(params_file = files_to_load["stud"],directory="params_files/studModel")
     nb_stud = population.nb_students
 
     zpdes_params = func.load_json(file_name=files_to_load["zpdes"],dir_path="params_files/ZPDES")

@@ -29,10 +29,10 @@ class Population(object):
     def __init__(self,params = None, params_file = None, directory = "params_files", *args, **kwargs):
         if params != None or params_file != None: 
             params = params or func.load_json(params_file,directory)
-
+        self.params = params
         self.uuid = str(uuid.uuid1())
         self.base_model = params["base_model"]
-        self.perturbed_models = params
+        self.disrupted_models = params["disrupted_model"]
         self.nb_students = params["nb_students"]
         self.students_models = []
         self.students = []
@@ -40,14 +40,14 @@ class Population(object):
 
 
     def perturb_KT_model(self):
-        trans_dep_mv = self.perturbed_models["kc_trans_dep"]
+        trans_dep_mv = self.disrupted_models["kc_trans_dep"]
         trans_dep_pert = []
         for i in range(len(self.base_model["kc_trans_dep"])):
             mean = trans_dep_mv["mean"][i]
             cov = np.diag(trans_dep_mv["var"][i])
             trans_dep_pert.append(np.array(np.random.multivariate_normal(mean,cov,self.nb_students)))
 
-        kt_mv = self.perturbed_models["KT"]
+        kt_mv = self.disrupted_models["KT"]
         kt_pert = {}
         for key in self.base_model["KT"].keys():
             mean = kt_mv["mean"][key]
