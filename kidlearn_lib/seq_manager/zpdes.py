@@ -123,6 +123,7 @@ class ZpdesSsbg(SSBanditGroup):
             self.nb_stay = ssbg_def["nb_stay"]
         else: 
             self.nb_stay = [1] * self.nactions
+
         self.nbturn = [0]*self.nactions
         self.param_values = [[] for i in range(self.nactions)]
         self.values_children = [[] for i in range(self.nactions)]
@@ -227,7 +228,7 @@ class ZpdesSsb(SSbandit):
     def spe_promote_async(self):
         succrate_active = self.success_rate(-self.stepMax,
                                             val=self.active_bandits(),
-                                            min_nb_ans= 3)
+                                            min_nb_ans= 2)
 
         if succrate_active > self.upZPDval and 0 in self.len_success():# and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
               self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()])*self.promote_coeff
@@ -300,7 +301,7 @@ class ZpdesSsb(SSbandit):
     def len_success(self, first_val = 0, last_val=None):
         return [len(x) for x in self.success][first_val:last_val]
 
-    def success_rate(self, first_step=0, last_step=None, val=None, min_nb_ans=3):
+    def success_rate(self, first_step=0, last_step=None, val=None, min_nb_ans=2):
         if val == None :
             val = range(self.nval)
         elif len(val) == 0:

@@ -1,0 +1,1 @@
+{"n_Observation": 2, "learn_model": {"file_name": "stud_KT3kc_0", "path": "params_files/studModel"}, "name": "POMDP", "actions": "KT6kc", "action": "KT3kc", "n_StatePerAct": 2, "ref": "KT3kc_0", "gamma": 0.99, "n_Action": 3}

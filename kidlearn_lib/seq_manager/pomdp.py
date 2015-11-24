@@ -104,7 +104,7 @@ class POMDP(object):
             if save_pomdp:
                 self.save()
 
-    def load_learn_model(self, params=None,):
+    def load_learn_model(self, params=None):
         if "file_name" in params.keys():
             params = func.load_json(params["file_name"],params["path"])
 
@@ -215,6 +215,7 @@ class POMDP(object):
         k = 0
 
         while i <= nB and k < 100 :
+            print i,k
             # Sample action
             A = np.ceil((self._nA) * np.random.rand())-1
         
@@ -459,9 +460,9 @@ def perseus(pomdp=None):
     #V = np.ndarray(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
     V = np.matrix(min(pomdp._R.min(axis=0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
   #  print "V %s" %  V
-    
+    print "Perseus"
     while quit == 0:
-
+        print iterr
         #return perseusBackup(pomdp, V, D)
         #print "iterr %s" % iterr
         Vnew = perseusBackup(pomdp, V, D)

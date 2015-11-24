@@ -4,9 +4,9 @@
     "seq_path": 0,
 
     "graph": { 
-        "file_name" :"KT6kc_graph",
+        "file_name" :"",
         "path" : "graph/",
-        "main_act" : "KT6kc"
+        "main_act" : ""
         },
 
 

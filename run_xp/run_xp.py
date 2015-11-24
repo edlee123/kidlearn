@@ -75,14 +75,14 @@ def local_xp(objs_to_job=None):
 
 def all_values_zpdes():
     filter1_vals = [round(x,1) for x in np.arange(0.1,0.6,0.1)]
-    stepUp_vals = range(6,11,2)
+    stepUp_vals = range(4,8,1)
     upZPD_vals = [round(x,1) for x in np.arange(0.3,0.8,0.1)]
     deact_vals = [round(x,1) for x in np.arange(0.4,0.9,0.1)]
     prom_coef_vals = [round(x,1) for x in np.arange(0.2,2,0.2)]
 
     return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals
 
-def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
+def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act = "KT6kc"):
     
     filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals = all_values_zpdes()
 
@@ -104,7 +104,11 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
             }
         }
     }
-    base_conf = func.load_json("ZPDES_KT6kc","params_files/ZPDES")
+
+    base_conf = func.load_json("ZPDES_base","params_files/ZPDES")
+    base_conf["graph"]["file_name"] = "{}_graph".format(main_act)
+    base_conf["graph"]["main_act"] = main_act
+
     base_conf["graph"].update(func.load_json(base_conf["graph"]["file_name"],base_conf["graph"]["path"]))
     zpdes_confs = mp.multi_conf(base_conf=base_conf, multi_params=multi_confs, combine=1)
 
@@ -115,7 +119,7 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/"):
     jstr = json.dumps(zpdes_confs)
     
     k_lib.config.datafile.create_directories([save_path])
-    save_path = save_path + "KT6kc_all_confs.json"
+    save_path = "{}{}_all_confs.json".format(save_path,main_act)
     k_lib.functions.write_in_file(save_path,jstr)
 
     return zpdes_confs
@@ -142,8 +146,16 @@ def gen_xp_to_optimize(zpdes_confs,ref_xp="optimize",nb_stud=1000,nb_step=100, b
     return xp
 
 
-def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test = None):
-    all_zpdes_confs = k_lib.functions.load_json("KT6kc_all_confs","experimentation/optimize/multiconf/")
+def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test = None, main_act="KT6kc"):
+    all_confs_file_path = "experimentation/optimize/multiconf/"
+    all_confs_file = "{}_all_confs.json".format(main_act)
+    print os.path.join(all_confs_file_path,all_confs_file)
+
+    if os.path.isfile(os.path.join(all_confs_file_path,all_confs_file)):
+        all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
+    else: 
+        all_zpdes_confs = gen_conf_to_optimize(all_confs_file_path,main_act)
+
     all_conf_ids = mp.generate_diff_config_id(all_zpdes_confs)
     nb_conf_to_test = nb_conf_to_test or len(all_zpdes_confs)
 
@@ -168,7 +180,7 @@ def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test = None):
 
     return set_zpdes_confs
 
-def gen_stud_confs(nb_students=1000, perturbated=0, params_file="stud_KT6kc"):
+def gen_stud_confs(nb_students=1000, perturbated=0, params_file="stud_KT6kc_0"):
     studconf = func.load_json(params_file,"params_files/studModel")
     if perturbated == 1 :
         pass
@@ -177,17 +189,18 @@ def gen_stud_confs(nb_students=1000, perturbated=0, params_file="stud_KT6kc"):
 
     return stud_confs
 
-def xp_conf_to_job(zpdes_conf,stud_confs, nb_step=100):
+def xp_conf_to_job(zpdes_conf,stud_confs, nb_step=100,studFile=""):
     xp_conf = {}
     xp_conf["zpdes_conf"] = zpdes_conf
     xp_conf["stud_confs"] = stud_confs
     xp_conf["nb_steps"] = nb_step
+    xp_conf["stud_file"] = studFile
 
     return xp_conf
 
 
 
-def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0, nb_conf_to_test = None):
+def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0, nb_conf_to_test = None, stud_file="stud_KT6kc_0"):
 
     if xp_type == 1: jq = avakas_xp()
     else: jq = local_xp()
@@ -199,8 +212,8 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0, 
     set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp,nb_conf_to_test)
 
     for set_zpdes in set_zpdes_conf:
-        stud_confs = gen_stud_confs(nb_students=nb_stud)
-        xp_conf = xp_conf_to_job(set_zpdes,stud_confs, nb_step=nb_step)
+        stud_confs = gen_stud_confs(nb_students=nb_stud, params_file=stud_file)
+        xp_conf = xp_conf_to_job(set_zpdes,stud_confs, nb_step=nb_step, studFile=stud_file)
 
         #file_to_save = xp.uuid+".dat"
         if xp_type == 1:
@@ -322,6 +335,11 @@ def do_q_simu():
         data = group[0].get_ex_repartition_time(100)
         graph.kGraph.plot_cluster_lvl_sub([data],100,100, title="%s \nStudent distribution per erxercices type over time" % ("test"), path="simulation/graphics/", ref="clust_xseq_global_%s" % (seq_name), legend=["M1","M2","M3","M4","M5","M6","R1","R2","R3","R4","MM1","MM2","MM3","MM4","RM1","RM2","RM3","RM4"], dataToUse=range(len([data])))
 
+def change_graph_params(params,graph_file,main_act):
+    params["graph"]["file_name"] = graph_file
+    params["graph"]["main_act"] = main_act
+    return params
+
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
 def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc",disruption=0, ref_pomdp="_2", ref_stud="_2"):
     if files_to_load == None:
@@ -331,7 +349,7 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     def_files_to_load["pomdp"] = {"file_name":"POMDP_{}{}".format(ref_xp,ref_pomdp), "path":"data/pomdp"}
     def_files_to_load["stud"] = "stud_{}{}".format(ref_xp,ref_stud)
     def_files_to_load["zpdes"] = "ZPDES_{}".format(ref_xp)
-    def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
+    #def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
     def_files_to_load["random"] = "RANDOM_{}".format(ref_xp)
 
     ref_xp = "{}_{}".format(ref_xp,ref_bis)
@@ -487,6 +505,15 @@ def draw_xp_graph(xp, ref_xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,
 # Cost 
 #############################################################################
 
+def recup_mean_cost_from_jq(jq=None, jq_uuid=None):
+    jq_uuid = jq_uuid or jq.uuid
+    allcost_name = "all_cost_"+jq_uuid
+    allcost = k_lib.func.load_json(allcost_name)
+    nc = calcul_xp_cost(cost=allcost)
+    cost_mean = copy.deepcopy(nc["mean"])
+
+    return cost_mean
+
 
 # calcul xp costs 
 def calcul_xp_cost(xp = None, cost = None):
@@ -550,3 +577,18 @@ def curve_cost_val_compare_conf(conf_val):
         plt.close()
         plt.plot([valu[0] for valu in val],[valu[1] for valu in val])
         plt.show()
+
+def gen_all_pomdp():
+    pomdp_model_base = k_lib.func.load_json("POMDP_KT6kc","params_files/POMDP")
+    for nbKc in [10]: #2,3,4,5,7,
+        print nbKc
+        pomdp_model = copy.deepcopy(pomdp_model_base)
+        pomdp_model["ref"] = "KT{}kc_0".format(nbKc)
+        pomdp_model["action"] = "KT{}kc".format(nbKc)
+        pomdp_model["n_Action"] = nbKc
+        pomdp_model["learn_model"]["file_name"] = "stud_KT{}kc_0".format(nbKc)
+        path = "params_files/POMDP/POMDP_KT{}kc.json".format(nbKc)
+        func.write_in_file(path,json.dumps(pomdp_model))
+        pomdp = k_lib.seq_manager.POMDP(params = pomdp_model, save_pomdp=1)
+
+

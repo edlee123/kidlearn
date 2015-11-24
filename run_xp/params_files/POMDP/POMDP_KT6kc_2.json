@@ -1,6 +1,6 @@
 {
     "name" : "POMDP",
-    "ref" : "KT6kc",
+    "ref" : "KT6kc_2",
     "actions": "KT6kc",
     "n_Action" : 6,
     "n_StatePerAct": 2,
