@@ -348,11 +348,10 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     def_files_to_load = {}
     def_files_to_load["pomdp"] = {"file_name":"POMDP_{}{}".format(ref_xp,ref_pomdp), "path":"data/pomdp"}
     def_files_to_load["stud"] = "stud_{}{}".format(ref_xp,ref_stud)
-    def_files_to_load["zpdes"] = "ZPDES_{}".format(ref_xp)
+    def_files_to_load["zpdes"] = "ZPDES_base"
     #def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
-    def_files_to_load["random"] = "RANDOM_{}".format(ref_xp)
+    def_files_to_load["random"] = "RANDOM_base"
 
-    ref_xp = "{}_{}".format(ref_xp,ref_bis)
 
     for key,val in def_files_to_load.items():
         if key not in files_to_load.keys():
@@ -366,9 +365,9 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     zpdes_params2 = {
         "algo_name" : "ZpdesHssbg",
         "graph": { 
-            "file_name" :"KT6kc_graph",
+            "file_name" :"{}_graph".format(ref_xp),
             "path" : "graph/",
-            "main_act" : "KT6kc"
+            "main_act" : "{}".format(ref_xp)
             },
         
         "ZpdesSsbg": {
@@ -394,10 +393,14 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     nb_stud = population.nb_students
 
     zpdes_params = func.load_json(file_name=files_to_load["zpdes"],dir_path="params_files/ZPDES")
+    zpdes_params = change_graph_params(zpdes_params,"{}_graph".format(ref_xp),ref_xp)
+
     zpdes = k_lib.seq_manager.ZpdesHssbg(zpdes_params)#params=zpdes_params)
     zpdes2 = k_lib.seq_manager.ZpdesHssbg(zpdes_params2)#params=zpdes_params)
     #riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
-    random = k_lib.seq_manager.RandomSequence(params_file=files_to_load["random"],directory="params_files/RANDOM")
+    random_params = func.load_json(file_name=files_to_load["random"],dir_path="params_files/RANDOM")
+    random_params = change_graph_params(random_params,"{}_graph".format(ref_xp),ref_xp)
+    random = k_lib.seq_manager.RandomSequence(random_params)
 
     ws_tab_zpdes = []
     ws_tab_zpdes2 = []
@@ -422,8 +425,9 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
     wkgs =  {"POMDP" : [wG_pomdp], "ZPDES": [wG_zpdes], "Random": [wG_random], "ZPDES2": [wG_zpdes2]}#, "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} # 
 
+    ref_xp_bis = "{}{}".format(ref_xp,ref_bis)
     params = {
-        "ref_expe" : ref_xp,
+        "ref_expe" : ref_xp_bis,
         "path_to_save" : path_to_save,
         "seq_manager_list": wkgs.keys(), #"RIARIT"
         "nb_step" : nb_step,
@@ -436,7 +440,10 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     xp = k_lib.experimentation.Experiment(WorkingGroups = wkgs, params = params)
 
     xp.run(nb_step)
-    draw_xp_graph(xp,ref_xp,["V1","V2","V3","V4","V5","V6"], nb_ex_type = [1,1,1,1,1,1])
+
+    values_vect = ["V{}".format(i+1) for i in range(len(xp.KC))]
+
+    draw_xp_graph(xp, type_ex = values_vect, nb_ex_type = [1]*len(xp.KC))
     #all_mean_data = draw_xp_graph(xp,ref_xp)
     #cost = calcul_xp_cost(xp)
 
@@ -467,11 +474,11 @@ def expe_zpdes_promot(ref_xp="kt_multiZ",path_to_save="experimentation/data/", n
                                         "model" : "KT_student"})
     xp.run()
     xp.save()
-    draw_xp_graph(xp, ref_xp, ["V1","V2","V3","V4","V5","V6"], nb_ex_type=[1,1,1,1,1,1])
+    draw_xp_graph(xp, ["V1","V2","V3","V4","V5","V6"], nb_ex_type=[1,1,1,1,1,1])
 
     return xp
 
-def draw_xp_histo(xp, ref_xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,1,1,1,1]):
+def draw_xp_histo(xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,1,1,1,1]):
     # draw histo graph to visualise exercise in time
     for seq_name,group in xp._groups.items():
         data = group[0].get_ex_repartition_time(first_ex= 1, nb_ex=xp.nb_step+1, main_rt = xp.main_act,type_ex = type_ex, nb_ex_type=nb_ex_type)
@@ -495,8 +502,8 @@ def draw_xp_kc_curve(xp):
 
 
 # Script to draw xp graphs
-def draw_xp_graph(xp, ref_xp, type_ex=["V1","V2","V3","V4","V5"], nb_ex_type=[1,1,1,1,1]):
-    draw_xp_histo(xp,ref_xp,type_ex,nb_ex_type)
+def draw_xp_graph(xp, type_ex, nb_ex_type):
+    draw_xp_histo(xp,type_ex,nb_ex_type)
     draw_xp_kc_curve(xp)
     
     return 
@@ -584,7 +591,7 @@ def gen_all_pomdp():
         print nbKc
         pomdp_model = copy.deepcopy(pomdp_model_base)
         pomdp_model["ref"] = "KT{}kc_0".format(nbKc)
-        pomdp_model["action"] = "KT{}kc".format(nbKc)
+        pomdp_model["actions"] = "KT{}kc".format(nbKc)
         pomdp_model["n_Action"] = nbKc
         pomdp_model["learn_model"]["file_name"] = "stud_KT{}kc_0".format(nbKc)
         path = "params_files/POMDP/POMDP_KT{}kc.json".format(nbKc)

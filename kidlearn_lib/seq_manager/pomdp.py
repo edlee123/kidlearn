@@ -125,9 +125,12 @@ class POMDP(object):
 
     def load(self, load_p):
         pomdp = datafile.load_file(load_p["file_name"],load_p["path"])
+        
         for key,val in pomdp.__dict__.items():
             object.__setattr__(self, key, val)
 
+        if "action" in self.params.keys():
+            self.main_act = self.params["action"]
 
     def get_KC(self):
         return self._KC

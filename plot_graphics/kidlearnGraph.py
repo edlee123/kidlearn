@@ -1300,7 +1300,12 @@ def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of stud
     #         red,        orange    yellow,    gree,    cyan,     blue,   purple
     #["#00DDFF","#00AAFF","#0066AA","#0044BB","#0033DD","#0000FF"]
     if len(data_lvl[0]) > 1:
-        colors = [["#BBFFFF","#6699FF","#4466FF","#0066FF","#004499","#0000FF"],["#33CC33","#00AA00","#006600","#003300"],["#9900CC","#6633FF","#500099","#330066","#110044"],["#FF4444","#EE0000","#990000","#662222","#ffffff"],["#0055ff","#bb00ff","#ff99ff","#555599","#888888","#ffffff"],["#ff0000","#ffbb00","#ffff00","#99FF00","#66ccFF","#0055ff"]]
+        colors = [["#BBFFFF","#6699FF","#4466FF","#0066FF","#004499","#0000FF"],
+                  ["#33CC33","#00AA00","#006600","#003300"],
+                  ["#9900CC","#6633FF","#500099","#330066","#110044"],
+                  ["#FF4444","#EE0000","#990000","#662222","#ffffff"],
+                  ["#0055ff","#bb00ff","#ff99ff","#555599","#888888","#ffffff"],
+                  ["#ff0000","#ffbb00","#ffff00","#99FF00","#66ccFF","#0055ff"]]
     else:
         colors = [["#ff0000","#ffbb00","#ffff00","#99FF00","#66ccFF","#0055ff","#bb00ff","#ff99ff","#555599","#888888","#ffffff"]]
     hatch_tab = [None,"/", "\"", "x", "o", "-", "O", "+", ".", "*", "|"]
@@ -1317,7 +1322,7 @@ def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of stud
     
     for k in range(len(data_lvl[0])):
         for j in range(0,len(data_lvl[0][k])):
-            p_legend = plt.bar(ind, data_lvl[0][k][j], width, color = colors[k][j])#, hatch = hatch_tab[k])
+            p_legend = plt.bar(ind, data_lvl[0][k][j], width, color = colors[k%len(colors)][j+k%len(colors)])#, hatch = hatch_tab[k])
             ptuple.append(p_legend[0])
 
     for i in range(0,len(data_lvl)):
@@ -1333,7 +1338,7 @@ def plot_cluster_lvl_sub(data,nb_stud = 100,nb_ex = None,title = 'Number of stud
                 plt.ylabel("Group %s" % str(i+1), fontsize=30)
             
             for j in range(0,len(data_lvl[i][k])):
-                plt.bar(ind, data_lvl[i][k][j], width,bottom=bota[j], color = colors[k][j])#,hatch = hatch_tab[k])#,edgecolor = colors[j], hatch = hatch_tab[i], alpha=0.5))
+                plt.bar(ind, data_lvl[i][k][j], width,bottom=bota[j], color = colors[k%len(colors)][j+k%len(colors)])#,hatch = hatch_tab[k])#,edgecolor = colors[j], hatch = hatch_tab[i], alpha=0.5))
             botBase=bota[-1]
         
         plt.xticks(np.arange(0,max(81,nb_ex+1),(10)),  fontsize=25)
