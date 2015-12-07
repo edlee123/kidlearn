@@ -18,12 +18,14 @@ import os
 import sys
 import kidlearn_lib as k_lib
 import scipy.optimize as soptimize
+import scipy.stats as sstats
 import uuid
 
 from kidlearn_lib.config import manage_param as mp
 from kidlearn_lib import functions as func
 from experiment_manager.job_queue import get_jobqueue
 from experiment_manager.job.kidlearn_job import  KidlearnJob
+from experiment_manager.job.classic_job import  ClassicJob
 
 sys.path.append("../..")
 import plot_graphics as graph
@@ -55,7 +57,7 @@ def avakas_xp(objs_to_job=None):
     if objs_to_job != None :
         for obj in objs_to_job:
             file_to_save = obj.uuid+".dat"
-            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements, path = jq.jobsdir, jq_path=jq.basedir))
         jq.check_virtualenvs()
     return jq
 
@@ -65,11 +67,13 @@ def local_xp(objs_to_job=None):
     }
 
     jq = get_jobqueue(**jq_config)
+    print jq.jobsdir
+    print jq.basedir
 
     if objs_to_job != None :
         for obj in objs_to_job:
             file_to_save = obj.uuid+".dat"
-            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100, estimated_time = 3600))
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100, estimated_time = 3600, path = jq.jobsdir, jq_path=jq.basedir))
 
     return jq
 
@@ -217,9 +221,9 @@ def full_optimize_zpdes(nb_group_per_xp=10,nb_stud=1000, nb_step=100,xp_type=0, 
 
         #file_to_save = xp.uuid+".dat"
         if xp_type == 1:
-            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements))
+            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf,step_fun="step_forward",steps=100,estimated_time = 5400,virtual_env="test",requirements=jrequirements,path = jq.jobsdir, jq_path=jq.basedir))
         else:
-            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time = 3600))
+            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time = 3600,path = jq.jobsdir, jq_path=jq.basedir))
 
     if xp_type == 1:
         jq.check_virtualenvs()
@@ -372,12 +376,12 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
         
         "ZpdesSsbg": {
             "ZpdesSsb": {
-                "filter1": 0.4,# 0.30,
+                "filter1": 0.2,#0.4,# 0.30,
                 "uniformval": 0.05,# 0.05,
-                "stepUpdate" : 6,# 6,
+                "stepUpdate" : 4,#6,# 6,
                 "upZPDval" : 0.6,# 0.6,
-                "deactZPDval" : 0.4,# 0.5,
-                "promote_coeff" : 14,# 1.7,
+                "deactZPDval" : 0.7,#0.4,# 0.5,
+                "promote_coeff" : 0.8,# 1.7,
                 "thresHierarProm" : 0.5,# 0.5,
                 "h_promote_coeff" : 0.25,# 0.25,
                 "size_window": 3,# 3,
@@ -497,6 +501,7 @@ def draw_xp_kc_curve(xp):
             mean_data.append([np.mean(data[x]) for x in range(len(data))])
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
+
         
         graph.kGraph.draw_curve([mean_data], labels=[xp._groups.keys()], nb_ex=len(data), typeData="skill_level", type_data_spe="" , ref="%s_%s" %(xp.ref_expe,skill_labels[k]), markers=None, colors=[["#00BBBB","green","black",'#FF0000']], line_type=['dashed','dashdot','solid',"dotted"], legend_position=5, std_data=[std_data], path= "%s" % (xp.save_path), showPlot=False)
 
@@ -542,6 +547,15 @@ def calcul_xp_cost(xp = None, cost = None):
 
     return data_cost
 
+def find_opti_conf(cost_mean):
+
+    max_val_key = []
+    for key,val in cost_mean.items():
+        if val == max(cost_mean.values()):
+            max_val_key.append(key)
+
+    return max_val_key
+
 def curve_cost_evolv(cost_mean):
     filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals = all_values_zpdes()
 
@@ -566,16 +580,6 @@ def curve_cost_evolv(cost_mean):
         val_tab_to_curve[key].sort()
     return val_tab_to_curve
 
-
-def find_opti_conf(cost_mean):
-
-    max_val_key = []
-    for key,val in cost_mean.items():
-        if val == max(cost_mean.values()):
-            max_val_key.append(key)
-
-    return max_val_key
-
 def curve_cost_val_compare_conf(conf_val):
     for key,val in conf_val.items():
         plt.cla()
@@ -599,3 +603,66 @@ def gen_all_pomdp():
         pomdp = k_lib.seq_manager.POMDP(params = pomdp_model, save_pomdp=1)
 
 
+##########################################
+######## Stats
+##########################################
+
+def orgaTestDiffData(dTest1, dTest2):
+    dT1 = [[] for x in range(len(dTest1[0]))]
+    dT2 = [[] for x in range(len(dTest2[0]))]
+
+    for al in dTest1:
+        for tData in range(len(al)):
+            for stud in al[tData]:
+                dT1[tData].append(stud)
+
+    for al in dTest2:
+        for tData in range(len(al)):
+            for stud in al[tData]:
+                dT2[tData].append(stud)
+
+    return [dT1,dT2]
+
+def chi2AllErrorTrans(allErrorTrans,axis = 0): # /!\ not good chi2 funtion 
+    nbGroup = len(allErrorTrans)
+    nbEx = len(allErrorTrans[0])
+
+    chi2Xval = []
+    chi2Pval = []
+
+    for j in range(nbEx):
+        obs = []
+        for i in range(nbGroup):
+            obs.append(allErrorTrans[i][j])
+        obs = np.array(obs).T
+        obs.shape
+        #################################################
+        Xval,Pval = sstats.chisquare(obs,axis = axis)
+        #################################################
+        chi2Xval.append(Xval)
+        chi2Pval.append(Pval)
+
+    return chi2Pval
+
+def anovaPaperEx(data,paramToAnalyse = 8):
+    dataToAnov = []
+    for al in data:
+        alData = []
+        for stud in al[paramToAnalyse]:
+            alData.append(stud)
+        dataToAnov.append(alData)
+
+    fVal,pVal = sstats.f_oneway(*dataToAnove)
+    print "f : %s, p : %s" % (fVal,pVal)
+    HVal,pVal = sstats.kruskal(*dataToAnov)
+    print "H : %s, p : %s" % (fVal,pVal)
+
+    return
+
+import scipy.io
+
+def savemat(mat):
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.cos(x)
+
+    scipy.io.savemat('test.mat', dict(x=x, y=y))

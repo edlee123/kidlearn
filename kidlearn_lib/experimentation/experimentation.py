@@ -55,7 +55,7 @@ class SessionStep(object):
         return self.exercise["act"]
 
     @property
-    def ex_answer(self):
+    def answer(self):
         return self.exercise["answer"]
     
     def __repr__(self):
@@ -205,6 +205,15 @@ class WorkingSession(object):
         else:
             return self._step[time].student["knowledges"][kc]#.level
 
+    def get_act_obs(self,begin_time=1, end_time=None, act_key="KT6kc", **kwargs):
+        act = []
+        obs = []
+        for step in self._step[begin_time:end_time]:
+            act.append(step.act[act_key][0])
+            obs.append(step.answer)
+
+        return np.array([act,obs])
+
     def base(self):
         return
 
@@ -303,7 +312,7 @@ class WorkingGroup(object):
             else: 
                 data.append(ws.step[time])
         return data
-    
+
     def get_act_repartition_time(self,first_ex = 1, nb_ex=101, act = "MAIN",nb_act = 5):
         repart = [[0 for x in range(nb_act)]]
         for num_ex in range(first_ex,nb_ex):
@@ -329,6 +338,12 @@ class WorkingGroup(object):
                     repart[exs[j][main_rt][0]][num_ex-first_ex][exs[j][type_ex[exs[j][main_rt][0]]][0]] += 1
 
         return repart
+
+    def get_act_obs(self, begin_time=1, end_time=None,**kwargs):
+        act_obs = []
+        for ws in self.working_sessions:
+            act_obs.append(ws.get_act_obs(begin_time, end_time,**kwargs))
+        return act_obs
 
     ##### Data Analysis tools 
     ###########################################################################
@@ -466,6 +481,12 @@ class Experiment(object):
                 cost[name].append(sub_group.calcul_cost())
         return cost
 
+    def get_act_obs(self, begin_time=1, end_time=None,**kwargs):
+        act_obs = {}
+        for name,group in self._groups.items():
+            for sub_group in group:
+                act_obs[name] = np.array(sub_group.get_act_obs(begin_time, end_time))
+        return act_obs
 
     ##### Data Analysis tools 
     ###########################################################################

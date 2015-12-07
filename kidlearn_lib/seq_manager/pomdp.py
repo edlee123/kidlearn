@@ -87,8 +87,14 @@ class POMDP(object):
             self._AS = np.zeros(self._nS)
             self._AS[-1] = 1
             self._R = np.array([np.zeros(self._nA) for x in range(self._nS)], dtype='float128')
-            self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x in range(self._nA)], dtype='float128')
-            self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x in range(self._nA)], dtype='float128')
+            
+            self._P = np.array([[np.zeros(self._nS) for x in range(self._nS)]for x2 in range(self._nA)], dtype='float128')
+            
+            self.manP = np.array([[np.zeros(self._nS) for x in range(self._nA)]for x2 in range(self._nS)], dtype='float128')
+
+            self._O = np.array([[np.zeros(2) for x in range(self._nS)] for x2 in range(self._nA)], dtype='float128')
+
+            self.manO = np.array([[np.zeros(2) for x in range(self._nA)] for x2 in range(self._nS)], dtype='float128')
 
             self.construct_transDepend_pomdpKT()
 
@@ -152,14 +158,19 @@ class POMDP(object):
                     iss = int(str_ss,2)
                     #no forgetting
                     self._P[aa][ii][iss] = 1
+                    self.manP[ii][aa][iss] = 1
                     self._O[aa][ii] = [1-self._Ps, self._Ps]
+                    self.manO[ii][aa] = [1-self._Ps, self._Ps]
                 else:
                     nss[aa] = 1
                     iss = int(''.join([str(x) for x in nss]),2)
                     aux = np.dot(ss, self._trans_dep[aa,:]) + self._Pt[aa]
                     self._P[aa][ii][iss] = aux
+                    self.manP[ii][aa][iss] = aux
                     self._P[aa][ii][ii] = 1-aux
+                    self.manP[ii][aa][ii] = 1-aux
                     self._O[aa][ii] = [self._Pg, 1-self._Pg]
+                    self.manO[ii][aa] = [self._Pg, 1-self._Pg]
 
     def construct_basic_pomdpKT(self):
 
@@ -218,7 +229,9 @@ class POMDP(object):
         k = 0
 
         while i <= nB and k < 100 :
-            print i,k
+            
+            #print i,k
+            
             # Sample action
             A = np.ceil((self._nA) * np.random.rand())-1
         
@@ -373,7 +386,7 @@ class POMDP(object):
                 #b = np.matrix(b)
 
                 # Compute updated beliefs for current action and all observations
-
+                #print"b : {}".format(b) 
                 Vaux = (b * self._P[a]).T
 
                 Vaux = np.multiply(npmat.repmat(Vaux,1,self._nZ) , self._O[a])
@@ -384,7 +397,8 @@ class POMDP(object):
                 # Compute observation probabilities and multiply
 
                 Q[a] = (b * np.matrix(self._R[:, a]).T).item(0,0) + self._gamma * np.sum(Vmax)
-            #print Q
+            #print "Q : {}".format(Q)
+            #raw_input()
             act = greedy('prob',Q)
 
         f_act = {self.main_act: [act]}
@@ -405,12 +419,13 @@ def greedy(mode, U):
     #print np.shape(U)
     #raw_input()
     #Idx = np.argmax(U, axis=0)
+    U = [np.around(x) for x in U]
     Idx = np.argwhere(U == np.amax(U, axis=0)).flatten().tolist()
 
     if mode == 'samp':
-        print Idx
-        print len(Idx) * np.random.rand()
-        print np.ceil(len(Idx) * np.random.rand())
+        #print Idx
+        #print len(Idx) * np.random.rand()
+        #print np.ceil(len(Idx) * np.random.rand())
         a = Idx[np.ceil(len(Idx) * np.random.rand())]
     elif mode == 'prob':
         a = Idx
@@ -465,7 +480,7 @@ def perseus(pomdp=None):
   #  print "V %s" %  V
     print "Perseus"
     while quit == 0:
-        print iterr
+        #print iterr
         #return perseusBackup(pomdp, V, D)
         #print "iterr %s" % iterr
         Vnew = perseusBackup(pomdp, V, D)
