@@ -71,6 +71,7 @@ kidlearn_soft/
 Simulation/
 Expe/
 result_xp/
+*/jq/*
 *.bz2
 *.dat
 
