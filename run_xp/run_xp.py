@@ -87,18 +87,21 @@ def all_values_zpdes():
     upZPD_vals = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
     deact_vals = [round(x, 1) for x in np.arange(0.4, 0.9, 0.1)]
     prom_coef_vals = [round(x, 1) for x in np.arange(0.2, 2, 0.2)]
+    #thresHProm = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
+    thresHDeact_vals = [round(x, 1) for x in np.arange(0.6, 1, 0.1)]
 
-    return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals
+    return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals
 
 
-def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act="KT6kc"):
-    filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals = all_values_zpdes()
+def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act="KT6kc", ref_stud="0"):
+    filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals = all_values_zpdes()
 
     print filter1_vals
     print stepUp_vals
     print upZPD_vals
     print deact_vals
     print prom_coef_vals
+    print thresHDeact_vals
 
     multi_confs = {
         "ZpdesSsbg": {
@@ -108,12 +111,13 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_a
                 "upZPDval": upZPD_vals,
                 "deactZPDval": deact_vals,
                 "promote_coeff": prom_coef_vals,
+                "thresHDeact": thresHDeact_vals
             }
         }
     }
 
     base_conf = func.load_json("ZPDES_base", "params_files/ZPDES")
-    base_conf["graph"]["file_name"] = "{}_graph".format(main_act)
+    base_conf["graph"]["file_name"] = "graph_{}_{}".format(main_act, ref_stud)
     base_conf["graph"]["main_act"] = main_act
 
     base_conf["graph"].update(func.load_json(base_conf["graph"]["file_name"], base_conf["graph"]["path"]))
@@ -154,14 +158,14 @@ def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100
     return xp
 
 
-def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc"):
+def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_stud="0"):
     all_confs_file_path = "experimentation/optimize/multiconf/"
     all_confs_file = "{}_all_confs.json".format(main_act)
 
     if os.path.isfile(os.path.join(all_confs_file_path, all_confs_file)):
         all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
     else:
-        all_zpdes_confs = gen_conf_to_optimize(all_confs_file_path, main_act)
+        all_zpdes_confs = gen_conf_to_optimize(all_confs_file_path, main_act, ref_stud)
 
     all_conf_ids = mp.generate_diff_config_id(all_zpdes_confs)
     nb_conf_to_test = nb_conf_to_test or len(all_zpdes_confs)
@@ -208,7 +212,8 @@ def xp_conf_to_job(zpdes_conf, stud_confs, nb_step=100, studFile=""):
     return xp_conf
 
 
-def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0, nb_conf_to_test=None, stud_file="stud_KT6kc_0"):
+def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0, nb_conf_to_test=None, ref_xp="KT6kc", ref_stud=0):
+    stud_file = "stud_{}_{}".format(ref_xp, ref_stud)
 
     if xp_type == 1:
         jq = avakas_xp()
@@ -219,7 +224,7 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl, kidleanrUrl]
 
-    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test)
+    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test, main_act=ref_xp, ref_stud=ref_stud)
 
     for set_zpdes in set_zpdes_conf:
         stud_confs = gen_stud_confs(nb_students=nb_stud, params_file=stud_file)
@@ -317,7 +322,7 @@ def calcul_cost_zpdes(zpdes_param, nb_stud=100, nb_step=100):
                 "upZPDval": zpdes_param[3],
                 "deactZPDval": zpdes_param[4],
                 "promote_coeff": zpdes_param[5],
-                "thresHierarProm": 0.3,
+                "thresHProm": 0.3,
                 "h_promote_coeff": 1,
                 "thresZBegin": 0.4,
                 "size_window": 3,
@@ -398,7 +403,31 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
                 "upZPDval": 0.6,  # 0.6,
                 "deactZPDval": 0.7,  # 0.4,# 0.5,
                 "promote_coeff": 0.8,  # 1.7,
-                "thresHierarProm": 0.5,  # 0.5,
+                "thresHProm": 0.5,  # 0.5,
+                "h_promote_coeff": 0.25,  # 0.25,
+                "size_window": 3,  # 3,
+                "spe_promo": 0  # 0
+            }
+        }
+    }
+
+    zpdes_params_1opti = {
+        "algo_name": "ZpdesHssbg",
+        "graph": {
+            "file_name": "{}_graph".format(ref_xp),
+            "path": "graph/",
+            "main_act": "{}".format(ref_xp)
+        },
+
+        "ZpdesSsbg": {
+            "ZpdesSsb": {
+                "filter1": 0.5,  # 0.4,# 0.30,
+                "uniformval": 0.05,  # 0.05,
+                "stepUpdate": 4,  # 6,# 6,
+                "upZPDval": 0.7,  # 0.6,
+                "deactZPDval": 0.6,  # 0.4,# 0.5,
+                "promote_coeff": 0.6,  # 1.7,
+                "thresHProm": 0.5,  # 0.5,
                 "h_promote_coeff": 0.25,  # 0.25,
                 "size_window": 3,  # 3,
                 "spe_promo": 0  # 0
@@ -416,37 +445,13 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
         "ZpdesSsbg": {
             "ZpdesSsb": {
-                "filter1": 0.5,  # 0.4,# 0.30,
-                "uniformval": 0.05,  # 0.05,
-                "stepUpdate": 4,  # 6,# 6,
-                "upZPDval": 0.7,  # 0.6,
-                "deactZPDval": 0.6,  # 0.4,# 0.5,
-                "promote_coeff": 0.6,  # 1.7,
-                "thresHierarProm": 0.5,  # 0.5,
-                "h_promote_coeff": 0.25,  # 0.25,
-                "size_window": 3,  # 3,
-                "spe_promo": 0  # 0
-            }
-        }
-    }
-
-    zpdes_params_3opti = {
-        "algo_name": "ZpdesHssbg",
-        "graph": {
-            "file_name": "{}_graph".format(ref_xp),
-            "path": "graph/",
-            "main_act": "{}".format(ref_xp)
-        },
-
-        "ZpdesSsbg": {
-            "ZpdesSsb": {
                 "filter1": 0.1,  # 0.4,# 0.30,
                 "uniformval": 0.05,  # 0.05,
                 "stepUpdate": 4,  # 6,# 6,
                 "upZPDval": 0.6,  # 0.6,
                 "deactZPDval": 0.7,  # 0.4,# 0.5,
                 "promote_coeff": 1.6,  # 1.7,
-                "thresHierarProm": 0.5,  # 0.5,
+                "thresHProm": 0.5,  # 0.5,
                 "h_promote_coeff": 0.25,  # 0.25,
                 "size_window": 3,  # 3,
                 "spe_promo": 0  # 0
@@ -455,8 +460,8 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     }
 
     zpdes_params_opti["_0"] = zpdes_params_0opti
+    zpdes_params_opti["_1"] = zpdes_params_1opti
     zpdes_params_opti["_2"] = zpdes_params_2opti
-    zpdes_params_opti["_3"] = zpdes_params_3opti
 
     #population_conf = func.load_json()
     population = k_lib.student.Population(params_file=disruption_pop_file, directory="params_files/studModel")
@@ -496,11 +501,11 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     #wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions=ws_tab_random)
 
     wkgs = {
-            "POMDP": [wG_pomdp],
-            "ZPDES": [wG_zpdes],
-            #"Random": [wG_random],
-            "ZPDES2": [wG_zpdes2]
-            }  # , "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} #
+        "POMDP": [wG_pomdp],
+        "ZPDES": [wG_zpdes],
+        #"Random": [wG_random],
+        "ZPDES2": [wG_zpdes2]
+    }  # , "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} #
 
     ref_xp_bis = "{}{}".format(ref_xp, ref_bis)
     params = {
@@ -531,15 +536,16 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
 
 # all xp on same graph
-def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_pomdp=["_0", "_2", "_3"], ref_stud="_0", save_xp_data=0):
+def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_pomdp=["0", "1", "2"], ref_stud="0", save_xp_data=0):
+    ref_bis = "%s_stud%s" % (ref_bis, ref_stud)
     if files_to_load is None:
         files_to_load = {}
 
     def_files_to_load = {}
     def_files_to_load["pomdp"] = []
     for ref_pomdp in refs_pomdp:
-        def_files_to_load["pomdp"].append({"file_name": "POMDP_{}{}".format(ref_xp, ref_pomdp), "path": "data/pomdp"})
-    def_files_to_load["stud"] = "stud_{}{}".format(ref_xp, ref_stud)
+        def_files_to_load["pomdp"].append({"file_name": "POMDP_{}_{}".format(ref_xp, ref_pomdp), "path": "data/pomdp"})
+    def_files_to_load["stud"] = "stud_{}_{}".format(ref_xp, ref_stud)
     def_files_to_load["zpdes"] = "ZPDES_base"
     #def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
     def_files_to_load["random"] = "RANDOM_base"
@@ -548,7 +554,6 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         if key not in files_to_load.keys():
             files_to_load[key] = val
 
-
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
 
     zpdes_params_opti = {}
@@ -556,7 +561,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     zpdes_params_0opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "{}_graph".format(ref_xp),
+            "file_name": "graph_{}_{}".format(ref_xp, ref_pomdp[0]),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -569,7 +574,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
                 "upZPDval": 0.6,  # 0.6,
                 "deactZPDval": 0.7,  # 0.4,# 0.5,
                 "promote_coeff": 0.8,  # 1.7,
-                "thresHierarProm": 0.5,  # 0.5,
+                "thresHProm": 0.5,  # 0.5,
                 "h_promote_coeff": 0.25,  # 0.25,
                 "size_window": 3,  # 3,
                 "spe_promo": 0  # 0
@@ -577,10 +582,10 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         }
     }
 
-    zpdes_params_2opti = {
+    zpdes_params_1opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "{}_graph".format(ref_xp),
+            "file_name": "graph_{}_{}".format(ref_xp, ref_pomdp[1]),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -593,7 +598,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
                 "upZPDval": 0.7,  # 0.6,
                 "deactZPDval": 0.6,  # 0.4,# 0.5,
                 "promote_coeff": 0.6,  # 1.7,
-                "thresHierarProm": 0.5,  # 0.5,
+                "thresHProm": 0.5,  # 0.5,
                 "h_promote_coeff": 0.25,  # 0.25,
                 "size_window": 3,  # 3,
                 "spe_promo": 0  # 0
@@ -601,10 +606,10 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         }
     }
 
-    zpdes_params_3opti = {
+    zpdes_params_2opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "{}_graph".format(ref_xp),
+            "file_name": "graph_{}_{}".format(ref_xp, ref_pomdp[2]),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -617,7 +622,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
                 "upZPDval": 0.6,  # 0.6,
                 "deactZPDval": 0.7,  # 0.4,# 0.5,
                 "promote_coeff": 1.6,  # 1.7,
-                "thresHierarProm": 0.5,  # 0.5,
+                "thresHProm": 0.5,  # 0.5,
                 "h_promote_coeff": 0.25,  # 0.25,
                 "size_window": 3,  # 3,
                 "spe_promo": 0  # 0
@@ -625,33 +630,38 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         }
     }
 
-    zpdes_params_opti["_0"] = zpdes_params_0opti
-    zpdes_params_opti["_2"] = zpdes_params_2opti
-    zpdes_params_opti["_3"] = zpdes_params_3opti
+    zpdes_params_opti["0"] = zpdes_params_0opti
+    zpdes_params_opti["1"] = zpdes_params_1opti
+    zpdes_params_opti["2"] = zpdes_params_2opti
 
     #population_conf = func.load_json()
-    population = k_lib.student.Population(params_file=disruption_pop_file, directory="params_files/studModel")
+    params_pop = func.load_json(disruption_pop_file, "params_files/studModel")
+    params_pop["nb_students"] = nb_stud
+    population = k_lib.student.Population(params=params_pop)
     #stud = k_lib.student.KTstudent(params=population.base_model)
     stud = k_lib.student.KTstudent(params_file=files_to_load["stud"], directory="params_files/studModel")
-    nb_stud = nb_stud  # population.nb_students
+    # nb_stud = nb_stud  # population.nb_students
 
     pomdPs = []
     zpdes2s = []
+    zpdesHs = []
 
     zpdes_params = func.load_json(file_name=files_to_load["zpdes"], dir_path="params_files/ZPDES")
-    zpdes_params = change_graph_params(zpdes_params, "{}_graph".format(ref_xp), ref_xp)
 
-    zpdesH = k_lib.seq_manager.ZpdesHssbg(zpdes_params)  # params=zpdes_params)
+    #zpdesH = k_lib.seq_manager.ZpdesHssbg(zpdes_params)  # params=zpdes_params)
 
     for i in range(len(refs_pomdp)):
         pomdPs.append(k_lib.seq_manager.POMDP(load_p=files_to_load["pomdp"][i]))
         zpdes2s.append(k_lib.seq_manager.ZpdesHssbg(zpdes_params_opti[refs_pomdp[i]]))  # params=zpdes_params)
+
+        zpdes_params = change_graph_params(zpdes_params, "graph_{}_{}".format(ref_xp, refs_pomdp[i]), ref_xp)
+        zpdesHs.append(k_lib.seq_manager.ZpdesHssbg(zpdes_params))
     #riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
     random_params = func.load_json(file_name=files_to_load["random"], dir_path="params_files/RANDOM")
     random_params = change_graph_params(random_params, "{}_graph".format(ref_xp), ref_xp)
     random = k_lib.seq_manager.RandomSequence(random_params)
 
-    ws_tab_zpdes = []
+    ws_tab_zpdes = [[] for i in range(len(refs_pomdp))]
     ws_tab_zpdes2 = [[] for i in range(len(refs_pomdp))]
     ws_tab_pomdp = [[] for i in range(len(refs_pomdp))]
     #ws_tab_riarit = []
@@ -660,14 +670,14 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     for i in range(nb_stud):
         if disruption == 1:
             stud = population.students[i]
-        ws_tab_zpdes.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(zpdesH)))
         for ii in range(len(refs_pomdp)):
+            ws_tab_zpdes[ii].append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(zpdesHs[ii])))
             ws_tab_zpdes2[ii].append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(zpdes2s[ii])))
             ws_tab_pomdp[ii].append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(pomdPs[ii])))
         #ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
         ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(random)))
 
-    wG_zpdes = [k_lib.experimentation.WorkingGroup(WorkingSessions=ws_tab_zpdes)]
+    wG_zpdes = [k_lib.experimentation.WorkingGroup(WorkingSessions=x) for x in ws_tab_zpdes]
 
     wG_zpdes2 = [k_lib.experimentation.WorkingGroup(WorkingSessions=x) for x in ws_tab_zpdes2]
     wG_pomdp = [k_lib.experimentation.WorkingGroup(WorkingSessions=x) for x in ws_tab_pomdp]
@@ -675,11 +685,11 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     #wG_random = k_lib.experimentation.WorkingGroup(WorkingSessions=ws_tab_random)
 
     wkgs = {
-            "POMDP": wG_pomdp,
-            "ZpdesH": wG_zpdes,
-            #"Random": [wG_random],
-            "Zpdes*": wG_zpdes2
-            }  # , "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} #
+        "POMDP": wG_pomdp,
+        "ZpdesH": wG_zpdes,
+        #"Random": [wG_random],
+        "Zpdes*": wG_zpdes2
+    }  # , "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} #
 
     ref_xp_bis = "{}{}".format(ref_xp, ref_bis)
     params = {
@@ -699,7 +709,8 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     values_vect = ["V{}".format(i + 1) for i in range(len(xp.KC))]
 
-    draw_xp_graph(xp, type_ex=values_vect, nb_ex_type=[1] * len(xp.KC))
+    ref_sub_group = [copy.deepcopy(refs_pomdp), copy.deepcopy(refs_pomdp), copy.deepcopy(refs_pomdp)]
+    draw_xp_graph(xp, type_ex=values_vect, nb_ex_type=[1] * len(xp.KC), ref_sub_group=ref_sub_group)
     #all_mean_data = draw_xp_graph(xp,ref_xp)
     #cost = calcul_xp_cost(xp)
 
@@ -743,16 +754,24 @@ def expe_zpdes_promot(ref_xp="kt_multiZ", path_to_save="experimentation/data/", 
 def draw_xp_histo(xp, type_ex=["V1", "V2", "V3", "V4", "V5"], nb_ex_type=[1, 1, 1, 1, 1]):
     # draw histo graph to visualise exercise in time
     for seq_name, group in xp._groups.items():
-        data = group[0].get_ex_repartition_time(first_ex=1, nb_ex=xp.nb_step + 1, main_rt=xp.main_act, type_ex=type_ex, nb_ex_type=nb_ex_type)
-        graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s \nStudent distribution per erxercices type over time" % (seq_name), path="%s" % (xp.save_path), ref="exTime_%s_%s" % (xp.ref_expe, seq_name), legend=type_ex, dataToUse=range(len([data])), show=0)
+        for i in range(len(group)):
+            data = group[i].get_ex_repartition_time(first_ex=1, nb_ex=xp.nb_step + 1, main_rt=xp.main_act, type_ex=type_ex, nb_ex_type=nb_ex_type)
+            graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s_%s \nStudent distribution per erxercices type over time" % (seq_name, i), path="%s" % (xp.save_path), ref="exTime_%s_%s_%s" % (xp.ref_expe, seq_name, i), legend=type_ex, dataToUse=range(len([data])), show=0)
 
 
-def draw_xp_kc_curve(xp):
+def draw_xp_kc_curve(xp, ref_sub_group=None):
     # draw learning curve
     skill_labels = xp.KC
     skill_labels.append("All")
     all_mean_data = {seq_name: {} for seq_name in xp._groups.keys()}
     labels = []
+    if ref_sub_group is None:
+        ref_sub_group = []
+        iii = 0
+        for seq_name, group in xp._groups.items():
+            ref_sub_group.append(range(len(group)))
+            iii += 1
+
     for k in range(len(skill_labels)):
         mean_data = [[] for i in range(len(xp._groups.keys()))]
         std_data = []
@@ -760,17 +779,17 @@ def draw_xp_kc_curve(xp):
         iii = 0
         for seq_name, group in xp._groups.items():
             if k == 0:
-                labels.append(["%s_%s" % (seq_name, x) for x in range(len(group))])
+                labels.append(["%s_%s" % (seq_name, x) for x in ref_sub_group[iii]])
             for y in group:
-                data = [y.get_students_level(time=x, kc=k) for x in range(xp.nb_step)]
+                data = [y.get_students_level(time=x, kc=k) for x in range(xp.nb_step + 1)]
                 mean_data[iii].append([np.mean(data[x]) for x in range(len(data))])
-            #all_data.append(data)
+            # all_data.append(data)
             std_data.append([np.std(data[x]) for x in range(len(data))])
             all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
             iii += 1
 
         dataToDraw = mean_data
-        std_dataToDraw = [std_data]
+        #std_dataToDraw = [std_data]
         if k == len(skill_labels) - 1:
             pvals = calcul_pvals(xp)
             draw_pvals(xp, pvals)
@@ -782,9 +801,9 @@ def draw_xp_kc_curve(xp):
 # for i in range(1, xp.nb_step):
 # pvals.append(sstats.f_oneway(data[0][i], data[1][i]))
         #        all_pvals.append(pvals)
-        #print labels
+        # print labels
 
-        graph.kGraph.draw_curve(dataToDraw, labels=labels, nb_ex=xp.nb_step, typeData="skill_level", type_data_spe="", ref="%s_%s" % (xp.ref_expe, skill_labels[k]), markers=None, colors=[["#00BBBB"], ["green"], ["black"], ['#FF0000']], line_type=['dashed', 'dashdot', 'solid', "dotted"], legend_position=5, path="%s" % (xp.save_path), showPlot=False)#std_data=std_dataToDraw,
+        graph.kGraph.draw_curve(dataToDraw, labels=labels, nb_ex=xp.nb_step + 1, typeData="skill_level", type_data_spe="", ref="%s_%s" % (xp.ref_expe, skill_labels[k]), markers=None, colors=[["#00BBBB"], ["green"], ["black"], ['#FF0000']], line_type=['solid', 'dashed', 'dashdot'], legend_position=5, path="%s" % (xp.save_path), showPlot=False)  # std_data=std_dataToDraw,
 
     # return all_pvals
 
@@ -827,9 +846,9 @@ def kruskal(dataToAnov):
 # Script to draw xp graphs
 
 
-def draw_xp_graph(xp, type_ex, nb_ex_type):
+def draw_xp_graph(xp, type_ex, nb_ex_type, ref_sub_group=None):
     draw_xp_histo(xp, type_ex, nb_ex_type)
-    draw_xp_kc_curve(xp)
+    draw_xp_kc_curve(xp, ref_sub_group)
 
     return
 
@@ -840,7 +859,7 @@ def draw_xp_graph(xp, type_ex, nb_ex_type):
 
 def recup_mean_cost_from_jq(jq=None, jq_uuid=None):
     jq_uuid = jq_uuid or jq.uuid
-    allcost_name = "jq/"+jq_uuid+"/all_cost_" + jq_uuid
+    allcost_name = "jq/" + jq_uuid + "/all_cost_" + jq_uuid
     allcost = k_lib.func.load_json(allcost_name)
     nc = calcul_xp_cost(cost=allcost)
     cost_mean = copy.deepcopy(nc["mean"])

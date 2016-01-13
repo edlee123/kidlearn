@@ -1047,18 +1047,21 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     if title == "":
         title = "Evolution of %s %s" % (type_data_spe, typeData)
 
-    plt.xlabel(xylabels[0], fontsize=20)
-    plt.ylabel(xylabels[1], fontsize=20)
+    plt.xlabel(xylabels[0], fontsize=30)
+    plt.ylabel(xylabels[1], fontsize=30)
 
     colorsBis = colors  # gen_colors(data)
+
+    plt.xticks(fontsize=30)
+    plt.yticks(fontsize=30)
 
     for nbPdata in range(0, len(data)):
         nb_group = len(data[nbPdata])
 
         for group in range(0, nb_group):
             _lineWidth = 2
-            if line_type[(nbPdata * nb_group + group) % len(line_type)] == 'solid':
-                _lineWidth = 1
+            #if line_type[(nbPdata * nb_group + group) % len(line_type)] == 'solid':
+            #    _lineWidth = 1
 
             # print nbPdata
             if len(labels[nbPdata % len(labels)]) <= group:
@@ -1106,13 +1109,13 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     plt.title(title, fontsize=20)
 
     if legend_position == 0:
-        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 14})
+        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     elif legend_position == 1:
-        plt.legend(bbox_to_anchor=(0, 0, 0.3, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 14})
+        plt.legend(bbox_to_anchor=(0, 0, 0.3, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     elif legend_position == 2:
         plt.legend(bbox_to_anchor=(0, 0, 1.1, 0), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     else:
-        plt.legend(bbox_to_anchor=(0, 0, 1, 0.3), ncol=1, fancybox=True, shadow=True, prop={'size': 14})
+        plt.legend(bbox_to_anchor=(0, 0, 1, 0.3), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
 
