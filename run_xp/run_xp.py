@@ -81,15 +81,17 @@ def local_xp(objs_to_job=None):
     return jq
 
 
-def all_values_zpdes():
+def all_values_zpdes(hierarUtile=0):
     filter1_vals = [round(x, 1) for x in np.arange(0.1, 0.6, 0.1)]
     stepUp_vals = range(4, 8, 1)
     upZPD_vals = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
     deact_vals = [round(x, 1) for x in np.arange(0.4, 0.9, 0.1)]
     prom_coef_vals = [round(x, 1) for x in np.arange(0.2, 2, 0.2)]
     #thresHProm = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
-    thresHDeact_vals = [round(x, 1) for x in np.arange(0.6, 1, 0.1)]
-
+    if hierarUtile:
+        thresHDeact_vals = [round(x, 1) for x in np.arange(0.6, 1, 0.1)]
+    else:
+        thresHDeact_vals = [0.7]
     return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals
 
 
@@ -121,6 +123,7 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_a
     base_conf["graph"]["main_act"] = main_act
 
     base_conf["graph"].update(func.load_json(base_conf["graph"]["file_name"], base_conf["graph"]["path"]))
+    print base_conf
     zpdes_confs = mp.multi_conf(base_conf=base_conf, multi_params=multi_confs, combine=1)
 
     #conf_ids = mp.generate_diff_config_id(zpdes_confs)
@@ -160,7 +163,7 @@ def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100
 
 def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_stud="0"):
     all_confs_file_path = "experimentation/optimize/multiconf/"
-    all_confs_file = "{}_all_confs.json".format(main_act)
+    all_confs_file = "{}_{}_all_confs.json".format(main_act,ref_stud)
 
     if os.path.isfile(os.path.join(all_confs_file_path, all_confs_file)):
         all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
@@ -561,7 +564,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     zpdes_params_0opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, ref_pomdp[0]),
+            "file_name": "graph_{}_{}".format(ref_xp, refs_pomdp[0]),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -585,7 +588,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     zpdes_params_1opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, ref_pomdp[1]),
+            "file_name": "graph_{}_{}".format(ref_xp, refs_pomdp[1]),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -609,7 +612,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     zpdes_params_2opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, ref_pomdp[2]),
+            "file_name": "graph_{}_{}".format(ref_xp, refs_pomdp[2]),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
