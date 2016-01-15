@@ -244,14 +244,18 @@ class ZpdesSsb(SSbandit):
 
     def hierarchical_promote_async(self):
         for i in range(1, self.nval):
-            ssbg = self.sonSSBG[self.param_values[i - 1]]
-            tabTabSucessRate = self.hsuccess_rate(ssbg, -self.stepMax)
-            tabMeanSucessRate = [np.mean(tab) for tab in tabTabSucessRate]
-            meanSucess = np.mean(tabMeanSucessRate)
-            minTabTabSucessRate = min([min(tab) for tab in tabTabSucessRate])
-            if self.bandval[i] == 0 and meanSucess > self.thresHProm:
+            ssbgi1 = self.sonSSBG[self.param_values[i - 1]]
+            tabTabSucessRatei1 = self.hsuccess_rate(ssbgi1, -self.stepMax)
+            tabMeanSucessRatei1 = [np.mean(tab) for tab in tabTabSucessRatei1]
+            meanSucessi1 = np.mean(tabMeanSucessRatei1)
+
+            ssbgi = self.sonSSBG[self.param_values[i]]
+            tabTabSucessRatei = self.hsuccess_rate(ssbgi, -self.stepUpdate)
+            minTabTabSucessRatei = min([min(tab) for tab in tabTabSucessRatei])
+
+            if self.bandval[i] == 0 and self.len_success()[i] == 0 and meanSucessi1 > self.thresHProm:
                 self.bandval[i] = self.bandval[i - 1] * self.h_promote_coeff
-            elif self.bandval[i] != 0 and minTabTabSucessRate > self.thresHDeact and self.bandval.count(0) < len(self.bandval) - 1:
+            elif self.bandval[i] != 0 and minTabTabSucessRatei > self.thresHDeact and self.bandval.count(0) < len(self.bandval) - 1:
                 self.bandval[i] = 0
 
     def spe_promote_async(self):
@@ -327,7 +331,7 @@ class ZpdesSsb(SSbandit):
     def len_success(self, first_val=0, last_val=None):
         return [len(x) for x in self.success][first_val:last_val]
 
-    def hsuccess_rate(self, ssbg, first_step=0, last_step=None, val=None, min_nb_ans=3, meanAll=0):
+    def hsuccess_rate(self, ssbg, first_step=0, last_step=None, val=None, min_nb_ans=2, meanAll=0):
         successUsed = [ssb.success_rate(first_step, last_step, min_nb_ans=min_nb_ans, meanAll=meanAll) for ssb in ssbg.SSB if ssb.is_hierarchical == 1]
 
         return successUsed

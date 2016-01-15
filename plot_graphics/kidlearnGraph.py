@@ -1111,11 +1111,11 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     if legend_position == 0:
         plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     elif legend_position == 1:
-        plt.legend(bbox_to_anchor=(0, 0, 0.3, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     elif legend_position == 2:
         plt.legend(bbox_to_anchor=(0, 0, 1.1, 0), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     else:
-        plt.legend(bbox_to_anchor=(0, 0, 1, 0.3), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 1, 0.4), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
 

@@ -46,7 +46,7 @@ def avakas_xp(objs_to_job=None):
     jq_config = {
         'jq_type': 'avakas',
         'ssh_cfg': {'username': 'bclement'},
-        'max_jobs': 350,
+        'max_jobs': 1000,
         'auto_update': False
     }
 
@@ -83,20 +83,24 @@ def local_xp(objs_to_job=None):
 
 def all_values_zpdes(hierarUtile=0):
     filter1_vals = [round(x, 1) for x in np.arange(0.1, 0.6, 0.1)]
-    stepUp_vals = range(4, 8, 1)
-    upZPD_vals = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
-    deact_vals = [round(x, 1) for x in np.arange(0.4, 0.9, 0.1)]
-    prom_coef_vals = [round(x, 1) for x in np.arange(0.2, 2, 0.2)]
+    stepUp_vals = range(4, 7, 1)
+    upZPD_vals = [round(x, 1) for x in np.arange(0.5, 0.8, 0.1)]
+    deact_vals = [round(x, 1) for x in np.arange(0.4, 0.8, 0.1)]
+    prom_coef_vals = [round(x, 1) for x in np.arange(0.6, 1.8, 0.3)]
     #thresHProm = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
     if hierarUtile:
-        thresHDeact_vals = [round(x, 1) for x in np.arange(0.6, 1, 0.1)]
+        thresHDeact_vals = [round(x, 1) for x in np.arange(0.5, 0.8, 0.1)]
     else:
         thresHDeact_vals = [0.7]
     return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals
 
 
-def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act="KT6kc", ref_stud="0"):
-    filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals = all_values_zpdes()
+def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act="KT6kc", ref_stud="0", hierarUtile=0):
+
+    if ref_stud in ["2"]:
+        hierarUtile = 1
+
+    filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals = all_values_zpdes(hierarUtile)
 
     print filter1_vals
     print stepUp_vals
@@ -133,7 +137,7 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_a
     jstr = json.dumps(zpdes_confs)
 
     k_lib.config.datafile.create_directories([save_path])
-    save_path = "{}{}_all_confs.json".format(save_path, main_act)
+    save_path = "{}{}_{}_all_confs.json".format(save_path, main_act, ref_stud)
     k_lib.functions.write_in_file(save_path, jstr)
 
     return zpdes_confs
@@ -163,7 +167,7 @@ def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100
 
 def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_stud="0"):
     all_confs_file_path = "experimentation/optimize/multiconf/"
-    all_confs_file = "{}_{}_all_confs.json".format(main_act,ref_stud)
+    all_confs_file = "{}_{}_all_confs.json".format(main_act, ref_stud)
 
     if os.path.isfile(os.path.join(all_confs_file_path, all_confs_file)):
         all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
@@ -540,6 +544,7 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
 # all xp on same graph
 def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_pomdp=["0", "1", "2"], ref_stud="0", save_xp_data=0):
+
     ref_bis = "%s_stud%s" % (ref_bis, ref_stud)
     if files_to_load is None:
         files_to_load = {}
@@ -564,7 +569,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     zpdes_params_0opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, refs_pomdp[0]),
+            "file_name": "graph_{}_{}".format(ref_xp, 0),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -577,10 +582,6 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
                 "upZPDval": 0.6,  # 0.6,
                 "deactZPDval": 0.7,  # 0.4,# 0.5,
                 "promote_coeff": 0.8,  # 1.7,
-                "thresHProm": 0.5,  # 0.5,
-                "h_promote_coeff": 0.25,  # 0.25,
-                "size_window": 3,  # 3,
-                "spe_promo": 0  # 0
             }
         }
     }
@@ -588,31 +589,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     zpdes_params_1opti = {
         "algo_name": "ZpdesHssbg",
         "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, refs_pomdp[1]),
-            "path": "graph/",
-            "main_act": "{}".format(ref_xp)
-        },
-
-        "ZpdesSsbg": {
-            "ZpdesSsb": {
-                "filter1": 0.5,  # 0.4,# 0.30,
-                "uniformval": 0.05,  # 0.05,
-                "stepUpdate": 4,  # 6,# 6,
-                "upZPDval": 0.7,  # 0.6,
-                "deactZPDval": 0.6,  # 0.4,# 0.5,
-                "promote_coeff": 0.6,  # 1.7,
-                "thresHProm": 0.5,  # 0.5,
-                "h_promote_coeff": 0.25,  # 0.25,
-                "size_window": 3,  # 3,
-                "spe_promo": 0  # 0
-            }
-        }
-    }
-
-    zpdes_params_2opti = {
-        "algo_name": "ZpdesHssbg",
-        "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, refs_pomdp[2]),
+            "file_name": "graph_{}_{}".format(ref_xp, 1),
             "path": "graph/",
             "main_act": "{}".format(ref_xp)
         },
@@ -622,13 +599,31 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
                 "filter1": 0.1,  # 0.4,# 0.30,
                 "uniformval": 0.05,  # 0.05,
                 "stepUpdate": 4,  # 6,# 6,
-                "upZPDval": 0.6,  # 0.6,
+                "upZPDval": 0.7,  # 0.6,
+                "deactZPDval": 0.6,  # 0.4,# 0.5,
+                "promote_coeff": 0.8,  # 1.7,
+            }
+        }
+    }
+
+    zpdes_params_2opti = {
+        "algo_name": "ZpdesHssbg",
+        "graph": {
+            "file_name": "graph_{}_{}".format(ref_xp, 2),
+            "path": "graph/",
+            "main_act": "{}".format(ref_xp)
+        },
+
+        "ZpdesSsbg": {
+            "ZpdesSsb": {
+                "filter1": 0.2,  # 0.4,# 0.30,
+                "uniformval": 0.05,  # 0.05,
+                "stepUpdate": 4,  # 4,# 6,
+                "upZPDval": 0.5,  # 0.6,
                 "deactZPDval": 0.7,  # 0.4,# 0.5,
-                "promote_coeff": 1.6,  # 1.7,
+                "promote_coeff": 0.8,  # 1.7,
                 "thresHProm": 0.5,  # 0.5,
-                "h_promote_coeff": 0.25,  # 0.25,
-                "size_window": 3,  # 3,
-                "spe_promo": 0  # 0
+                "thresHDeact": 0.7
             }
         }
     }
@@ -651,7 +646,7 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     zpdes_params = func.load_json(file_name=files_to_load["zpdes"], dir_path="params_files/ZPDES")
 
-    #zpdesH = k_lib.seq_manager.ZpdesHssbg(zpdes_params)  # params=zpdes_params)
+    # zpdesH = k_lib.seq_manager.ZpdesHssbg(zpdes_params)  # params=zpdes_params)
 
     for i in range(len(refs_pomdp)):
         pomdPs.append(k_lib.seq_manager.POMDP(load_p=files_to_load["pomdp"][i]))
