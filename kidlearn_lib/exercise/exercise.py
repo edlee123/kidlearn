@@ -13,24 +13,24 @@
 
 import numpy as np
 import copy
-import re
 
 from ..knowledge import Knowledge
 
+
 class Exercise(object):
 
-    def __init__(self, act, knowledge_levels=None, knowledge_names=None, 
-            answer=None, nbMax_try=1, params=None, *args,**kwargs):
-        # act : 
+    def __init__(self, act, knowledge_levels=None, knowledge_names=None,
+                 answer=None, nbMax_try=1, params=None, *args, **kwargs):
+        # act :
 
         self._act = act
         self._answer = answer
-        self._knowledges = [Knowledge(kn,kl) for (kn,kl) in zip(knowledge_names,knowledge_levels)]
-        
+        self._knowledges = [Knowledge(kn, kl) for (kn, kl) in zip(knowledge_names, knowledge_levels)]
+
         self._nbMax_try = nbMax_try
         params = np.array(params)
-        
-        self.add_attr(args,kwargs)
+
+        self.add_attr(args, kwargs)
 
     @property
     def state(self):
@@ -47,7 +47,7 @@ class Exercise(object):
     @property
     def act(self):
         return self._act
-    
+
     @property
     def answer(self):
         return self._answer
@@ -57,12 +57,12 @@ class Exercise(object):
         return self._knowledges
 
     def __repr__(self):
-        #print "act : %s" % self._act
-        #print "ans : %s" % self._answer
+        # print "act : %s" % self._act
+        # print "ans : %s" % self._answer
         act = copy.deepcopy(self._act)
         act["ans"] = self._answer
         return act.__str__()
-    
+
     def __str__(self):
         return self.__repr__()
 
@@ -78,7 +78,7 @@ class Exercise(object):
         return np.array([kc._level for kc in self._knowledges])
 
     def get_attr(self):
-        return {"act": self._act, "knowledge" : self._knowledges, "answer" : self._answer}
+        return {"act": self._act, "knowledge": self._knowledges, "answer": self._answer}
 
     def add_attr(self, *args, **kwargs):
         for key, val in kwargs.iteritems():

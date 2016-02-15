@@ -1,0 +1,13 @@
+{
+    "name" : "POMDP",
+    "ref" : "KT6kc",
+    "actions": "KT6kc",
+    "n_Action" : 6,
+    "n_StatePerAct": 2,
+    "n_Observation" : 2,
+    "gamma" : 0.99,
+    "learn_model" : {
+        "file_name": "stud_KT6kc",
+        "path" : "params_files/studModel"
+    }
+}

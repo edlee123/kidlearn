@@ -14,12 +14,12 @@ import copy
 import collections
 import numpy as np
 
-from ..functions import functions as func
 from .riarit import RiaritHssbg
+from .. import functions as func
 
 class Sequence(RiaritHssbg):
      
-    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"):
+    def __init__(self, params=None, params_file="seq_test_1", directory="params_files"): 
         sizeSerie = params['sizeSerie']
         RiaritHssbg.__init__(self, params = params)
         #self.fault = [0]*sizeSerie utsing ?

@@ -1,3 +1,3 @@
 from .config import *
-#import manage_param 
-#import datafile as datafile
+from . import manage_param 
+from . import datafile
