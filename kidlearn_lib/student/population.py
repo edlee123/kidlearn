@@ -24,44 +24,57 @@ from .. import functions as func
 
 class Population(object):
 
-    def __init__(self, params=None, params_file=None, directory="params_files", *args, **kwargs):
-        if params is not None or params_file is not None:
-            params = params or func.load_json(params_file, directory)
-        self.params = params
-        self.uuid = str(uuid.uuid1())
-        self.base_model = params["base_model"]
-        self.disrupted_models = params["disrupted_model"]
-        self.nb_students = params["nb_students"]
-        self.students_models = []
-        self.students = []
-        self.perturb_KT_model()
+    def __init__(self, params=None, params_file=None, directory="params_file", stud_list=None, *args, **kwargs):
+        if params is not None:
+            params = params
+        elif params_file is not None:
+            params = []
+            if type(params_file) is list:
+                for pf in params_file:
+                    params.append(func.load_json(pf, directory))
+            else:
+                params.append(func.load_json(params_file, directory))
 
-    def perturb_KT_model(self):
-        trans_dep_mv = self.disrupted_models["kc_trans_dep"]
+        if stud_list is not None:
+            self.students = stud_list
+
+        else:
+            self.params = params
+            self.uuid = str(uuid.uuid1())
+            self.base_model = [x["base_model"] for x in params]
+            self.disrupted_models = [x["disrupted_model"] for x in params]
+            self.nb_students = [x["nb_students"] for x in params]
+            self.students_models = []
+            self.students = []
+            for nPop in range(len(self.params)):
+                self.perturb_KT_model(nPop)
+
+    def perturb_KT_model(self, nPop):
+        trans_dep_mv = self.disrupted_models[nPop]["kc_trans_dep"]
         trans_dep_pert = []
-        for i in range(len(self.base_model["kc_trans_dep"])):
+        for i in range(len(self.base_model[nPop]["kc_trans_dep"])):
             mean = trans_dep_mv["mean"][i]
             cov = np.diag(trans_dep_mv["var"][i])
-            trans_dep_pert.append(np.array(np.random.multivariate_normal(mean, cov, self.nb_students)))
+            trans_dep_pert.append(np.array(np.random.multivariate_normal(mean, cov, self.nb_students[nPop])))
 
-        kt_mv = self.disrupted_models["KT"]
+        kt_mv = self.disrupted_models[nPop]["KT"]
         kt_pert = {}
-        for key in self.base_model["KT"].keys():
+        for key in self.base_model[nPop]["KT"].keys():
             mean = kt_mv["mean"][key]
             cov = np.diag(kt_mv["var"][key])
-            kt_pert[key] = np.array(np.random.multivariate_normal(mean, cov, self.nb_students))
+            kt_pert[key] = np.array(np.random.multivariate_normal(mean, cov, self.nb_students[nPop]))
             for i in range(len(kt_pert[key])):
                 for j in range(len(kt_pert[key][i])):
                     if kt_pert[key][i][j] < 0:
                         kt_pert[key][i][j] = 0.01
 
-        for i in range(self.nb_students):
-            new_model = copy.deepcopy(self.base_model)
+        for i in range(self.nb_students[nPop]):
+            new_model = copy.deepcopy(self.base_model[nPop])
             for x in range(len(trans_dep_pert)):
                 new_model["kc_trans_dep"][x] = np.array(new_model["kc_trans_dep"][x]) - trans_dep_pert[x][i]
-                new_model["kc_trans_dep"][x] = [max(new_model["kc_trans_dep"][x][y], 0.01) for y in range(len(new_model["kc_trans_dep"][x]))]
+                new_model["kc_trans_dep"][x] = [max(new_model["kc_trans_dep"][x][y], 0) for y in range(len(new_model["kc_trans_dep"][x]))]
 
-            for key in self.base_model["KT"].keys():
+            for key in self.base_model[nPop]["KT"].keys():
                 new_model["KT"][key] = np.array(new_model["KT"][key]) - kt_pert[key][i]
             self.students_models.append(new_model)
             self.students.append(KTstudent(params=new_model))

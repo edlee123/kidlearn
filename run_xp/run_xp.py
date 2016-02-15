@@ -30,6 +30,7 @@ from experiment_manager.job.kidlearn_job import KidlearnJob
 from experiment_manager.job.classic_job import ClassicJob
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import cPickle
 
 sys.path.append("../..")
 import plot_graphics as graph
@@ -392,7 +393,7 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
 
-    zpdes_params_opti = {}
+    zpdes_conf_opti = {}
 
     zpdes_params_0opti = {
         "algo_name": "ZpdesHssbg",
@@ -466,9 +467,9 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
         }
     }
 
-    zpdes_params_opti["_0"] = zpdes_params_0opti
-    zpdes_params_opti["_1"] = zpdes_params_1opti
-    zpdes_params_opti["_2"] = zpdes_params_2opti
+    zpdes_conf_opti["_0"] = zpdes_params_0opti
+    zpdes_conf_opti["_1"] = zpdes_params_1opti
+    zpdes_conf_opti["_2"] = zpdes_params_2opti
 
     #population_conf = func.load_json()
     population = k_lib.student.Population(params_file=disruption_pop_file, directory="params_files/studModel")
@@ -480,7 +481,7 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
     zpdes_params = change_graph_params(zpdes_params, "{}_graph".format(ref_xp), ref_xp)
 
     zpdes = k_lib.seq_manager.ZpdesHssbg(zpdes_params)  # params=zpdes_params)
-    zpdes2 = k_lib.seq_manager.ZpdesHssbg(zpdes_params_opti[ref_pomdp])  # params=zpdes_params)
+    zpdes2 = k_lib.seq_manager.ZpdesHssbg(zpdes_conf_opti[ref_pomdp])  # params=zpdes_params)
     #riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
     random_params = func.load_json(file_name=files_to_load["random"], dir_path="params_files/RANDOM")
     random_params = change_graph_params(random_params, "{}_graph".format(ref_xp), ref_xp)
@@ -543,17 +544,22 @@ def kt_expe(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, n
 
 
 # all xp on same graph
-def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_pomdp=["0", "1", "2"], ref_stud="0", save_xp_data=0):
+def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=100, nb_stud=100, files_to_load=None, ref_bis="", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_opti=["0", "1", "2", "3"], refs_stud=["0", "1", "2", "3"], save_xp_data=0, mixed_pop=1):
 
-    ref_bis = "%s_stud%s" % (ref_bis, ref_stud)
+    if type(refs_stud) != list:
+        refs_stud = [refs_stud]
+
+    ref_bis = "{}opti{}_stud{}".format(ref_bis, "".join(refs_opti), "".join(refs_stud))
     if files_to_load is None:
         files_to_load = {}
 
     def_files_to_load = {}
     def_files_to_load["pomdp"] = []
-    for ref_pomdp in refs_pomdp:
-        def_files_to_load["pomdp"].append({"file_name": "POMDP_{}_{}".format(ref_xp, ref_pomdp), "path": "data/pomdp"})
-    def_files_to_load["stud"] = "stud_{}_{}".format(ref_xp, ref_stud)
+    def_files_to_load["stud"] = []
+    for ref in refs_opti:
+        def_files_to_load["pomdp"].append({"file_name": "POMDP_{}_{}".format(ref_xp, ref), "path": "data/pomdp"})
+    for ref in refs_stud:
+        def_files_to_load["stud"].append("stud_{}_{}".format(ref_xp, ref))
     def_files_to_load["zpdes"] = "ZPDES_base"
     #def_files_to_load["riarit"] = "RIARIT_{}".format(ref_xp)
     def_files_to_load["random"] = "RANDOM_base"
@@ -564,80 +570,60 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     #pomdP = k_lib.config.datafile.load_file("KT_expe_2","data/pomdp")
 
-    zpdes_params_opti = {}
-
-    zpdes_params_0opti = {
-        "algo_name": "ZpdesHssbg",
-        "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, 0),
-            "path": "graph/",
-            "main_act": "{}".format(ref_xp)
-        },
-
-        "ZpdesSsbg": {
-            "ZpdesSsb": {
-                "filter1": 0.2,  # 0.4,# 0.30,
-                "uniformval": 0.05,  # 0.05,
-                "stepUpdate": 4,  # 6,# 6,
-                "upZPDval": 0.6,  # 0.6,
-                "deactZPDval": 0.7,  # 0.4,# 0.5,
-                "promote_coeff": 0.8,  # 1.7,
-            }
-        }
+    zpdes_conf_opti = {}
+    zpdes_params_opti = {
+        "0": [0.2, 0.05, 4, 0.6, 0.7, 0.8, 0.5, 0.5],
+        "1": [0.1, 0.05, 4, 0.7, 0.6, 0.8, 0.5, 0.5],
+        "2": [0.5, 0.05, 4, 0.8, 0.7, 1.5, 0.5, 0.5],
+        "3": [0.4, 0.05, 4, 0.8, 0.6, 1.2, 0.5, 0.5],
+        "4": [0.4, 0.05, 4, 0.8, 0.6, 1.2, 0.5, 0.5],
     }
 
-    zpdes_params_1opti = {
-        "algo_name": "ZpdesHssbg",
-        "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, 1),
-            "path": "graph/",
-            "main_act": "{}".format(ref_xp)
-        },
+    for ref in refs_opti:
+        zpdes_conf_opti[ref] = {
+            "algo_name": "ZpdesHssbg",
+            "graph": {
+                "file_name": "graph_{}_{}".format(ref_xp, ref),
+                "path": "graph/",
+                "main_act": "{}".format(ref_xp)
+            },
 
-        "ZpdesSsbg": {
-            "ZpdesSsb": {
-                "filter1": 0.1,  # 0.4,# 0.30,
-                "uniformval": 0.05,  # 0.05,
-                "stepUpdate": 4,  # 6,# 6,
-                "upZPDval": 0.7,  # 0.6,
-                "deactZPDval": 0.6,  # 0.4,# 0.5,
-                "promote_coeff": 0.8,  # 1.7,
+            "ZpdesSsbg": {
+                "ZpdesSsb": {
+                    "filter1": zpdes_params_opti[ref][0],  # 0.4,# 0.30,
+                    "uniformval": zpdes_params_opti[ref][1],  # 0.05,
+                    "stepUpdate": zpdes_params_opti[ref][2],  # 4,# 6,
+                    "upZPDval": zpdes_params_opti[ref][3],  # 0.6,
+                    "deactZPDval": zpdes_params_opti[ref][4],  # 0.4,# 0.5,
+                    "promote_coeff": zpdes_params_opti[ref][5],  # 1.7,
+                    "thresHProm": zpdes_params_opti[ref][6],  # 0.5,
+                    "thresHDeact": zpdes_params_opti[ref][7]
+                }
             }
         }
-    }
 
-    zpdes_params_2opti = {
-        "algo_name": "ZpdesHssbg",
-        "graph": {
-            "file_name": "graph_{}_{}".format(ref_xp, 2),
-            "path": "graph/",
-            "main_act": "{}".format(ref_xp)
-        },
+    params_pop = []
+    for ref in refs_stud:
+        p_pop = func.load_json("{}_{}".format(disruption_pop_file, ref), "params_files/studModel")
+        p_pop["nb_students"] = nb_stud
+        params_pop.append(p_pop)
+    if disruption == 1:
+        population = k_lib.student.Population(params=params_pop)
+    elif mixed_pop:
+        stud_list = []
+        for ii in range(len(refs_stud)):
+            for i in range(nb_stud):
+                stud_list.append(k_lib.student.KTstudent(params_file=files_to_load["stud"][ii], directory="params_files/studModel"))
+        population = k_lib.student.Population(stud_list=stud_list)
+    else:
+        stud_list = {}
+        for ii in range(len(refs_stud)):
+            stud_list[refs_stud[ii]] = []
+            for i in range(nb_stud):
+                stud_list[refs_stud[ii]].append(k_lib.student.KTstudent(params_file=files_to_load["stud"][ii], directory="params_files/studModel"))
+        population = k_lib.student.Population(stud_list=stud_list)
 
-        "ZpdesSsbg": {
-            "ZpdesSsb": {
-                "filter1": 0.2,  # 0.4,# 0.30,
-                "uniformval": 0.05,  # 0.05,
-                "stepUpdate": 4,  # 4,# 6,
-                "upZPDval": 0.5,  # 0.6,
-                "deactZPDval": 0.7,  # 0.4,# 0.5,
-                "promote_coeff": 0.8,  # 1.7,
-                "thresHProm": 0.5,  # 0.5,
-                "thresHDeact": 0.7
-            }
-        }
-    }
-
-    zpdes_params_opti["0"] = zpdes_params_0opti
-    zpdes_params_opti["1"] = zpdes_params_1opti
-    zpdes_params_opti["2"] = zpdes_params_2opti
-
-    #population_conf = func.load_json()
-    params_pop = func.load_json(disruption_pop_file, "params_files/studModel")
-    params_pop["nb_students"] = nb_stud
-    population = k_lib.student.Population(params=params_pop)
     #stud = k_lib.student.KTstudent(params=population.base_model)
-    stud = k_lib.student.KTstudent(params_file=files_to_load["stud"], directory="params_files/studModel")
     # nb_stud = nb_stud  # population.nb_students
 
     pomdPs = []
@@ -648,32 +634,31 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     # zpdesH = k_lib.seq_manager.ZpdesHssbg(zpdes_params)  # params=zpdes_params)
 
-    for i in range(len(refs_pomdp)):
+    for i in range(len(refs_opti)):
         pomdPs.append(k_lib.seq_manager.POMDP(load_p=files_to_load["pomdp"][i]))
-        zpdes2s.append(k_lib.seq_manager.ZpdesHssbg(zpdes_params_opti[refs_pomdp[i]]))  # params=zpdes_params)
+        zpdes2s.append(k_lib.seq_manager.ZpdesHssbg(zpdes_conf_opti[refs_opti[i]]))  # params=zpdes_params)
 
-        zpdes_params = change_graph_params(zpdes_params, "graph_{}_{}".format(ref_xp, refs_pomdp[i]), ref_xp)
+        zpdes_params = change_graph_params(zpdes_params, "graph_{}_{}".format(ref_xp, refs_opti[i]), ref_xp)
         zpdesHs.append(k_lib.seq_manager.ZpdesHssbg(zpdes_params))
     #riarit = k_lib.seq_manager.RiaritHssbg(params_file=files_to_load["riarit"],directory="params_files/RIARIT")
     random_params = func.load_json(file_name=files_to_load["random"], dir_path="params_files/RANDOM")
     random_params = change_graph_params(random_params, "{}_graph".format(ref_xp), ref_xp)
-    random = k_lib.seq_manager.RandomSequence(random_params)
+    #random = k_lib.seq_manager.RandomSequence(random_params)
 
-    ws_tab_zpdes = [[] for i in range(len(refs_pomdp))]
-    ws_tab_zpdes2 = [[] for i in range(len(refs_pomdp))]
-    ws_tab_pomdp = [[] for i in range(len(refs_pomdp))]
+    ws_tab_zpdes = [[] for i in range(len(refs_opti))]
+    ws_tab_zpdes2 = [[] for i in range(len(refs_opti))]
+    ws_tab_pomdp = [[] for i in range(len(refs_opti))]
     #ws_tab_riarit = []
-    ws_tab_random = []
+    #ws_tab_random = []
 
-    for i in range(nb_stud):
-        if disruption == 1:
-            stud = population.students[i]
-        for ii in range(len(refs_pomdp)):
-            ws_tab_zpdes[ii].append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(zpdesHs[ii])))
-            ws_tab_zpdes2[ii].append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(zpdes2s[ii])))
-            ws_tab_pomdp[ii].append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(pomdPs[ii])))
+    for i in range(len(population.students)):
+        stud = population.students[i]
+        for ii in range(len(refs_opti)):
+            ws_tab_zpdes[ii].append(k_lib.experimentation.WorkingSession(student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(zpdesHs[ii], -1))))
+            ws_tab_zpdes2[ii].append(k_lib.experimentation.WorkingSession(student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(zpdes2s[ii], -1))))
+            ws_tab_pomdp[ii].append(k_lib.experimentation.WorkingSession(student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(pomdPs[ii], -1))))
         #ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
-        ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(random)))
+        #ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(random)))
 
     wG_zpdes = [k_lib.experimentation.WorkingGroup(WorkingSessions=x) for x in ws_tab_zpdes]
 
@@ -685,8 +670,8 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
     wkgs = {
         "POMDP": wG_pomdp,
         "ZpdesH": wG_zpdes,
-        #"Random": [wG_random],
         "Zpdes*": wG_zpdes2
+        #"Random": [wG_random]
     }  # , "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} #
 
     ref_xp_bis = "{}{}".format(ref_xp, ref_bis)
@@ -696,8 +681,9 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         "seq_manager_list": wkgs.keys(),  # "RIARIT"
         "nb_step": nb_step,
         "population": {
-            "nb_students": nb_stud,
+            "nb_students": nb_stud * len(refs_stud),
             "model": "KT_student",
+            "ref_stud": "stud_{}_{}".format(ref_xp, "".join(refs_stud))
         }
     }
 
@@ -705,10 +691,17 @@ def kt_expe_all(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     xp.run(nb_step)
 
-    values_vect = ["V{}".format(i + 1) for i in range(len(xp.KC))]
+    ref_sub_group = [copy.deepcopy(refs_opti), copy.deepcopy(refs_opti), copy.deepcopy(refs_opti), [""]]
+    draw_xp_kc_curve(xp, ref_sub_group=ref_sub_group, subgroup_treat=True)
+    draw_xp_kc_curve(xp)
 
-    ref_sub_group = [copy.deepcopy(refs_pomdp), copy.deepcopy(refs_pomdp), copy.deepcopy(refs_pomdp)]
-    draw_xp_graph(xp, type_ex=values_vect, nb_ex_type=[1] * len(xp.KC), ref_sub_group=ref_sub_group)
+    # values_vect = ["V{}".format(i + 1) for i in range(len(xp.KC))]
+    # draw_xp_graph(xp, type_ex=values_vect, nb_ex_type=[1] * len(xp.KC), ref_sub_group=ref_sub_group)
+
+    # draw_xp_histo(xp, type_ex=values_vect, nb_ex_type=[1] * len(xp.KC),)
+
+    pvals = calcul_pvals(xp)
+    draw_pvals(xp, pvals)
     #all_mean_data = draw_xp_graph(xp,ref_xp)
     #cost = calcul_xp_cost(xp)
 
@@ -753,57 +746,29 @@ def draw_xp_histo(xp, type_ex=["V1", "V2", "V3", "V4", "V5"], nb_ex_type=[1, 1, 
     # draw histo graph to visualise exercise in time
     for seq_name, group in xp._groups.items():
         for i in range(len(group)):
+            seq_name_title = seq_name.replace("*", "E")
             data = group[i].get_ex_repartition_time(first_ex=1, nb_ex=xp.nb_step + 1, main_rt=xp.main_act, type_ex=type_ex, nb_ex_type=nb_ex_type)
-            graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s_%s \nStudent distribution per erxercices type over time" % (seq_name, i), path="%s" % (xp.save_path), ref="exTime_%s_%s_%s" % (xp.ref_expe, seq_name, i), legend=type_ex, dataToUse=range(len([data])), show=0)
+            graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s_%s \nStudent distribution per erxercices type over time" % (seq_name, i), path="%s" % (xp.save_path), ref="exTime_%s_%s_%s" % (xp.ref_expe, seq_name_title, i), legend=type_ex, dataToUse=range(len([data])), show=0)
 
 
-def draw_xp_kc_curve(xp, ref_sub_group=None):
+def draw_xp_kc_curve(xp, ref_sub_group=None, subgroup_treat=False):
     # draw learning curve
-    skill_labels = xp.KC
-    skill_labels.append("All")
-    all_mean_data = {seq_name: {} for seq_name in xp._groups.keys()}
+
+    skill_labels = ["All"]
+    kc_data = xp.get_kc_mean_std(subgroup_treat=subgroup_treat)
     labels = []
-    if ref_sub_group is None:
-        ref_sub_group = []
-        iii = 0
-        for seq_name, group in xp._groups.items():
-            ref_sub_group.append(range(len(group)))
-            iii += 1
+    for seq_name, iii in zip(xp._groups.keys(), range(len(xp._groups.keys()))):
+        if ref_sub_group is not None and subgroup_treat is True:
+            labels.append(["%s_%s" % (seq_name, x) for x in ref_sub_group[iii]])
+        else:
+            labels.append([seq_name])
 
-    for k in range(len(skill_labels)):
-        mean_data = [[] for i in range(len(xp._groups.keys()))]
-        std_data = []
-        #all_data = []
-        iii = 0
-        for seq_name, group in xp._groups.items():
-            if k == 0:
-                labels.append(["%s_%s" % (seq_name, x) for x in ref_sub_group[iii]])
-            for y in group:
-                data = [y.get_students_level(time=x, kc=k) for x in range(xp.nb_step + 1)]
-                mean_data[iii].append([np.mean(data[x]) for x in range(len(data))])
-            # all_data.append(data)
-            std_data.append([np.std(data[x]) for x in range(len(data))])
-            all_mean_data[seq_name][skill_labels[k]] = [np.mean(data[x]) for x in range(len(data))]
-            iii += 1
+    for kc in range(len(kc_data)):
+        mean_data = kc_data[kc]["mean"]
+        std_data = kc_data[kc]["std"]
 
-        dataToDraw = mean_data
-        #std_dataToDraw = [std_data]
-        if k == len(skill_labels) - 1:
-            pvals = calcul_pvals(xp)
-            draw_pvals(xp, pvals)
-
-        #    all_pvals = []
-#
-# for data in itertools.combinations(all_data, 2):
-# pvals = []
-# for i in range(1, xp.nb_step):
-# pvals.append(sstats.f_oneway(data[0][i], data[1][i]))
-        #        all_pvals.append(pvals)
-        # print labels
-
-        graph.kGraph.draw_curve(dataToDraw, labels=labels, nb_ex=xp.nb_step + 1, typeData="skill_level", type_data_spe="", ref="%s_%s" % (xp.ref_expe, skill_labels[k]), markers=None, colors=[["#00BBBB"], ["green"], ["black"], ['#FF0000']], line_type=['solid', 'dashed', 'dashdot'], legend_position=5, path="%s" % (xp.save_path), showPlot=False)  # std_data=std_dataToDraw,
-
-    # return all_pvals
+        graph.kGraph.draw_curve(mean_data, labels=labels, nb_ex=xp.nb_step + 1, typeData="Average KC level", type_data_spe="", ref="%s_%s_sg%s" % (xp.ref_expe, skill_labels[kc], int(subgroup_treat)), markers=None, colors=[["#00BBBB"], ["red"], ["black"], ['#FF0000']], line_type=['solid', 'dashed', 'dashdot', "dotted"], legend_position=5, path="%s" % (xp.save_path), showPlot=False, std_data=None)
+    return
 
 
 def draw_pvals(xp, pvals):
@@ -821,12 +786,15 @@ def calcul_pvals(xp):
     k = len(skill_labels) - 1
     all_data = {}
     for seq_name, group in xp._groups.items():
-        all_data[seq_name] = [group[0].get_students_level(time=x, kc=k) for x in range(xp.nb_step)]
+        all_data[seq_name] = []
+        for subgroup in group:
+            all_data[seq_name] += [subgroup.get_students_level(time=x, kc=k) for x in range(xp.nb_step)]
         # print data
         # raw_input()
 
     all_pvals = {}
     max_pvals = 0.2
+
     for data in itertools.combinations(all_data.iteritems(), 2):
         pvals = [max_pvals]
         for i in range(1, xp.nb_step):

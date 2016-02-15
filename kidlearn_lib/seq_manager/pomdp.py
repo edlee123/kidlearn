@@ -466,29 +466,45 @@ class POMDP(object):
 #########################################################################################
 
 
+def softmax(w, t=0.10):
+    if min(w) != max(w):
+        w = (np.array(w) - min(w))
+        w = w / max(w)
+        e = np.exp(w / t)
+        dist = e / np.sum(e)
+        return dist
+    else:
+        return [1.0 / len(w)] * len(w)
+
+
 def greedy(mode, U):
     # print U
     # print np.shape(U)
     # raw_input()
     #Idx = np.argmax(U, axis=0)
-    U = [np.around(x) for x in U]
-    Idx = np.argwhere(U == np.amax(U, axis=0)).flatten().tolist()
+    if mode == "prob":
+        p = softmax(U)
+        a = func.dissample(p)
 
-    if mode == 'samp':
-        # print Idx
-        # print len(Idx) * np.random.rand()
-        # print np.ceil(len(Idx) * np.random.rand())
-        a = Idx[np.ceil(len(Idx) * np.random.rand())]
-    elif mode == 'prob':
-        a = Idx
+    else:
+        U = [np.around(x, 4) for x in U]
+        Idx = np.argwhere(U == np.amax(U, axis=0)).flatten().tolist()
 
-        if isinstance(a, int):
-            p = 1
-        else:
-            p = 1.0 / len(a)
-        p = np.array([1.0 / len(a)] * len(a))
+        if mode == 'samp':
+            # print Idx
+            # print len(Idx) * np.random.rand()
+            # print np.ceil(len(Idx) * np.random.rand())
+            a = Idx[np.ceil(len(Idx) * np.random.rand())]
+        elif mode == 'prob':
+            a = Idx
 
-        a = a[func.dissample(p)]
+            if isinstance(a, int):
+                p = 1
+            else:
+                p = 1.0 / len(a)
+            p = np.array([1.0 / len(a)] * len(a))
+
+            a = a[func.dissample(p)]
 
     return a
 
@@ -511,11 +527,11 @@ def perseus(pomdp=None):
     echo, max_iterr, eps = perseus_init()
 
     # Parse arguments
-    nopomdp = (pomdp == None)
+    nopomdp = (pomdp is None)
 
     pomdp = pomdp or POMDP()
     D = pomdp.belief_sample
-    if D == None:
+    if D is None:
         D = pomdp.sampleBeliefs()
 
     # print D[[1,2],:]
@@ -524,12 +540,12 @@ def perseus(pomdp=None):
     iterr = 1
 
     # Initialize V set
-  #  print "R %s" % pomdp._R
-  #  print "rmin %s"  % pomdp._R.min(axis = 0)
+    # print "R %s" % pomdp._R
+    # print "rmin %s"  % pomdp._R.min(axis = 0)
 
     #V = np.ndarray(min(pomdp._R.min(axis = 0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
     V = np.matrix(min(pomdp._R.min(axis=0)) * np.ones((pomdp._nS)) / (1 - pomdp._gamma))
-  #  print "V %s" %  V
+    # print "V %s" %  V
     print "Perseus"
     while quit == 0:
         # print iterr

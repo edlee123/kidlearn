@@ -8,6 +8,8 @@ import matplotlib.cm as cm
 from matplotlib.patches import Rectangle
 import pylab as pylab
 #from my_functions import *
+import kidlearn_lib as k_lib
+import kidlearn_lib.config.datafile as datafile
 
 import seaborn
 seaborn.set_style("darkgrid")
@@ -1004,8 +1006,8 @@ def draw_simple_curves(data, stdData=None, x_range=None, y_range=None, labels=No
 
     for nbSet in range(len(data)):
         if std_data != None:
-            y3 = [data[nbSet][i] + std_data[nbSet][i] for i in range(nb_ex)]
-            y4 = [data[nbSet][i] - std_data[nbSet][i] for i in range(nb_ex)]
+            y3 = [data[nbSet][i] + std_data[nbSet][i]/4 for i in range(nb_ex)]
+            y4 = [data[nbSet][i] - std_data[nbSet][i]/4 for i in range(nb_ex)]
 
             plt.fill_between(x_range, y3, y4, facecolor=colors[nbSet], alpha=0.1)
 
@@ -1030,7 +1032,7 @@ def draw_simple_curves(data, stdData=None, x_range=None, y_range=None, labels=No
         plt.show()
 
 
-def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=100, typeData="successRate", type_data_spe="MAIN", ref="", markers=None, titleC="", colors=[["#00BBBB", "black", '#FF0000']], line_type=['dashed', 'solid', 'dashdot', 'dotted'], legend_position=1, showPlot=True, std_data=None):
+def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=100, typeData="successRate", type_data_spe="MAIN", ref="", markers=None, titleC="", colors=[["#00BBBB", "black", '#FF0000']], line_type=['dashed', 'solid', 'dashdot', 'dotted'], legend_position=1, showPlot=True, std_data=None, lineWidths=[2, 2, 3, 3, 3, 3]):
 
     plt.cla()
     plt.clf()
@@ -1055,12 +1057,14 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     plt.xticks(fontsize=30)
     plt.yticks(fontsize=30)
 
+    #plt.ylim(ymin=0, ymax=1.1)
+
     for nbPdata in range(0, len(data)):
         nb_group = len(data[nbPdata])
 
         for group in range(0, nb_group):
-            _lineWidth = 2
-            #if line_type[(nbPdata * nb_group + group) % len(line_type)] == 'solid':
+            #_lineWidth = 2
+            # if line_type[(nbPdata * nb_group + group) % len(line_type)] == 'solid':
             #    _lineWidth = 1
 
             # print nbPdata
@@ -1078,7 +1082,7 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
             # print data[nbPdata][group]
             #x = range(len(data[nbPdata][group]))
             x = range(len(data[nbPdata][group]))
-            if std_data != None:
+            if std_data is not None:
 
                 y3 = [data[nbPdata][group][i] + std_data[nbPdata][group][i] for i in range(nb_ex)]
                 y4 = [data[nbPdata][group][i] - std_data[nbPdata][group][i] for i in range(nb_ex)]
@@ -1092,10 +1096,12 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
 
                 plt.fill_between(x, y3, y4, facecolor=colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], alpha=0.1)
 
-            plt.plot(x, data[nbPdata][group], label=lab, color=colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle=line_type[(nbPdata * nb_group + group) % len(line_type)], linewidth=_lineWidth)
+            plt.plot(x, data[nbPdata][group], label=lab, color=colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle=line_type[group % len(line_type)], linewidth=lineWidths[group % len(lineWidths)])
+            #plt.plot(x, data[nbPdata][group], label=lab, color=colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle=line_type[(nbPdata * nb_group + group) % len(line_type)], linewidth=lineWidths[(nbPdata * nb_group + group) % len(line_type)])
+
                 # plt.errorbar(x, data[nbPdata][group],std_data[nbPdata][group], errorevery = 5)#, label = lab, color = colorsBis[nbPdata % len(colorsBis)][group % len(colorsBis[nbPdata % len(colorsBis)])], linestyle = line_type[(nbPdata*nb_group + group) % len(line_type)],linewidth = _lineWidth)
 
-            if markers != None:  # and len(markers[group]) > skill:
+            if markers is not None:  # and len(markers[group]) > skill:
                 markers_data = []
                 for i in markers[group]:
                     markers_data.append(data[nbPdata][group][i])
@@ -1106,7 +1112,7 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
         plt.plot(x, data[1][0][skill], label = labels[1][0],color = colors[1][0],linestyle = 'dashdot',linewidth = 2)
         plt.plot(x, data[1][1][skill], label = labels[1][1],color = colors[1][1],linestyle = 'dotted',linewidth = 2)
         """
-    plt.title(title, fontsize=20)
+    #plt.title(title, fontsize=30)
 
     if legend_position == 0:
         plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
@@ -1115,15 +1121,19 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     elif legend_position == 2:
         plt.legend(bbox_to_anchor=(0, 0, 1.1, 0), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
     else:
-        plt.legend(bbox_to_anchor=(0, 0, 1, 0.4), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 1, 0.5), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
 
+    curve_data = {"data": data, "path": path, "labels": labels, "nb_ex": nb_ex, "typeData": typeData, "type_data_spe": type_data_spe, "ref": ref, "markers": markers, "titleC": titleC, "colors": colors, "line_type": line_type, "legend_position": legend_position, "showPlot": showPlot, "std_data": std_data, "lineWidths": lineWidths}
+
     if path != "":
         plt.draw()
-        path_f = path + "Curve_%s_%s_%s" % (typeData, type_data_spe, ref)
+        path_f = path + "Curve_%s_%s_%s" % (typeData.replace(" ", "_"), type_data_spe, ref)
+        file_data = "data_Curve_%s_%s_%s" % (typeData.replace(" ", "_"), type_data_spe, ref)
         # print path_f
-        plt.savefig(path_f)
+        plt.savefig(path_f, bbox_inches='tight', pad_inches=0)   # transparent="True",
+        datafile.save_file(curve_data, file_data, path)
 
     if showPlot:
         plt.show()

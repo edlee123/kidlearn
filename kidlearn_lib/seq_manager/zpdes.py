@@ -47,8 +47,9 @@ class ZpdesHssbg(HierarchicalSSBG):
                 values_worked.append(str(self.SSBGs[key].SSB[0].param_values[val[0]]))
 
             lvl = [0] * self.ncompetencies
-            for i in range(0,self.ncompetencies):
-                if "V%s" % (i+1) in values_worked:
+            for i in range(0, self.ncompetencies):
+                p_name = "V{}".format(i + 1)
+                if p_name in values_worked:
                     lvl[i] = 1
             return lvl
 

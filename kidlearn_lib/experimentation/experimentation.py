@@ -148,6 +148,7 @@ class WorkingSession(object):
     def run(self, nb_ex):
         for i in range(nb_ex):
             self.step_forward()
+        self.free_data()
 
     def step_forward(self):
         ex = self.new_exercise()
@@ -176,6 +177,10 @@ class WorkingSession(object):
 
     def save_actual_step(self, ex=None):
         self._step.append(self.actual_step(ex))
+
+    def free_data(self):
+        self._student = None
+        self._seq_manager = None
 
     def compute_all_act_level(self, data, model="KT"):
         if model == "KT":
@@ -381,6 +386,10 @@ class Experiment(object):
 
         self.nb_students = self.params["population"]["nb_students"]
         self.model_student = self.params["population"]["model"]
+        if "ref_stud" in self.params["population"].keys():
+            self.ref_stud = self.params["population"]["ref_stud"]
+        else:
+            self.ref_stud = "0"
 
         if "path_to_save" not in self.params.keys():
             self.params["path_to_save"] = "experimentation/data/"
@@ -488,6 +497,53 @@ class Experiment(object):
             for sub_group in group:
                 act_obs[name] = np.array(sub_group.get_act_obs(begin_time, end_time))
         return act_obs
+
+    def get_data_KC(self, nKC=None):
+        if nKC is None:
+            nKC = [len(self.KC)]
+        elif type(nKC) is int:
+            nKC = [nKC]
+
+        all_data = []
+
+        for k in nKC:
+            data_kc = {}
+            for seq_name, group in self._groups.items():
+                data_seq = []
+                for subgroup in group:
+                    data = [subgroup.get_students_level(time=x, kc=k) for x in range(self.nb_step + 1)]
+                    data_seq.append(data)
+
+                data_kc[seq_name] = data_seq
+            all_data.append(data_kc)
+
+        return all_data
+
+    def get_kc_mean_std(self, nKC=None, subgroup_treat=False):
+        if nKC is None:
+            nKC = [len(self.KC)]
+        elif type(nKC) is int:
+            nKC = [nKC]
+        kc_data = self.get_data_KC()
+        mean_std_data = []
+        for kc in range(len(kc_data)):
+            mean_data = [[] for i in range(len(self._groups.keys()))]
+            std_data = [[] for i in range(len(self._groups.keys()))]
+            iii = 0
+            #i = 0
+            for seq_name, group in kc_data[kc].items():
+                if subgroup_treat is False:
+                    mean_data[iii].append([np.mean([group[i][x] for i in range(len(group))]) for x in range(len(group[0]))])
+                    std_data[iii].append([np.std([group[i][x] for i in range(len(group))]) for x in range(len(group[0]))])#/np.sqrt(len(group[0][x]))
+                else:
+                    for subgroup in group:
+                        mean_data[iii].append([np.mean(subgroup[x]) for x in range(len(subgroup))])
+                        std_data = None  # [iii].append([np.std(subgroup[x]) for x in range(len(subgroup))])
+                iii += 1
+
+            mean_std_data.append({"mean": mean_data, "std": std_data})
+
+        return mean_std_data
 
     # Data Analysis tools
     ###########################################################################

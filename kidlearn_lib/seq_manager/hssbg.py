@@ -279,7 +279,12 @@ class SSbandit(object):
         return func.dissample(nn)
 
     def sample(self, exploration_coeff=10):
-
+        #if np.count_nonzero(self.bandval) == 1:
+        if self.bandval.count(0) == len(self.bandval)-1:
+            for i in range(len(self.bandval)):
+                if self.bandval[i] != 0:
+                    self.bandval[i] = self.uniformval
+        #    self.bandval = self.bandval/sum(self.bandval) * self.uniformval
         nn = np.array(self.bandval)
         norm_v = sum(nn)
         for i in range(0, len(nn)):
@@ -292,6 +297,7 @@ class SSbandit(object):
                 nb_0 += 1
 
         if nb_0 == len(nn):
+
             print self.name
             print "Prob : %s : %s " % (str(self.param_values), str(self.bandval))
             # print self.success
