@@ -52,7 +52,9 @@ bnet = mk_dbn(intra, inter, ns, 'discrete', dnodes, ...
 %draw_dbn(intra,inter);
 bnet.onodes = onodes;
 
-bnet.CPD{1} = tabular_CPD(bnet, 1, prior1);
-bnet.CPD{2} = tabular_CPD(bnet, 2, prior2);
-bnet.CPD{3} = tabular_CPD(bnet, 3, obsmat1);
-bnet.CPD{4} = tabular_CPD(bnet, 4, transmat1);
+bnet.CPD{1} = tabular_CPD(bnet, 1, 'CPT', prior1, 'adjustable', 0);
+bnet.CPD{2} = tabular_CPD(bnet, 2, 'CPT', prior2, 'adjustable', 0);
+%bnet.CPD{3} = tabular_CPD(bnet, 3, 'CPT', 'unif', 'prior_type', 'dirichlet', 'dirichlet_weight', .001, 'dirichlet_type', 'unif');
+bnet.CPD{3} = tabular_CPD(bnet, 3, 'CPT', obsmat1, 'adjustable', 0);
+bnet.CPD{4} = tabular_CPD(bnet, 4, 'CPT', transmat1, 'adjustable', 1, 'prior_type', 'dirichlet', 'dirichlet_weight', .001, 'dirichlet_type', 'BDeu');
+%bnet.CPD{4} = tabular_CPD(bnet, 4, 'CPT', 'unif', 'dirichlet_weight', .001, 'dirichlet_type', 'unif');

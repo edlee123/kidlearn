@@ -3,11 +3,11 @@ function [l,bnet2] = learnparam(cases, bnet)
 %engine = jtree_unrolled_dbn_inf_engine(bnet, T);
 %engine = hmm_inf_engine(bnet);
 %engine = smoother_engine(hmm_2TBN_inf_engine(bnet));
-%engine = smoother_engine(jtree_2TBN_inf_engine(bnet));
+engine = smoother_engine(jtree_2TBN_inf_engine(bnet));
 %engine = bk_inf_engine(bnet, 'clusters', {[1]});
-engine = jtree_dbn_inf_engine(bnet);
+%engine = jtree_dbn_inf_engine(bnet);
 
-[bnet2, LLtrace] = learn_params_dbn_em(engine, cases, 'max_iter', 10);
+[bnet2, LLtrace] = learn_params_dbn_em(engine, cases, 'max_iter', 100);
 
 bnet2.onodes = bnet.onodes;
 
