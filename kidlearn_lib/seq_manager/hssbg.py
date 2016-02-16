@@ -293,13 +293,13 @@ class SSbandit(object):
 
         nb_0 = 0
         for i in range(0, len(nn)):
-            if nn[i] < pow(10, -70):
+            if nn[i] == 0: # < pow(10, -70):
                 nb_0 += 1
 
         if nb_0 == len(nn):
-
-            print self.name
-            print "Prob : %s : %s " % (str(self.param_values), str(self.bandval))
+            nb0 = nb_0
+            #print self.name
+            #print "Prob : %s : %s " % (str(self.param_values), str(self.bandval))
             # print self.success
         #nn = exp(nn)-1
         nn = nn / sum(nn)
