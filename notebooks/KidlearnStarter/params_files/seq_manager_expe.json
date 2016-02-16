@@ -1,8 +1,8 @@
 {
     "RiaritHssbg":{
         "name" : "RiaritHssbg",
-        "RT": { 
-            "name": "MAIN",
+        "graph": { 
+            "file_name": "MAIN",
             "path" : "graph/hierarchyRT/expe"
         },
 
@@ -19,14 +19,13 @@
     },
 
     "ZpdesHssbg":{
-        "name" : "ZpdesHssbg",
+        "algo_name" : "ZpdesHssbg",
         "RT": { 
             "name": "MAIN",
             "path" : "graph/hierarchyRT/expe"
         },
 
         "ZpdesSsbg": {
-            "name" : "ZpdesSsbg",
             "levelupdate": 0.6,
 
             "ZpdesSsb" :{

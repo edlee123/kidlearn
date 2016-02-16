@@ -7,15 +7,14 @@
 
     "seq_manager": {
 
-        "name" : "RiaritHssbg",
-        "RT": { 
-            "name": "MAIN",
+        "algo_name" : "RiaritHssbg",
+        "graph": { 
+            "file_name": "MAIN",
             "path" : "graph/expe",
             "main_act": "MAIN"
         },
 
         "RiaritSsbg": {
-            "name" : "RiaritSsbg",
             "levelupdate": 0.6,
 
             "RiaritSsb": {

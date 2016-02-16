@@ -16,6 +16,7 @@ import re
 import pickle
 import json
 import copy
+import uuid
 
 from ..knowledge import Knowledge
 from .. import functions as func
@@ -23,6 +24,7 @@ from .. import functions as func
 class Student(object):
 
     def __init__(self, id="x", params=None):
+        self.uuid = str(uuid.uuid1())
         self.params = params
         func.setattr_dic_or_default(self,"_id",params,id)
         self._knowledges = []

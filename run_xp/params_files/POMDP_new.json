@@ -1,5 +1,5 @@
 {
-    "name" : "POMDP",
+    "name_algo" : "POMDP",
     "ref" : "KT_expe_2",
     "knowledge_names":["S1","S2","S3","S4","S5"],
     "actions": "KT1",

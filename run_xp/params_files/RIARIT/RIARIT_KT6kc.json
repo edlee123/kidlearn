@@ -1,0 +1,18 @@
+{
+    "algo_name" : "RiaritHssbg",
+    "RT": { 
+        "file_name":"KT6kc",
+        "path" : "graph/",
+        "main_act" : "KT6kc"
+        },
+
+    "RiaritSsbg": {
+        "levelupdate": 0.8,
+
+        "RiaritSsb": {
+            "filter1": 0.1, 
+            "filter2": 0.90, 
+            "uniformval": 0.05
+        }
+    }
+}

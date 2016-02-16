@@ -13,8 +13,8 @@
 import numpy as np
 
 from .student import Student
-from ..functions import functions as func
 from ..knowledge import Knowledge
+from .. import functions as func
 
 class Qstudent(Student):
 

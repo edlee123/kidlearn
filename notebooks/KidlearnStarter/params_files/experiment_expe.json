@@ -1,5 +1,5 @@
 {
-    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence"],
+    "seq_manager_list" : ["RiaritHssbg","ZpdesHssbg","Sequence","RandomSequence"],
     "nb_step" : 100,
     "ref_expe": "expe",
 
@@ -26,9 +26,12 @@
     "seq_managers": {
 
         "RiaritHssbg":{
+            "file_name":"riarit_xp",
+            "directory":"params_files",
+
             "algo_name" : "RiaritHssbg",
             "RT": { 
-                "file": "MAIN",
+                "file_name": "MAIN",
                 "path" : "graph/expe",
                 "main_act": "MAIN"
             },
@@ -48,13 +51,13 @@
         "ZpdesHssbg":{
             "algo_name" : "ZpdesHssbg",
             "graph": { 
-                "file": "money_graph",
+                "file_name": "money_graph",
                 "path" : "graph/",
                 "main_act": "MAIN"
             },
 
             "riarit":{
-                "file": "riarit_xp",
+                "file_name": "riarit_xp",
                 "path" : "params_files/"
             },
 
@@ -64,13 +67,13 @@
                     "filter2": 0.8, 
                     "uniformval": 0.05,
                     "stepUpdate" : 6,
-                    "size_window": 3,
-                    "thresZBegin" : 0.4,
                     "upZPDval" : 0.5,
                     "deactZPDval" : 0.6,
                     "promote_coeff" : 1,
                     "thresHierarProm" : 0.3,
                     "h_promote_coeff" : 1,
+                    "thresZBegin" : 0.4,
+                    "size_window": 3,
                     "spe_promo" : 0
                 }
             }
@@ -80,11 +83,11 @@
             "algo_name" : "Sequence",
             "seq_path": {
                 "params_file" : "expe_seq",
-                "directory" : "sequence_def"
+                "directory" : "graph"
             },
 
              "graph": { 
-                "file": "MAIN",
+                "file_name": "MAIN",
                 "path" : "graph/expe",
                 "main_act": "MAIN"
             },
@@ -109,17 +112,17 @@
             "random_type" : 0,
             "seq_path": {
                 "params_file" : "expe_seq",
-                "directory" : "sequence_def"
+                "directory" : "graph"
             },
 
              "graph": { 
-                "file": "money_graph",
+                "file_name": "money_graph",
                 "path" : "graph/",
                 "main_act": "MAIN"
             },
 
             "riarit":{
-                "file": "riarit_xp",
+                "file_name": "riarit_xp",
                 "path" : "params_files/"
             },
 

@@ -7,14 +7,14 @@
 
     "seq_manager": {
 
-        "name" : "Sequence",
+        "algo_name" : "Sequence",
         "seq_path": {
                 "params_file" : "expe_seq",
                 "directory" : "sequence_def"
         },
     
          "RT": { 
-            "name": "MAIN",
+            "file_name": "MAIN",
             "path" : "graph/expe",
             "main_act": "MAIN"
         },

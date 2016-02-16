@@ -1,7 +1,7 @@
 {
     "algo_name" : "ZpdesHssbg",
     "graph": { 
-        "file":"zpdes_graph_example",
+        "file_name":"zpdes_graph_example",
         "path" : "graph/",
         "main_act":"N2"
         },

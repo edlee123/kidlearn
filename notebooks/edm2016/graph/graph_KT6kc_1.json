@@ -1,0 +1,9 @@
+{
+    "act_prime" : "KT6kc",
+    "ncompetencies":6,
+    "KT6kc":{
+        "h": [1],
+        "ssbg" : [["V1","V2","V3","V4","V5","V6"]],
+        "init_ssb" : [[0,1]]
+    }
+}

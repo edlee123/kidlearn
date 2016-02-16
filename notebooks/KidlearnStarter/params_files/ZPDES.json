@@ -1,10 +1,15 @@
 {
-    "name" : "ZpdesHssbg",
+    "algo_name" : "ZpdesHssbg",
     "graph": { 
-        "name":"N1",
+        "file_name":"N1_graph",
         "path" : "graph/",
         "main_act":"N1"
         },
+
+    "riarit":{
+        "file_name": "RIARIT",
+        "path" : "params_files/"
+    },
 
     "ZpdesSsbg": {
         "name" : "ZpdesSsbg",
