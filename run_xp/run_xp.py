@@ -688,7 +688,7 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         }
     }
 
-    xp = k_lib.experimentation.Experiment(WorkingGroups=wkgs, params=params)
+    xp = k_lib.experimentation.Experiment(WorkingGroups=wkgs, params=params, unique_save=False)
 
     xp.run(nb_step)
 
@@ -753,7 +753,7 @@ def draw_xp_histo(xp, type_ex=["V1", "V2", "V3", "V4", "V5"], nb_ex_type=[1, 1, 
             graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s_%s \nStudent distribution per erxercices type over time" % (seq_name, i), path="%s" % (xp.save_path), ref="exTime_%s_%s_%s" % (xp.ref_expe, seq_name_title, i), legend=type_ex, dataToUse=range(len([data])), show=0)
 
 
-def draw_xp_kc_curve(xp, ref_sub_group=None, subgroup_treat=False, showPlot=False):
+def draw_xp_kc_curve(xp, ref_sub_group=None, subgroup_treat=False, showPlot=False, use_std=False):
     # draw learning curve
 
     skill_labels = ["All"]
@@ -767,9 +767,11 @@ def draw_xp_kc_curve(xp, ref_sub_group=None, subgroup_treat=False, showPlot=Fals
 
     for kc in range(len(kc_data)):
         mean_data = kc_data[kc]["mean"]
-        std_data = kc_data[kc]["std"]
+        std_data = None
+        if use_std:
+            std_data = kc_data[kc]["std"]
 
-        graph.kGraph.draw_curve(mean_data, labels=labels, nb_ex=xp.nb_step + 1, typeData="Average KC level", type_data_spe="", ref="%s_%s_sg%s" % (xp.ref_expe, skill_labels[kc], int(subgroup_treat)), markers=None, colors=[["#00BBBB"], ["red"], ["black"], ['#FF0000']], line_type=['solid', 'dashed', 'dashdot', "dotted"], legend_position=5, path="%s" % (xp.save_path), showPlot=showPlot, std_data=None)
+        graph.kGraph.draw_curve(mean_data, labels=labels, nb_ex=xp.nb_step + 1, typeData="Average KC level", type_data_spe="", ref="%s_%s_sg%s" % (xp.ref_expe, skill_labels[kc], int(subgroup_treat)), markers=None, colors=[["#00BBBB"], ["red"], ["black"], ['#FF0000']], line_type=['solid', 'dashed', 'dashdot', "dotted"], legend_position=5, path="%s" % (xp.save_path), showPlot=showPlot, std_data=std_data)
     return
 
 

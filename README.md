@@ -17,6 +17,8 @@ Check [KidlearnStarter notebook](notebooks/KidlearnStarter/KidlearnStarter.ipynb
 #### Sequences manager explanation :
 Check [Seq_manager_explanation notebook](notebooks/Sequence_manager_explanation/Seq_manager_explanation.ipynb)
 
+### EDM 2016 results : 
+Check [EDM2016 notebook](notebooks/edm2016/edm2016.ipynb)
 
 People involved:
 Benjamin Clement, Didier Roy, Pierre-Yves Oudeyer, Manuel Lopes

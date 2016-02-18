@@ -1057,7 +1057,8 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     plt.xticks(fontsize=30)
     plt.yticks(fontsize=30)
 
-    #plt.ylim(ymin=0, ymax=1.1)
+    if std_data is not None:
+        plt.ylim(ymin=0, ymax=1.15)
 
     for nbPdata in range(0, len(data)):
         nb_group = len(data[nbPdata])

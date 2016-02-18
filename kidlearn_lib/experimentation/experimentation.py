@@ -365,7 +365,7 @@ class WorkingGroup(object):
 class Experiment(object):
 
     def __init__(self, params=None, params_file=None, directory="params_files",
-                 WorkingGroups=None, *args, **kwargs):
+                 WorkingGroups=None, unique_save=True, *args, **kwargs):
         # params : seq_manager_list, nb_stud, nb_step, model_stud, ref_simu
 
         #self.config = self.load_config()
@@ -376,8 +376,13 @@ class Experiment(object):
             for key, val in kwargs.iteritems():
                 params[key] = val
 
-        self.uuid = str(uuid.uuid1())
-        self.date = time.strftime('%Y-%m-%d_%H-%M-%S')
+        if unique_save is True:
+            self.uuid = str(uuid.uuid1())
+            self.date = time.strftime('%Y-%m-%d_%H-%M-%S')
+        else:
+            self.uuid = "u"
+            self.date = ""
+
         self.params = params
         self.logs = {}
 
@@ -538,7 +543,7 @@ class Experiment(object):
                 else:
                     for subgroup in group:
                         mean_data[iii].append([np.mean(subgroup[x]) for x in range(len(subgroup))])
-                        std_data = None  # [iii].append([np.std(subgroup[x]) for x in range(len(subgroup))])
+                        std_data[iii].append([np.std(subgroup[x]) for x in range(len(subgroup))])
                 iii += 1
 
             mean_std_data.append({"mean": mean_data, "std": std_data})
