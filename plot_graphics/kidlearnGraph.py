@@ -1058,7 +1058,7 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     plt.yticks(fontsize=30)
 
     if std_data is not None:
-        plt.ylim(ymin=0, ymax=1.15)
+        plt.ylim(ymin=0, ymax=1)
 
     for nbPdata in range(0, len(data)):
         nb_group = len(data[nbPdata])
@@ -1116,13 +1116,13 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     #plt.title(title, fontsize=30)
 
     if legend_position == 0:
-        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 24})
     elif legend_position == 1:
-        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 0.2, 1), ncol=1, fancybox=True, shadow=True, prop={'size': 24})
     elif legend_position == 2:
-        plt.legend(bbox_to_anchor=(0, 0, 1.1, 0), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 1.1, 0), ncol=1, fancybox=True, shadow=True, prop={'size': 24})
     else:
-        plt.legend(bbox_to_anchor=(0, 0, 1, 0.5), ncol=1, fancybox=True, shadow=True, prop={'size': 20})
+        plt.legend(bbox_to_anchor=(0, 0, 1, 0.4), ncol=1, fancybox=True, shadow=True, prop={'size': 24})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
 

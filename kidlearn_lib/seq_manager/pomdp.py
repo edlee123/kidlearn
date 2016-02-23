@@ -230,6 +230,8 @@ class POMDP(object):
 
         if "action" in self.params.keys():
             self.main_act = self.params["action"]
+        else:
+            self.main_act = "KT6kc"
 
     def get_KC(self):
         return self._KC

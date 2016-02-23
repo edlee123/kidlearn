@@ -180,7 +180,7 @@ class WorkingSession(object):
 
     def free_data(self):
         self._student = None
-        self._seq_manager = None
+        #self._seq_manager = None
 
     def compute_all_act_level(self, data, model="KT"):
         if model == "KT":
@@ -534,16 +534,19 @@ class Experiment(object):
         for kc in range(len(kc_data)):
             mean_data = [[] for i in range(len(self._groups.keys()))]
             std_data = [[] for i in range(len(self._groups.keys()))]
+            percentile_data = [[] for i in range(len(self._groups.keys()))]
             iii = 0
             #i = 0
             for seq_name, group in kc_data[kc].items():
                 if subgroup_treat is False:
                     mean_data[iii].append([np.mean([group[i][x] for i in range(len(group))]) for x in range(len(group[0]))])
-                    std_data[iii].append([np.std([group[i][x] for i in range(len(group))]) for x in range(len(group[0]))])#/np.sqrt(len(group[0][x]))
+                    #std_data[iii].append([np.std([group[i][x] for i in range(len(group))]) for x in range(len(group[0]))])#/np.sqrt(len(group[0][x]))
+                    std_data[iii].append([np.std([group[i][x] for i in range(len(group))])/np.sqrt(len(group[0][x])) for x in range(len(group[0]))])
+
                 else:
                     for subgroup in group:
                         mean_data[iii].append([np.mean(subgroup[x]) for x in range(len(subgroup))])
-                        std_data[iii].append([np.std(subgroup[x]) for x in range(len(subgroup))])
+                        std_data[iii].append([np.std(subgroup[x])/np.sqrt(len(subgroup[x])) for x in range(len(subgroup))])
                 iii += 1
 
             mean_std_data.append({"mean": mean_data, "std": std_data})
