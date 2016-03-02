@@ -54,7 +54,7 @@ def avakas_xp(objs_to_job=None):
 
     jq = get_jobqueue(**jq_config)
 
-    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/feature/xp_script#egg=kidlearn_lib'
+    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/edm2016#egg=kidlearn_lib'
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl, kidleanrUrl]
 
@@ -86,7 +86,7 @@ def local_xp(objs_to_job=None):
 def all_values_zpdes(hierarUtile=0):
     filter1_vals = [round(x, 1) for x in np.arange(0.1, 0.6, 0.1)]
     stepUp_vals = range(4, 7, 1)
-    upZPD_vals = [round(x, 1) for x in np.arange(0.5, 0.8, 0.1)]
+    upZPD_vals = [round(x, 1) for x in np.arange(0.4, 0.8, 0.1)]
     deact_vals = [round(x, 1) for x in np.arange(0.4, 0.8, 0.1)]
     prom_coef_vals = [round(x, 1) for x in np.arange(0.6, 1.8, 0.3)]
     #thresHProm = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
@@ -167,9 +167,9 @@ def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100
     return xp
 
 
-def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_stud="0"):
+def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_stud="0", ref_compute="0"):
     all_confs_file_path = "experimentation/optimize/multiconf/"
-    all_confs_file = "{}_{}_all_confs.json".format(main_act, ref_stud)
+    all_confs_file = "{}_{}_{}_all_confs.json".format(main_act, ref_stud, ref_compute)
 
     if os.path.isfile(os.path.join(all_confs_file_path, all_confs_file)):
         all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
@@ -201,10 +201,17 @@ def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6k
     return set_zpdes_confs
 
 
-def gen_stud_confs(nb_students=1000, perturbated=0, params_file="stud_KT6kc_0"):
+def gen_stud_confs(nb_students=1000, params_file="stud_KT6kc_0", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_stud=["0", "1", "2", "3", "4"]):
     studconf = func.load_json(params_file, "params_files/studModel")
-    if perturbated == 1:
-        pass
+    if disruption == 1:
+        params_pop = []
+        for ref in refs_stud:
+            p_pop = func.load_json("{}_{}".format(disruption_pop_file, ref), "params_files/studModel")
+        p_pop["nb_students"] = nb_students
+        params_pop.append(p_pop)
+        population = k_lib.student.Population(params=params_pop)
+        stud_confs = population.students_models
+
     else:
         stud_confs = [copy.deepcopy(studconf) for x in range(nb_students)]
 
@@ -221,7 +228,7 @@ def xp_conf_to_job(zpdes_conf, stud_confs, nb_step=100, studFile=""):
     return xp_conf
 
 
-def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0, nb_conf_to_test=None, ref_xp="KT6kc", ref_stud=0):
+def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0, nb_conf_to_test=None, ref_xp="KT6kc", ref_stud=0, refs_stud=["0", "1", "2", "3", "4"], disruption_pop_file="perturbation_KT6kc", disruption=0):
     stud_file = "stud_{}_{}".format(ref_xp, ref_stud)
 
     if xp_type == 1:
@@ -229,14 +236,19 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
     else:
         jq = local_xp()
 
-    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/feature/xp_script#egg=kidlearn_lib'
+    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/edm2016#egg=kidlearn_lib'
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl, kidleanrUrl]
 
-    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test, main_act=ref_xp, ref_stud=ref_stud)
+    if disruption == 1:
+        ref_stud_compute = "".join(refs_stud)
+    else:
+        ref_stud_compute = str(ref_stud)
+
+    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test, main_act=ref_xp, ref_stud=ref_stud, ref_compute=ref_stud_compute)
 
     for set_zpdes in set_zpdes_conf:
-        stud_confs = gen_stud_confs(nb_students=nb_stud, params_file=stud_file)
+        stud_confs = gen_stud_confs(nb_students=nb_stud, params_file=stud_file, disruption_pop_file=disruption_pop_file, refs_stud=refs_stud, disruption=disruption)
         xp_conf = xp_conf_to_job(set_zpdes, stud_confs, nb_step=nb_step, studFile=stud_file)
 
         #file_to_save = xp.uuid+".dat"
@@ -250,6 +262,7 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
         #xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step))
 
     return jq
+
 
 def fit_exp_curve(xp):
 
@@ -580,11 +593,12 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     zpdes_conf_opti = {}
     zpdes_params_opti = {
-        "0": [0.2, 0.05, 4, 0.6, 0.7, 0.8, 0.5, 0.5],
+        #"0": [0.2, 0.05, 4, 0.6, 0.7, 0.8, 0.5, 0.5],
         "1": [0.1, 0.05, 4, 0.7, 0.6, 0.8, 0.5, 0.5],
         "2": [0.5, 0.05, 4, 0.8, 0.7, 1.5, 0.5, 0.5],
         "3": [0.4, 0.05, 4, 0.8, 0.6, 1.2, 0.5, 0.5],
         "4": [0.4, 0.05, 4, 0.8, 0.6, 1.2, 0.5, 0.5],
+        "0": [0.4, 0.05, 5, 0.4, 0.6, 1.5, 0.5, 0.5]
     }
 
     for ref in refs_opti:
@@ -615,8 +629,10 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         p_pop = func.load_json("{}_{}".format(disruption_pop_file, ref), "params_files/studModel")
         p_pop["nb_students"] = nb_stud
         params_pop.append(p_pop)
+
     if disruption == 1:
         population = k_lib.student.Population(params=params_pop)
+
     elif mixed_pop:
         stud_list = []
         for ii in range(len(refs_stud)):
@@ -704,7 +720,7 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
 
     ref_sub_group = [copy.deepcopy(refs_opti)]
     #draw_xp_kc_curve(xp, ref_sub_group=ref_sub_group, subgroup_treat=True)
-    #draw_xp_kc_curve(xp)
+    # draw_xp_kc_curve(xp)
 
     values_vect = ["V{}".format(i + 1) for i in range(len(xp.KC))]
     # draw_xp_graph(xp, type_ex=values_vect, nb_ex_type=[1] * len(xp.KC), ref_sub_group=ref_sub_group)
@@ -806,22 +822,30 @@ def calcul_pvals(xp, steps=None, max_pvals=1, save_vals=False):
     k = len(skill_labels) - 1
     all_data = {}
     for seq_name, group in xp._groups.items():
-        all_data[seq_name] = []
+        all_data[seq_name] = [[] for x in range(xp.nb_step)]
         for subgroup in group:
-            all_data[seq_name] += [subgroup.get_students_level(time=x, kc=k) for x in range(xp.nb_step)]
+            for x in range(xp.nb_step):
+                all_data[seq_name][x] += subgroup.get_students_level(time=x, kc=k)
+        # print len(all_data[seq_name])
         # print data
         # raw_input()
 
     all_pvals = {}
+    all_pvals["K"] = {}
+    all_pvals["F"] = {}
 
     for data in itertools.combinations(all_data.iteritems(), 2):
         pvals = []
+        pvals2 = []
         for i in range(1, xp.nb_step):
             if steps is None:
-                pvals.append(min(max_pvals, sstats.f_oneway(data[0][1][i], data[1][1][i])[1]))
+                pvals.append(min(max_pvals, sstats.kruskal(data[0][1][i], data[1][1][i])[1]))
+                pvals2.append(min(max_pvals, sstats.f_oneway(data[0][1][i], data[1][1][i])[1]))
             elif i in steps:
-                pvals.append(min(max_pvals, sstats.f_oneway(data[0][1][i], data[1][1][i])[1]))
-        all_pvals["{}/{}".format(data[0][0], data[1][0])] = pvals
+                pvals.append(min(max_pvals, sstats.kruskal(data[0][1][i], data[1][1][i])[1]))
+                pvals2.append(min(max_pvals, sstats.f_oneway(data[0][1][i], data[1][1][i])[1]))
+        all_pvals["K"]["{}/{}".format(data[0][0], data[1][0])] = pvals
+        all_pvals["F"]["{}/{}".format(data[0][0], data[1][0])] = pvals2
 
     if save_vals:
         file_path = "{}pvals".format(xp.save_path)

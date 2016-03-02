@@ -13,6 +13,7 @@
 import numpy as np
 import uuid
 import copy
+import json
 
 from .kt_student import KTstudent
 from .. import functions as func
@@ -71,10 +72,10 @@ class Population(object):
         for i in range(self.nb_students[nPop]):
             new_model = copy.deepcopy(self.base_model[nPop])
             for x in range(len(trans_dep_pert)):
-                new_model["kc_trans_dep"][x] = np.array(new_model["kc_trans_dep"][x]) - trans_dep_pert[x][i]
+                new_model["kc_trans_dep"][x] = list(np.array(new_model["kc_trans_dep"][x]) - trans_dep_pert[x][i])
                 new_model["kc_trans_dep"][x] = [max(new_model["kc_trans_dep"][x][y], 0) for y in range(len(new_model["kc_trans_dep"][x]))]
 
             for key in self.base_model[nPop]["KT"].keys():
-                new_model["KT"][key] = np.array(new_model["KT"][key]) - kt_pert[key][i]
+                new_model["KT"][key] = list(np.array(new_model["KT"][key]) - kt_pert[key][i])
             self.students_models.append(new_model)
             self.students.append(KTstudent(params=new_model))

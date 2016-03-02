@@ -1038,7 +1038,7 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     plt.clf()
     plt.close()
     # plt.figure()
-    fig = plt.figure(figsize=(20, 13))
+    fig = plt.figure(figsize=(20, 9))
     ax = fig.add_subplot(111)
 
     xylabels = ["Time", typeData]
@@ -1122,7 +1122,7 @@ def draw_curve(data, path="", labels=[["Predefined", "RiARiT", "ZPDES"]], nb_ex=
     elif legend_position == 2:
         plt.legend(bbox_to_anchor=(0, 0, 1.1, 0), ncol=1, fancybox=True, shadow=True, prop={'size': 24})
     else:
-        plt.legend(bbox_to_anchor=(0, 0, 1, 0.4), ncol=1, fancybox=True, shadow=True, prop={'size': 24})
+        plt.legend(bbox_to_anchor=(0, 0, 1, 0.3), ncol=3, fancybox=True, shadow=True, prop={'size': 24})
 
     #plt.legend(bbox_to_anchor=(1.05, 1),loc=2, borderaxespad=0., ncol=1, fancybox=True, shadow=True, prop={'size':10})
 
