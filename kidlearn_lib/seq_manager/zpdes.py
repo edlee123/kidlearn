@@ -1,5 +1,5 @@
-#-*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------
 # Name:        ZPDES
 # Purpose:     Zone of Proximal Development and Empirical Success
 #
@@ -8,11 +8,11 @@
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
 # Licence:     GNU Affero General Public License v3.0
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 import numpy as np
 
-from .riarit import RiaritHssbg, RiaritSsbg, RiaritSsb
+from .riarit import RiaritHssbg  # , RiaritSsbg , RiaritSsb
 from .hssbg import HierarchicalSSBG, SSBanditGroup, SSbandit
 from .. import functions as func
 
@@ -30,7 +30,8 @@ class ZpdesHssbg(HierarchicalSSBG):
         HierarchicalSSBG.__init__(self, params=params)
         self.current_lvl_ex = {}
         if "riarit" in params.keys():
-            self.riarit = RiaritHssbg(params_file=params["riarit"]["file_name"], directory=params["riarit"]["path"])
+            self.riarit = RiaritHssbg(
+                params_file=params["riarit"]["file_name"], directory=params["riarit"]["path"])
         else:
             self.riarit = None
         # self.load_Error()
@@ -44,7 +45,8 @@ class ZpdesHssbg(HierarchicalSSBG):
         else:
             values_worked = []
             for key, val in act.items():
-                values_worked.append(str(self.SSBGs[key].SSB[0].param_values[val[0]]))
+                values_worked.append(
+                    str(self.SSBGs[key].SSB[0].param_values[val[0]]))
 
             lvl = [0] * self.ncompetencies
             for i in range(0, self.ncompetencies):
@@ -62,7 +64,8 @@ class ZpdesHssbg(HierarchicalSSBG):
         if "act_prime" in graph_infos.keys():
             graph_def = graph_infos
         else:
-            graph_def = func.load_json(graph_infos["file_name"], graph_infos["path"])
+            graph_def = func.load_json(
+                graph_infos["file_name"], graph_infos["path"])
 
         self.ncompetencies = graph_def["ncompetencies"]
         graph_def["current_ssbg"] = graph_def["act_prime"]
@@ -70,7 +73,7 @@ class ZpdesHssbg(HierarchicalSSBG):
         self.SSBGs = {}
         self.SSBGs[self.main_act] = mainSSBG
         self.addSSBG(mainSSBG, graph_def)
-        #self.lastAct = {}
+        # self.lastAct = {}
         return
 
     def addSSBG(self, ssbg_father, graph_def):
@@ -78,7 +81,7 @@ class ZpdesHssbg(HierarchicalSSBG):
             for nameRT, hierar in zip(actRT, hierarchy):
                 if hierar and nameRT not in self.SSBGs.keys():
                     graph_def["current_ssbg"] = nameRT
-                    #RT = "%s/%s.txt" % (self.graph_path, nameRT)
+                    # RT = "%s/%s.txt" % (self.graph_path, nameRT)
                     nssbg = self.instantiate_ssbg(graph_def)
                     self.SSBGs[nameRT] = nssbg
                     ssbg_father.add_sonSSBG(i, self.SSBGs[nameRT])
@@ -129,7 +132,8 @@ class ZpdesSsbg(SSBanditGroup):
         if "actions" in ssbg_def.keys():
             self.actions = ssbg_def["actions"]
         else:
-            self.actions = ["{}_act{}".format(self.ID, x) for x in range(self.nactions)]
+            self.actions = [
+                "{}_act{}".format(self.ID, x) for x in range(self.nactions)]
 
         if "nb_stay" in ssbg_def.keys():
             self.nb_stay = ssbg_def["nb_stay"]
@@ -194,8 +198,9 @@ class ZpdesSsb(SSbandit):
         if params is None:
             params = {}
 
-        SSbandit.__init__(self, id, nval, is_hierarchical, param_values, params=params)
-        #self.name = "zssb"
+        SSbandit.__init__(
+            self, id, nval, is_hierarchical, param_values, params=params)
+        #  self.name = "zssb"
         self.stepUpdate = params['stepUpdate']
         self.stepMax = self.stepUpdate / 2
 
@@ -241,7 +246,9 @@ class ZpdesSsb(SSbandit):
                 meanSucess = sumSucess * 1.0 / max(len(successUsed), 1)
 
                 if meanSucess > self.thresHProm:
-                    self.bandval[i] = self.bandval[i - 1] * self.h_promote_coeff  # TODO test with 4 for exemple
+                    # TODO test with 4 for exemple
+                    self.bandval[i] = self.bandval[
+                        i - 1] * self.h_promote_coeff
 
     def hierarchical_promote_async(self):
         for i in range(1, self.nval):
@@ -264,21 +271,28 @@ class ZpdesSsb(SSbandit):
                                             val=self.active_bandits(),
                                             min_nb_ans=2)
 
-        if succrate_active > self.upZPDval and 0 in self.len_success():  # and imax not in self.use_to_active: # and first < len(self.bandval) - 3:
-            self.bandval[self.len_success().index(0)] = min([self.bandval[x] for x in self.active_bandits()]) * self.promote_coeff
+        # and imax not in self.use_to_active: # and first < len(self.bandval) -
+        # 3:
+        if succrate_active > self.upZPDval and 0 in self.len_success():
+            self.bandval[self.len_success().index(0)] = min(
+                [self.bandval[x] for x in self.active_bandits()]) * self.promote_coeff
 
-        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate, val=[x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
+        max_usable_val_to_deact = [self.success_rate(-self.stepUpdate, val=[
+                                                     x]) for x in self.active_bandits() if self.len_success()[x] >= self.stepUpdate]
 
         if len(max_usable_val_to_deact) > 0:
             imaxd = self.active_bandits()[np.argmax(max_usable_val_to_deact)]
-            max_succrate_active_todeact = self.success_rate(-self.stepUpdate, val=[imaxd])
+            max_succrate_active_todeact = self.success_rate(
+                -self.stepUpdate, val=[imaxd])
 
-            if max_succrate_active_todeact > self.deactZPDval and self.bandval.count(0) < len(self.bandval) - 1:  # imaxd != self.nval-1:
+            # imaxd != self.nval-1:
+            if max_succrate_active_todeact > self.deactZPDval and self.bandval.count(0) < len(self.bandval) - 1:
                 # if self.bandval.count(0) < len(self.bandval)-1:
                 self.bandval[imaxd] = 0
 
     def spe_promote_windows(self):
-        # Promote initialisation for beginning of the sequence with less than windows size bandit activated
+        # Promote initialisation for beginning of the sequence with less than
+        # windows size bandit activated
         if self.nval - self.len_success().count(0) < self.size_window:
             i = self.len_success().index(0)
             if self.success_rate(-self.stepMax, val=[i - 1]) > self.upZPDval and len(self.success[i - 1]) > 1:
@@ -302,7 +316,8 @@ class ZpdesSsb(SSbandit):
                     self.bandval[first] = 0
 
                     if first + 3 < len(self.bandval):
-                        self.bandval[first + 3] = min(self.bandval[first + 2], self.bandval[first + 1]) / 2
+                        self.bandval[
+                            first + 3] = min(self.bandval[first + 2], self.bandval[first + 1]) / 2
 
     def promote(self, init=False):
         # Promote if initialisation
@@ -333,7 +348,8 @@ class ZpdesSsb(SSbandit):
         return [len(x) for x in self.success][first_val:last_val]
 
     def hsuccess_rate(self, ssbg, first_step=0, last_step=None, val=None, min_nb_ans=2, meanAll=0):
-        successUsed = [ssb.success_rate(first_step, last_step, min_nb_ans=min_nb_ans, meanAll=meanAll) for ssb in ssbg.SSB if ssb.is_hierarchical == 1]
+        successUsed = [ssb.success_rate(
+            first_step, last_step, min_nb_ans=min_nb_ans, meanAll=meanAll) for ssb in ssbg.SSB if ssb.is_hierarchical == 1]
 
         return successUsed
 
@@ -347,8 +363,9 @@ class ZpdesSsb(SSbandit):
             if len(self.success[x][first_step:last_step]) < min_nb_ans:
                 succrate.append(0)
             else:
-                succrate.append(np.mean(self.success[x][int(first_step):last_step]))
-        #succrate = [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
+                succrate.append(
+                    np.mean(self.success[x][int(first_step):last_step]))
+        #  succrate = [np.mean(x[first_step:last_step]) for x in self.success][first_val:last_val]
         if len(succrate) > 1 and meanAll == 1:
             return np.mean(succrate)
         elif len(succrate) > 1:

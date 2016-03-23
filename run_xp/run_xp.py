@@ -61,7 +61,8 @@ def avakas_xp(objs_to_job=None):
     if objs_to_job is not None:
         for obj in objs_to_job:
             file_to_save = obj.uuid + ".dat"
-            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100, estimated_time=5400, virtual_env="test", requirements=jrequirements, path=jq.jobsdir, jq_path=jq.basedir))
+            jq.add_job(KidlearnJob(descr=jq.name, filename=file_to_save, obj=obj, step_fun="step_forward", steps=100,
+                                   estimated_time=5400, virtual_env="test", requirements=jrequirements, path=jq.jobsdir, jq_path=jq.basedir))
         jq.check_virtualenvs()
     return jq
 
@@ -82,6 +83,10 @@ def local_xp(objs_to_job=None):
 
     return jq
 
+###################################################################
+# Greed search for ZPDES parameters
+###################################################################
+
 
 def all_values_zpdes(hierarUtile=0):
     filter1_vals = [round(x, 1) for x in np.arange(0.1, 0.6, 0.1)]
@@ -89,7 +94,7 @@ def all_values_zpdes(hierarUtile=0):
     upZPD_vals = [round(x, 1) for x in np.arange(0.4, 0.8, 0.1)]
     deact_vals = [round(x, 1) for x in np.arange(0.4, 0.8, 0.1)]
     prom_coef_vals = [round(x, 1) for x in np.arange(0.6, 1.8, 0.3)]
-    #thresHProm = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
+    # thresHProm = [round(x, 1) for x in np.arange(0.3, 0.8, 0.1)]
     if hierarUtile:
         thresHDeact_vals = [round(x, 1) for x in np.arange(0.5, 0.8, 0.1)]
     else:
@@ -97,10 +102,10 @@ def all_values_zpdes(hierarUtile=0):
     return filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals
 
 
-def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act="KT6kc", ref_stud="0", hierarUtile=0):
+def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_act="KT6kc", ref_graph="0", hierarUtile=0, ref_pop="0", save_configs=0):
 
-    if ref_stud in ["2"]:
-        hierarUtile = 1
+    # if ref_graph in ["2"]:
+    #    hierarUtile = 1
 
     filter1_vals, stepUp_vals, upZPD_vals, deact_vals, prom_coef_vals, thresHDeact_vals = all_values_zpdes(hierarUtile)
 
@@ -125,28 +130,52 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_a
     }
 
     base_conf = func.load_json("ZPDES_base", "params_files/ZPDES")
-    base_conf["graph"]["file_name"] = "graph_{}_{}".format(main_act, ref_stud)
+    base_conf["graph"]["file_name"] = "graph_{}_{}".format(main_act, ref_graph)
     base_conf["graph"]["main_act"] = main_act
 
     base_conf["graph"].update(func.load_json(base_conf["graph"]["file_name"], base_conf["graph"]["path"]))
-    print base_conf
+
     zpdes_confs = mp.multi_conf(base_conf=base_conf, multi_params=multi_confs, combine=1)
 
-    #conf_ids = mp.generate_diff_config_id(zpdes_confs)
-    #zpdes_confs = {conf_ids[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
-    uid = str(uuid.uuid1())
+    # conf_ids = mp.generate_diff_config_id(zpdes_confs)
+    # zpdes_confs = {conf_ids[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
+    # uid = str(uuid.uuid1())
 
-    jstr = json.dumps(zpdes_confs)
 
-    k_lib.config.datafile.create_directories([save_path])
-    save_path = "{}{}_{}_all_confs.json".format(save_path, main_act, ref_stud)
-    k_lib.functions.write_in_file(save_path, jstr)
+    if save_configs == 1:
+        jstr = json.dumps(zpdes_confs)
+        k_lib.config.datafile.create_directories([save_path])
+        save_path = "{}{}_{}_{}_all_confs.json".format(save_path, main_act, ref_graph, ref_pop)
+        k_lib.functions.write_in_file(save_path, jstr)
 
     return zpdes_confs
 
 
+def gen_conf_to_optimize_multi_graph(save_path="experimentation/optimize/multiconf/", main_act="KT6kc", ref_graphs=["0"], hierarUtile=0, ref_pop="0"):
+
+    zpdes_confs_multi_graphs = []
+    zpdes_confs = gen_conf_to_optimize(save_path, main_act, ref_graphs[0], hierarUtile, ref_pop)
+    zpdes_confs_multi_graphs.append(copy.deepcopy(zpdes_confs))
+
+    if len(ref_graphs) > 1:
+        for i in range(1, len(ref_graphs)):
+            for conf in zpdes_confs:
+                conf["graph"]["file_name"] = "graph_{}_{}".format(main_act, ref_graphs[i])
+                conf["graph"].update(func.load_json(conf["graph"]["file_name"], conf["graph"]["path"]))
+
+            zpdes_confs_multi_graphs.append(copy.deepcopy(zpdes_confs))
+
+    jstr = json.dumps(zpdes_confs_multi_graphs)
+    k_lib.config.datafile.create_directories([save_path])
+    save_path = "{}{}_{}_{}_all_confs.json".format(save_path, main_act, "".join(ref_graphs), ref_pop)
+    k_lib.functions.write_in_file(save_path, jstr)
+
+    return zpdes_confs_multi_graphs
+
+
 def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100, base_path_to_save="experimentation/data/"):
-    studconf = func.load_json(params_file="stud_KT6kc", directory="params_files/studModel")
+
+    # studconf = func.load_json(params_file="stud_KT6kc", directory="params_files/studModel")
     stud = k_lib.student.KTstudent(params_file="stud_KT6kc", directory="params_files/studModel")
 
     wkgs = {}
@@ -164,20 +193,21 @@ def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100
                                           nb_step=nb_step,
                                           population={"nb_students": nb_stud,
                                                       "model": "KT_student"})
+
     return xp
 
 
-def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_stud="0", ref_compute="0"):
+def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_graphs=["0"], ref_pop="0"):
     all_confs_file_path = "experimentation/optimize/multiconf/"
-    all_confs_file = "{}_{}_{}_all_confs.json".format(main_act, ref_stud, ref_compute)
+    all_confs_file = "{}_{}_{}_all_confs.json".format(main_act, ref_graphs, ref_pop)
 
     if os.path.isfile(os.path.join(all_confs_file_path, all_confs_file)):
         all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
     else:
-        all_zpdes_confs = gen_conf_to_optimize(all_confs_file_path, main_act, ref_stud)
+        all_zpdes_confs = gen_conf_to_optimize_multi_graph(all_confs_file_path, main_act, ref_graphs, ref_pop)
 
-    all_conf_ids = mp.generate_diff_config_id(all_zpdes_confs)
-    nb_conf_to_test = nb_conf_to_test or len(all_zpdes_confs)
+    all_conf_ids = mp.generate_diff_config_id(all_zpdes_confs[0])
+    nb_conf_to_test = nb_conf_to_test or len(all_conf_ids)
 
     set_zpdes_confs = []
 
@@ -190,7 +220,8 @@ def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6k
         first_conf = i * nb_group_per_xp
         last_conf = i * nb_group_per_xp + nb_conf
 
-        zpdes_conf = all_zpdes_confs[first_conf:last_conf]
+        zpdes_conf = [x[first_conf:last_conf] for x in all_zpdes_confs]
+
         # print "i %s nbconf %s, z %s" % (i, nb_conf,len(zpdes_conf))
 
         conf_ids = all_conf_ids[first_conf:last_conf]
@@ -202,7 +233,6 @@ def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6k
 
 
 def gen_stud_confs(nb_students=1000, params_file="stud_KT6kc_0", disruption_pop_file="perturbation_KT6kc", disruption=0, refs_stud=["0", "1", "2", "3", "4"]):
-    studconf = func.load_json(params_file, "params_files/studModel")
     if disruption == 1:
         params_pop = []
         for ref in refs_stud:
@@ -213,23 +243,26 @@ def gen_stud_confs(nb_students=1000, params_file="stud_KT6kc_0", disruption_pop_
         stud_confs = population.students_models
 
     else:
+        studconf = func.load_json(params_file, "params_files/studModel")
         stud_confs = [copy.deepcopy(studconf) for x in range(nb_students)]
 
     return stud_confs
 
 
-def xp_conf_to_job(zpdes_conf, stud_confs, nb_step=100, studFile=""):
+def xp_conf_to_job(zpdes_conf, stud_confs, nb_step=100, studFile="", ref_graphs=["0"], refs_stud=["0"]):
     xp_conf = {}
     xp_conf["zpdes_conf"] = zpdes_conf
     xp_conf["stud_confs"] = stud_confs
     xp_conf["nb_steps"] = nb_step
     xp_conf["stud_file"] = studFile
+    xp_conf["ref_graphs"] = ref_graphs
+    xp_conf["refs_stud"] = refs_stud
 
     return xp_conf
 
 
-def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0, nb_conf_to_test=None, ref_xp="KT6kc", ref_stud=0, refs_stud=["0", "1", "2", "3", "4"], disruption_pop_file="perturbation_KT6kc", disruption=0):
-    stud_file = "stud_{}_{}".format(ref_xp, ref_stud)
+def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0, nb_conf_to_test=None, ref_xp="KT6kc", ref_graphs=["0"], refs_stud=["0", "1", "2", "3", "4"], disruption_pop_file="perturbation_KT6kc", disruption=0):
+    stud_file = "stud_{}_{}".format(ref_xp, refs_stud[0])
 
     if xp_type == 1:
         jq = avakas_xp()
@@ -240,18 +273,15 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl, kidleanrUrl]
 
-    if disruption == 1:
-        ref_stud_compute = "".join(refs_stud)
-    else:
-        ref_stud_compute = str(ref_stud)
+    ref_pop = "".join(refs_stud)
 
-    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test, main_act=ref_xp, ref_stud=ref_stud, ref_compute=ref_stud_compute)
+    set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test, main_act=ref_xp, ref_graphs=ref_graphs, ref_pop=ref_pop)
 
     for set_zpdes in set_zpdes_conf:
         stud_confs = gen_stud_confs(nb_students=nb_stud, params_file=stud_file, disruption_pop_file=disruption_pop_file, refs_stud=refs_stud, disruption=disruption)
-        xp_conf = xp_conf_to_job(set_zpdes, stud_confs, nb_step=nb_step, studFile=stud_file)
+        xp_conf = xp_conf_to_job(set_zpdes, stud_confs, nb_step=nb_step, studFile=stud_file, ref_graphs=ref_graphs, refs_stud=refs_stud)
 
-        #file_to_save = xp.uuid+".dat"
+        # file_to_save = xp.uuid+".dat"
         if xp_type == 1:
             jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time=5400, virtual_env="test", requirements=jrequirements, path=jq.jobsdir, jq_path=jq.basedir))
         else:
@@ -259,13 +289,17 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
 
     if xp_type == 1:
         jq.check_virtualenvs()
-        #xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step))
+        # xp_list.append(xp_to_job(first_conf=first_conf, last_conf=last_conf, zpdes_confs = zpdes_confs, conf_ids = conf_ids, nb_stud=nb_stud, nb_step=nb_step))
 
     return jq
 
+###################################################################
+# Greed search for ZPDES parameters
+###################################################################
+###################################################################
+
 
 def fit_exp_curve(xp):
-
     return
 
 
@@ -680,7 +714,8 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         stud = population.students[i]
         for ii in range(len(refs_opti)):
             ws_tab_zpdes[ii].append(k_lib.experimentation.WorkingSession(student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(zpdesHs[ii], -1))))
-            ws_tab_zpdesOpt[ii].append(k_lib.experimentation.WorkingSession(student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(zpdesOpts[ii], -1))))
+            ws_tab_zpdesOpt[ii].append(k_lib.experimentation.WorkingSession(
+                student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(zpdesOpts[ii], -1))))
             ws_tab_pomdp[ii].append(k_lib.experimentation.WorkingSession(student=cPickle.loads(cPickle.dumps(stud, -1)), seq_manager=cPickle.loads(cPickle.dumps(pomdPs[ii], -1))))
         #ws_tab_riarit.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager = copy.deepcopy(riarit)))
         ws_tab_random.append(k_lib.experimentation.WorkingSession(student=copy.deepcopy(stud), seq_manager=copy.deepcopy(random)))
@@ -776,7 +811,8 @@ def draw_xp_histo(xp, type_ex=["V1", "V2", "V3", "V4", "V5"], nb_ex_type=[1, 1, 
         for i in range(len(group)):
             seq_name_title = seq_name.replace("*", "E")
             data = group[i].get_ex_repartition_time(first_ex=1, nb_ex=xp.nb_step + 1, main_rt=xp.main_act, type_ex=type_ex, nb_ex_type=nb_ex_type)
-            graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s_%s \nStudent distribution per erxercices type over time" % (seq_name, i), path="%s" % (xp.save_path), ref="exTime_%s_%s_%s" % (xp.ref_expe, seq_name_title, i), legend=type_ex, dataToUse=range(len([data])), show=0)
+            graph.kGraph.plot_cluster_lvl_sub([data], xp.nb_students, xp.nb_step, title="%s_%s \nStudent distribution per erxercices type over time" % (
+                seq_name, i), path="%s" % (xp.save_path), ref="exTime_%s_%s_%s" % (xp.ref_expe, seq_name_title, i), legend=type_ex, dataToUse=range(len([data])), show=0)
 
 
 def draw_xp_kc_curve(xp, ref_sub_group=None, subgroup_treat=False, showPlot=False, use_std=False):
@@ -803,7 +839,8 @@ def draw_xp_kc_curve(xp, ref_sub_group=None, subgroup_treat=False, showPlot=Fals
         if use_std:
             std_data = kc_data[kc]["std"]
 
-        graph.kGraph.draw_curve(mean_data, labels=labels, nb_ex=xp.nb_step + 1, typeData="Average KC level", type_data_spe="", ref="%s_%s_sg%s" % (xp.ref_expe, skill_labels[kc], int(subgroup_treat)), markers=None, colors=colors, line_type=['solid', 'dashed', 'dashdot', "dotted"], legend_position=5, path="%s" % (xp.save_path), showPlot=showPlot, std_data=std_data)
+        graph.kGraph.draw_curve(mean_data, labels=labels, nb_ex=xp.nb_step + 1, typeData="Average KC level", type_data_spe="", ref="%s_%s_sg%s" % (xp.ref_expe, skill_labels[kc], int(
+            subgroup_treat)), markers=None, colors=colors, line_type=['solid', 'dashed', 'dashdot', "dotted"], legend_position=5, path="%s" % (xp.save_path), showPlot=showPlot, std_data=std_data)
     return
 
 
@@ -813,7 +850,8 @@ def draw_pvals(xp, pvals):
     for key, val in pvals.items():
         pv.append(val)
         pvlabel.append(key)
-    graph.kGraph.draw_curve([pv], labels=[pvlabel], nb_ex=xp.nb_step, typeData="p_values_skill", type_data_spe="", ref="%s_%s" % (xp.ref_expe, "All"), markers=None, colors=[["#00BBBB", "green", "black", '#FF0000', '#FF6600', '#FF0066']], line_type=['dashed', 'dashdot', 'solid', "dotted", 'dashed', 'solid'], legend_position=5, std_data=None, path="%s" % (xp.save_path), showPlot=False)
+    graph.kGraph.draw_curve([pv], labels=[pvlabel], nb_ex=xp.nb_step, typeData="p_values_skill", type_data_spe="", ref="%s_%s" % (xp.ref_expe, "All"), markers=None, colors=[
+                            ["#00BBBB", "green", "black", '#FF0000', '#FF6600', '#FF0066']], line_type=['dashed', 'dashdot', 'solid', "dotted", 'dashed', 'solid'], legend_position=5, std_data=None, path="%s" % (xp.save_path), showPlot=False)
 
 
 def calcul_pvals(xp, steps=None, max_pvals=1, save_vals=False):
