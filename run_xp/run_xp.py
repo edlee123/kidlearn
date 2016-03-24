@@ -141,7 +141,6 @@ def gen_conf_to_optimize(save_path="experimentation/optimize/multiconf/", main_a
     # zpdes_confs = {conf_ids[x] : zpdes_confs[x] for x in range(len(zpdes_confs))}
     # uid = str(uuid.uuid1())
 
-
     if save_configs == 1:
         jstr = json.dumps(zpdes_confs)
         k_lib.config.datafile.create_directories([save_path])
@@ -199,7 +198,7 @@ def gen_xp_to_optimize(zpdes_confs, ref_xp="optimize", nb_stud=1000, nb_step=100
 
 def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6kc", ref_graphs=["0"], ref_pop="0"):
     all_confs_file_path = "experimentation/optimize/multiconf/"
-    all_confs_file = "{}_{}_{}_all_confs.json".format(main_act, ref_graphs, ref_pop)
+    all_confs_file = "{}_{}_{}_all_confs.json".format(main_act, "".join(ref_graphs), ref_pop)
 
     if os.path.isfile(os.path.join(all_confs_file_path, all_confs_file)):
         all_zpdes_confs = k_lib.functions.load_json(all_confs_file, all_confs_file_path)
@@ -212,22 +211,26 @@ def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6k
     set_zpdes_confs = []
 
     for i in range(nb_conf_to_test / nb_group_per_xp):
-        if nb_group_per_xp <= len(all_zpdes_confs) - i * nb_group_per_xp:
+
+        if nb_group_per_xp <= nb_conf_to_test - i * nb_group_per_xp:
             nb_conf = nb_group_per_xp
         else:
-            nb_conf = nb_group_per_xp - len(all_zpdes_confs) - i * nb_group_per_xp
+            nb_conf = nb_group_per_xp - (nb_conf_to_test - i * nb_group_per_xp)
 
         first_conf = i * nb_group_per_xp
         last_conf = i * nb_group_per_xp + nb_conf
 
         zpdes_conf = [x[first_conf:last_conf] for x in all_zpdes_confs]
 
-        # print "i %s nbconf %s, z %s" % (i, nb_conf,len(zpdes_conf))
+        print "i %s nbconf %s, z %s" % (i, nb_conf,len(zpdes_conf))
 
         conf_ids = all_conf_ids[first_conf:last_conf]
 
-        zpdes_conf = {conf_ids[x]: zpdes_conf[x] for x in range(len(zpdes_conf))}
-        set_zpdes_confs.append(zpdes_conf)
+        zpdes_conf_f = {conf_ids[x]: [zpdes_conf[y][x] for y in range(len(zpdes_conf))] for x in range(len(conf_ids))}
+        
+        #print zpdes_conf_f
+
+        set_zpdes_confs.append(zpdes_conf_f)
 
     return set_zpdes_confs
 
