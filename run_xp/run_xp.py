@@ -54,7 +54,7 @@ def avakas_xp(objs_to_job=None):
 
     jq = get_jobqueue(**jq_config)
 
-    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/edm2016#egg=kidlearn_lib'
+    kidleanrUrl = '-e git+https://github.com/flowersteam/kidlearn.git@origin/feature/multi_grpah_xp#egg=kidlearn_lib'
     expeManageUrl = '-e git+https://github.com/wschuell/experiment_manager.git@origin/feature/ben_jobs#egg=experiment_manager'
     jrequirements = [expeManageUrl, kidleanrUrl]
 
@@ -222,7 +222,7 @@ def gen_set_zpdes_confs(nb_group_per_xp=10, nb_conf_to_test=None, main_act="KT6k
 
         zpdes_conf = [x[first_conf:last_conf] for x in all_zpdes_confs]
 
-        print "i %s nbconf %s, z %s" % (i, nb_conf,len(zpdes_conf))
+        #print "i %s nbconf %s, z %s" % (i, nb_conf,len(zpdes_conf))
 
         conf_ids = all_conf_ids[first_conf:last_conf]
 
@@ -279,6 +279,9 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
     ref_pop = "".join(refs_stud)
 
     set_zpdes_conf = gen_set_zpdes_confs(nb_group_per_xp, nb_conf_to_test, main_act=ref_xp, ref_graphs=ref_graphs, ref_pop=ref_pop)
+
+    #print len(set_zpdes_conf)
+    #print len(set_zpdes_conf[0].values()[0])
 
     for set_zpdes in set_zpdes_conf:
         stud_confs = gen_stud_confs(nb_students=nb_stud, params_file=stud_file, disruption_pop_file=disruption_pop_file, refs_stud=refs_stud, disruption=disruption)
@@ -933,8 +936,8 @@ def calcul_xp_cost(xp=None, cost=None):
     else:
         cost = xp.calcul_cost()
         path_to_save = "{}/{}".format(xp.save_path, "cost.txt")
-    mean_cost = {key: np.mean(cost[key]) for key in cost.keys()}
-    std_cost = {key: np.std(cost[key]) for key in cost.keys()}
+    mean_cost = {key: [np.mean(x) for x in cost[key]] for key in cost.keys()}
+    std_cost = {key: [np.std(x) for x in cost[key]] for key in cost.keys()}
 
     data_cost = {"mean": mean_cost, "std": std_cost}
 
