@@ -54,6 +54,11 @@ class Student(object):
 
         return student_state
 
+    def choose(self, list_act):
+        chosen_act_idx = random.randint(len(list_act))
+
+        return list_act[chosen_act_idx]
+
     def answer(self, exercise=None, ans=None, nb_try=0):
         exercise._answer = ans
         exercise.add_attr(_nb_try=nb_try)

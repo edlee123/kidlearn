@@ -289,7 +289,7 @@ def full_optimize_zpdes(nb_group_per_xp=10, nb_stud=1000, nb_step=100, xp_type=0
 
         # file_to_save = xp.uuid+".dat"
         if xp_type == 1:
-            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time=5400, virtual_env="test", requirements=jrequirements, path=jq.jobsdir, jq_path=jq.basedir))
+            jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time=7400, virtual_env="test", requirements=jrequirements, path=jq.jobsdir, jq_path=jq.basedir))
         else:
             jq.add_job(KidlearnJob(descr=jq.name, filename="data.dat", obj=xp_conf, step_fun="step_forward", steps=100, estimated_time=3600, path=jq.jobsdir, jq_path=jq.basedir))
 
@@ -427,6 +427,13 @@ def do_q_simu():
 def change_graph_params(params, graph_file, main_act):
     params["graph"]["file_name"] = graph_file
     params["graph"]["main_act"] = main_act
+    return params
+
+def change_zssb_params(params,newparams):
+    param_names = ["filter1","uniformval","stepUpdate","upZPDval","deactZPDval","promote_coeff","thresHProm","thresHDeact"]
+    for i in range(len(param_names)):
+        params["ZpdesSsbg"]["ZpdesSsb"][param_names[i]] = newparams[i]
+
     return params
 
 # Xp with KT stud model, POMDP, ZPDES, Random %riarit%
@@ -639,30 +646,37 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         "3": [0.4, 0.05, 4, 0.8, 0.6, 1.2, 0.5, 0.5],
         "4": [0.4, 0.05, 4, 0.8, 0.6, 1.2, 0.5, 0.5],
         #"0": [0.4, 0.05, 5, 0.4, 0.6, 1.5, 0.5, 0.5]
+        #opti_all : [0.3,0.05,4,0.4,0.7,1,0.5,0.5]
     }
 
-    for ref in refs_opti:
-        zpdes_conf_opti[ref] = {
-            "algo_name": "ZpdesHssbg",
-            "graph": {
-                "file_name": "graph_{}_{}".format(ref_xp, ref),
-                "path": "graph/",
-                "main_act": "{}".format(ref_xp)
-            },
+    zpdes_opti_multi_graph_param = [0.3,0.05,4,0.4,0.7,1,0.5,0.5]
 
-            "ZpdesSsbg": {
-                "ZpdesSsb": {
-                    "filter1": zpdes_params_opti[ref][0],  # 0.4,# 0.30,
-                    "uniformval": zpdes_params_opti[ref][1],  # 0.05,
-                    "stepUpdate": zpdes_params_opti[ref][2],  # 4,# 6,
-                    "upZPDval": zpdes_params_opti[ref][3],  # 0.6,
-                    "deactZPDval": zpdes_params_opti[ref][4],  # 0.4,# 0.5,
-                    "promote_coeff": zpdes_params_opti[ref][5],  # 1.7,
-                    "thresHProm": zpdes_params_opti[ref][6],  # 0.5,
-                    "thresHDeact": zpdes_params_opti[ref][7]
-                }
-            }
-        }
+    for ref in refs_opti:
+        zpdes_conf_opti[ref] = func.load_json(file_name=files_to_load["zpdes"], dir_path="params_files/ZPDES")
+        zpdes_conf_opti[ref] = change_graph_params(zpdes_conf_opti[ref], "graph_{}_{}".format(ref_xp, ref), ref_xp)
+        zpdes_conf_opti[ref] = change_zssb_params(zpdes_conf_opti[ref],zpdes_params_opti[ref])
+
+        #{
+        #    "algo_name": "ZpdesHssbg",
+        #    "graph": {
+        #        "file_name": "graph_{}_{}".format(ref_xp, ref),
+        #        "path": "graph/",
+        #        "main_act": "{}".format(ref_xp)
+        #    },
+        #        
+        #    "ZpdesSsbg": {
+        #        "ZpdesSsb": {
+        #            "filter1": zpdes_params_opti[ref][0],  # 0.4,# 0.30,
+        #            "uniformval": zpdes_params_opti[ref][1],  # 0.05,
+        #            "stepUpdate": zpdes_params_opti[ref][2],  # 4,# 6,
+        #            "upZPDval": zpdes_params_opti[ref][3],  # 0.6,
+        #            "deactZPDval": zpdes_params_opti[ref][4],  # 0.4,# 0.5,
+        #            "promote_coeff": zpdes_params_opti[ref][5],  # 1.7,
+        #            "thresHProm": zpdes_params_opti[ref][6],  # 0.5,
+        #            "thresHDeact": zpdes_params_opti[ref][7]
+        #        }
+        #    }
+        #}
 
     params_pop = []
     for ref in refs_stud:
@@ -738,7 +752,7 @@ def multi_kt_xp(ref_xp="KT6kc", path_to_save="experimentation/data/", nb_step=10
         "ZpdesH": wG_zpdes,
         "Zpdes*": wG_zpdes2,
     }
-    if len(refs_stud) == 1:
+    if len(refs_stud) == 1 and len(refs_opti) == 1:
         wkgs["Random"] = [wG_random]
     # , "RIARIT": [wG_riarit]} # {"ZPDES": [wG_zpdes]} #
 
@@ -925,6 +939,13 @@ def recup_mean_cost_from_jq(jq=None, jq_uuid=None):
     cost_mean = copy.deepcopy(nc["mean"])
 
     return cost_mean
+
+def cost_mean_conf(cost_mean):
+    ncm = {}
+    for key, val in cost_mean.items():
+        ncm[key] = np.mean(val)
+
+    return ncm
 
 
 # calcul xp costs
