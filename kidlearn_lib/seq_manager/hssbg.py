@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Name:        HierarchicalSSBG
 # Purpose:     Hieratical Strategic Student Bandit
 #
@@ -8,9 +8,11 @@
 # Created:     14-03-2015
 # Copyright:   (c) BClement 2015
 # Licence:     GNU Affero General Public License v3.0
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
 import numpy as np
+import itertools
+import copy
 
 from .. import functions as func
 
@@ -105,6 +107,13 @@ class HierarchicalSSBG(object):
     def update(self, act=None, result=True, error_ID=None, *args, **kwargs):
         return 0
 
+    def choice_sample(self):
+        act_distrib = self.get_probDistribAct()
+        act_distrib = zip(*act_distrib)
+        act = np.random.choice(act_distrib[0], p=act_distrib[1])
+
+        return act
+
     def sample(self):
         act = self.speSample(ssbgToS=self.SSBGs[self.main_act])
         #self.lastAct = act
@@ -120,6 +129,55 @@ class HierarchicalSSBG(object):
                 nameRT = ssbgToS.param_values[actRT][act[ssbgToS.ID][actRT]]
                 self.speSample(self.SSBGs[nameRT], act)
         return act
+
+    def get_probDistribAct(self):
+        act_distrib = self.get_ssbgDistrib(ssbgToS=self.SSBGs[self.main_act])
+        #self.lastAct = act
+        return act_distrib
+
+    def get_ssbgDistrib(self, ssbgToS):  # , act=None):
+        # if act is None:
+        act_list = []
+        # act[ssbgToS.ID] = ssbgToS.sample()[0]
+
+        distrib_list = ssbgToS.get_prob_distrib()
+        # actToExplore = []
+        index_list = []
+        for distrib in distrib_list:
+            # actToExplore.append(np.random.choice(range(len(distrib)), p=distrib))
+            index_list.append(range(len(distrib)))
+
+        for actToExplore in itertools.product(*index_list):
+
+            act_list_bis = self.get_subSsbgDistrib(ssbgToS, actToExplore)
+            actToExploreProb = np.product([dis[i] for dis, i in zip(distrib_list, actToExplore)])
+
+            act_list.extend([(act, p * actToExploreProb) for act, p in act_list_bis])
+
+        return act_list
+
+    def get_subSsbgDistrib(self, ssbgToS, actToExplore):
+        act_list_bis = [({ssbgToS.ID: actToExplore}, 1)]
+        for actRT in range(len(actToExplore)):
+            hierar = ssbgToS.values_children[actRT][actToExplore[actRT]]
+            if hierar:
+                new_act_list_bis = []
+                nameRT = ssbgToS.param_values[actRT][actToExplore[actRT]]
+                partial_act_list = self.get_ssbgDistrib(self.SSBGs[nameRT])
+
+                for partial_act, p in partial_act_list:
+                    tmp = copy.deepcopy(act_list_bis)
+                    for act, pbis in tmp:
+                        act.update(partial_act)
+                    tmp = [(act,p*pbis) for act, pbis in tmp]
+                    new_act_list_bis.extend(tmp)
+                act_list_bis = new_act_list_bis
+
+        return act_list_bis
+
+
+
+
 
 # class HierarchicalSSBG
 #########################################################
@@ -208,6 +266,16 @@ class SSBanditGroup(object):
                 self.nbturn[i] = 0
         return self.act
 
+    def get_prob_distrib(self):
+        # TODO : old act to update distrib value depending of nbstay
+
+        act = []
+        for i in range(self.nactions):
+            if self.nbturn[i] % self.nb_stay[i] == 0:
+                act.append(self.SSB[i].get_probDistrib())
+                self.nbturn[i] = 0
+        return act
+
 #HierarchicalSSBG.ssbgClasse = SSBanditGroup
 
 # class SSBanditGroup
@@ -278,9 +346,9 @@ class SSbandit(object):
         nn = [1.0 / self.nval] * self.nval
         return func.dissample(nn)
 
-    def sample(self, exploration_coeff=10):
-        #if np.count_nonzero(self.bandval) == 1:
-        if self.bandval.count(0) == len(self.bandval)-1:
+    def get_probDistrib(self, exploration_coeff=10):
+        # if np.count_nonzero(self.bandval) == 1:
+        if self.bandval.count(0) == len(self.bandval) - 1:
             for i in range(len(self.bandval)):
                 if self.bandval[i] != 0:
                     self.bandval[i] = self.uniformval
@@ -293,13 +361,13 @@ class SSbandit(object):
 
         nb_0 = 0
         for i in range(0, len(nn)):
-            if nn[i] == 0: # < pow(10, -70):
+            if nn[i] == 0:  # < pow(10, -70):
                 nb_0 += 1
 
         if nb_0 == len(nn):
             nb0 = nb_0
-            #print self.name
-            #print "Prob : %s : %s " % (str(self.param_values), str(self.bandval))
+            # print self.name
+            # print "Prob : %s : %s " % (str(self.param_values), str(self.bandval))
             # print self.success
         #nn = exp(nn)-1
         nn = nn / sum(nn)
@@ -312,7 +380,11 @@ class SSbandit(object):
         if nb_0 == len(nn):
             print "band : %s " % str(nn)
         """
-        return func.dissample(nn)
+        
+        return nn
+        # return [func.dissample(nn)]
+    def sample(self, exploration_coeff=10):
+        return func.dissample(self.get_probDistrib(exploration_coeff))
 
 
 # class SSbandit

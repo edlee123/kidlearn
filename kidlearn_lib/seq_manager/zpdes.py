@@ -167,17 +167,19 @@ class ZpdesSsbg(SSBanditGroup):
         return r_ES
 
     def update(self, act, result_impact, *args, **kwargs):
+        # TODO : old act to update distrib value depending of nbstay
+
         r_ES = self.calcul_reward(act, result_impact)
 
         # For simulation
-        #r_KC = RiaritSsbg.calcul_reward(self,lvl,result,answer_impact = result)
+        # r_KC = RiaritSsbg.calcul_reward(self,lvl,result,answer_impact = result)
         # For simulation
 
         for ii in range(self.nactions):
             self.nbturn[ii] += 1
             # if len(self.SSB[ii].sonSSBG.keys()) > 0:
             #    r_ES[ii] += pow(10,-5)*all_act[self.param_values[ii][act[ii]]][0]/len(self.SSB[ii].sonSSBG[self.param_values[ii][act[ii]]].SSB[0].bandval)
-                # raw_input()
+         # raw_input()
             self.SSB[ii].update(act[ii], max(0, r_ES[ii]))
             self.SSB[ii].promote()
 

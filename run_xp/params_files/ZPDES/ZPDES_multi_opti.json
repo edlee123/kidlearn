@@ -1,0 +1,24 @@
+{
+    "algo_name" : "ZpdesHssbg",
+    "graph": { 
+        "file_name" :"",
+        "path" : "graph/",
+        "main_act" : ""
+        },
+    
+    "ZpdesSsbg": {
+        "ZpdesSsb": {
+            "filter1": 0.3,
+            "uniformval": 0.05,
+            "stepUpdate" : 4,
+            "upZPDval" : 0.4,
+            "deactZPDval" : 0.7,
+            "promote_coeff" : 1,
+            "thresHProm" : 0.5,
+            "thresHDeact" : 0.5,
+            "h_promote_coeff" : 0.5,
+            "size_window": 3,
+            "spe_promo": 0
+        }
+    }
+}

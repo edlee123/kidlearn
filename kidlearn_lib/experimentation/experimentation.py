@@ -154,7 +154,7 @@ class WorkingSession(object):
         ex = self.new_exercise()
         self.student_answer(ex)
         self.save_actual_step(ex)
-        #self.log.log(new_ex, student_answer)
+        # self.log.log(new_ex, student_answer)
         self.update_manager(ex)
 
     def new_exercise(self):
@@ -180,7 +180,7 @@ class WorkingSession(object):
 
     def free_data(self):
         self._student = None
-        #self._seq_manager = None
+        # self._seq_manager = None
 
     def compute_all_act_level(self, data, model="KT"):
         if model == "KT":

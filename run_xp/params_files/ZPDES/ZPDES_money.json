@@ -1,0 +1,24 @@
+{
+    "algo_name" : "ZpdesHssbg",
+    "graph": { 
+        "file_name" :"money_graph",
+        "path" : "graph/",
+        "main_act" : "MAIN"
+        },
+    
+    "ZpdesSsbg": {
+        "ZpdesSsb": {
+            "filter1": 0.20,
+            "uniformval": 0.05,
+            "stepUpdate" : 6,
+            "upZPDval" : 0.5,
+            "deactZPDval" : 0.7,
+            "promote_coeff" : 1,
+            "thresHProm" : 0.5,
+            "thresHDeact" : 0.7,
+            "h_promote_coeff" : 0.25,
+            "size_window": 3,
+            "spe_promo": 0
+        }
+    }
+}

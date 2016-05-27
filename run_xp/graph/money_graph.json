@@ -1,11 +1,12 @@
 {
     "act_prime" : "MAIN",
     "KC":["KnowMoney", "IntSum", "IntSub",  "IntDec",  "DecSum", "DecSub", "DecDec"],
+    "ncompetencies" : 7,
 
     "MAIN":{
         "actions":["ExType_H"],
         "h":[1],
-        "nb_stay":[4],
+        "nb_stay":[1],
         "ssbg":[["M","R","MM","RM"]]
         },
     "M":{

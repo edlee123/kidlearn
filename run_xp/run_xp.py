@@ -43,6 +43,17 @@ import plot_graphics as graph
 # Xp on Avakas
 #########################################################
 
+def test():
+    a = 5
+    global a
+
+def test2():
+    print a
+
+def test3():
+    a = 1
+    print a
+
 
 def avakas_xp(objs_to_job=None):
     jq_config = {
